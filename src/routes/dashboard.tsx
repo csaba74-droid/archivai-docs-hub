@@ -14,6 +14,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Archive,
   Search,
   Upload,
@@ -24,7 +41,14 @@ import {
   Loader2,
   Trash2,
   CalendarClock,
+  Sparkles,
 } from "lucide-react";
+import { categorizeDocument } from "@/lib/ai.functions";
+import { extractPdfText } from "@/lib/pdf";
+import { logAudit } from "@/lib/audit";
+import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
+import { DocumentHoverPreview } from "@/components/DocumentHoverPreview";
+import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 
 async function sha256Hex(file: File): Promise<string> {
   const buf = await file.arrayBuffer();
@@ -33,6 +57,16 @@ async function sha256Hex(file: File): Promise<string> {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
+
+const CONFIDENCE_THRESHOLD = 0.8;
+
+type PendingConfirm = {
+  file: File;
+  suggested: string;
+  confidence: number;
+  reasoning?: string;
+  resolve: (chosen: string | null) => void;
+};
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -53,6 +87,9 @@ function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmCategory, setConfirmCategory] = useState<string>("egyeb");
 
   const loadDocs = useCallback(async () => {
     setLoading(true);
@@ -79,12 +116,27 @@ function Dashboard() {
   }, [loadDocs]);
 
   const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
     return docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
-      if (search && !d.filename.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
+      if (!q) return true;
+      const hay =
+        (d.filename ?? "").toLowerCase() +
+        " " +
+        (d.original_filename ?? "").toLowerCase() +
+        " " +
+        (d.content_text ?? "").toLowerCase();
+      return hay.includes(q);
     });
   }, [docs, search, activeCat]);
+
+  useEffect(() => {
+    if (!search.trim()) return;
+    const t = setTimeout(() => {
+      void logAudit("search", null, { query: search, hits: filtered.length });
+    }, 800);
+    return () => clearTimeout(t);
+  }, [search, filtered.length]);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -92,22 +144,9 @@ function Dashboard() {
     return map;
   }, [docs]);
 
-  const inferCategory = (filename: string): string => {
-    const f = filename.toLowerCase();
-    if (/(utility|kozuzem|közüzem|villany|gaz|gáz|viz|víz)/.test(f)) return "kozuzemi";
-    if (/(bank|kivonat|statement)/.test(f)) return "banki";
-    if (/(invoice|szamla|számla)/.test(f)) return "szamlak";
-    if (/(contract|szerzodes|szerződés)/.test(f)) return "szerzodesek";
-    if (/(shipping|szallito|szállító)/.test(f)) return "szallitolevek";
-    if (/(payroll|munkaugy|munkaügy|hr)/.test(f)) return "munkaugyi";
-    if (/(tax|ado|adó)/.test(f)) return "adobevallasok";
-    if (/(technical|muszaki|műszaki|spec)/.test(f)) return "muszaki";
-    if (/(internal|belso|belső|memo)/.test(f)) return "belso";
-    return "egyeb";
-  };
-
   const handleDelete = async (doc: DocumentRow) => {
     if (isStrict(doc.category)) {
+      void logAudit("delete_blocked", doc.id, { reason: "strict" });
       toast.error("Ez a dokumentum törvényi megőrzés alatt áll", {
         description: "Az ITM-besorolású iratokat nem lehet törölni.",
       });
@@ -115,24 +154,46 @@ function Dashboard() {
     }
     if (!confirm(`Biztosan törlöd? \n${doc.filename}`)) return;
     try {
-      const { error: stErr } = await supabase.storage.from("documents").remove([doc.storage_path]);
+      const { error: stErr } = await supabase.storage
+        .from("documents")
+        .remove([doc.storage_path]);
       if (stErr) throw stErr;
-      const { error: dbErr } = await supabase.from("documents").delete().eq("id", doc.id);
+      const { error: dbErr } = await supabase
+        .from("documents")
+        .delete()
+        .eq("id", doc.id);
       if (dbErr) throw dbErr;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      void logAudit("delete", doc.id, { filename: doc.filename });
       toast.success("Dokumentum törölve");
-    } catch (e: any) {
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
       console.error("Delete failed:", e);
-      toast.error("Törlés sikertelen", { description: e?.message ?? String(e) });
+      toast.error("Törlés sikertelen", { description: msg });
+    }
+  };
+
+  const askConfirmCategory = (
+    file: File,
+    suggested: string,
+    confidence: number,
+    reasoning?: string,
+  ): Promise<string | null> => {
+    return new Promise((resolve) => {
+      setConfirmCategory(suggested);
+      setPendingConfirm({ file, suggested, confidence, reasoning, resolve });
+    });
+  };
+
+  const resolveConfirm = (chosen: string | null) => {
+    if (pendingConfirm) {
+      pendingConfirm.resolve(chosen);
+      setPendingConfirm(null);
     }
   };
 
   const handleFiles = async (files: FileList | File[]) => {
     const selectedFiles = Array.from(files);
-    console.info(
-      "Upload selected files:",
-      selectedFiles.map((file) => file.name),
-    );
     if (selectedFiles.length === 0) {
       toast.info("Nem választottál ki fájlt");
       return;
@@ -140,66 +201,99 @@ function Dashboard() {
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     const user = userData?.user;
     if (userErr || !user) {
-      console.error("Upload blocked: no authenticated user", userErr);
       toast.error("Nincs bejelentkezett felhasználó");
       return;
     }
     setUploading(true);
     let ok = 0;
-    let failed = 0;
     try {
       for (const file of selectedFiles) {
         try {
-          const category = inferCategory(file.name);
+          const isPdf =
+            (file.type || "").includes("pdf") ||
+            file.name.toLowerCase().endsWith(".pdf");
+          const contentText = isPdf ? await extractPdfText(file) : "";
+
+          // AI categorization
+          let category = "egyeb";
+          let aiConfidence = 0;
+          try {
+            const result = await categorizeDocument({
+              data: {
+                filename: file.name,
+                mimeType: file.type || undefined,
+                sample: contentText.slice(0, 2000) || undefined,
+              },
+            });
+            category = result.category;
+            aiConfidence = result.confidence;
+            void logAudit("categorize", null, {
+              filename: file.name,
+              category,
+              confidence: aiConfidence,
+            });
+
+            if (aiConfidence < CONFIDENCE_THRESHOLD) {
+              const chosen = await askConfirmCategory(
+                file,
+                category,
+                aiConfidence,
+                result.reasoning,
+              );
+              if (chosen === null) {
+                toast.info(`Kihagyva: ${file.name}`);
+                continue;
+              }
+              category = chosen;
+            }
+          } catch (e) {
+            console.warn("AI categorize failed, falling back to 'egyeb'", e);
+          }
+
           const hash = await sha256Hex(file);
           const safeName = file.name.replace(/[^\w.-]+/g, "_");
           const path = `${user.id}/${Date.now()}-${hash.slice(0, 8)}-${safeName}`;
-          console.info("Uploading file to Supabase Storage:", {
-            bucket: "documents",
-            path,
-            size: file.size,
-            type: file.type || "application/octet-stream",
-          });
-          const { error: upErr } = await supabase.storage.from("documents").upload(path, file, {
-            upsert: false,
-            contentType: file.type || "application/octet-stream",
-          });
+          const { error: upErr } = await supabase.storage
+            .from("documents")
+            .upload(path, file, {
+              upsert: false,
+              contentType: file.type || "application/octet-stream",
+            });
           if (upErr) throw upErr;
           const itm_compliant = isStrict(category);
-          const documentInsert = {
-            user_id: user.id,
-            filename: file.name,
-            original_filename: file.name,
-            storage_path: path,
-            category,
-            itm_compliant,
-            size_bytes: file.size,
-            mime_type: file.type || null,
-            sha256: hash,
-          };
-          console.info("Document insert query:", {
-            table: "documents",
-            method: "insert",
-            payload: documentInsert,
-          });
-          const { error: insErr } = await supabase.from("documents").insert(documentInsert);
-          if (insErr) {
-            console.error("Document insert failed:", {
-              error: insErr,
-              payload: documentInsert,
-            });
-            throw insErr;
-          }
+          const { data: inserted, error: insErr } = await supabase
+            .from("documents")
+            .insert({
+              user_id: user.id,
+              filename: file.name,
+              original_filename: file.name,
+              storage_path: path,
+              category,
+              itm_compliant,
+              size_bytes: file.size,
+              mime_type: file.type || null,
+              sha256: hash,
+              content_text: contentText || null,
+              ai_confidence: aiConfidence,
+            })
+            .select()
+            .single();
+          if (insErr) throw insErr;
           ok++;
-          console.info("Upload completed:", file.name);
-        } catch (e: any) {
-          failed++;
+          if (inserted) {
+            void logAudit("upload", (inserted as DocumentRow).id, {
+              filename: file.name,
+              category,
+              confidence: aiConfidence,
+            });
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
           console.error("Upload failed:", file.name, e);
-          toast.error(`Hiba: ${file.name}`, { description: e?.message ?? String(e) });
+          toast.error(`Hiba: ${file.name}`, { description: msg });
         }
       }
       if (ok > 0) toast.success(`${ok} fájl feltöltve`);
-      if (failed === 0 && ok === 0) toast.info("Nem volt feltölthető fájl");
       await loadDocs();
     } finally {
       setUploading(false);
@@ -297,7 +391,7 @@ function Dashboard() {
           <div className="relative flex-1 max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Keresés dokumentumok között..."
+              placeholder="Keresés név vagy tartalom alapján..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-10 bg-background"
@@ -331,7 +425,10 @@ function Dashboard() {
             <h2 className="text-2xl font-bold tracking-tight">
               {activeCat ? getCategory(activeCat).label : "Összes dokumentum"}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">{filtered.length} dokumentum</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filtered.length} dokumentum
+              {search.trim() && ` — találat: "${search}"`}
+            </p>
           </div>
 
           {/* Dropzone */}
@@ -351,7 +448,7 @@ function Dashboard() {
             {uploading ? (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <p className="text-sm">Feltöltés folyamatban...</p>
+                <p className="text-sm">Feltöltés és AI kategorizálás folyamatban...</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
@@ -361,8 +458,8 @@ function Dashboard() {
                 <p className="text-sm font-medium">
                   Húzd ide a fájlokat vagy kattints a Feltöltés gombra
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  PDF, DOCX, XLSX, képek — automatikus kategorizálással
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" /> AI-vezérelt automatikus kategorizálás
                 </p>
               </div>
             )}
@@ -381,85 +478,148 @@ function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
-                const Icon = cat.icon;
                 const strict = cat.mode === "strict";
                 const deadline = getRetentionDeadline(doc.category, doc.created_at);
                 return (
-                  <Card
-                    key={doc.id}
-                    className={`p-4 hover:shadow-md transition-shadow group relative ${
-                      strict ? "border-brand/30" : ""
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0 relative">
-                        <Icon className="h-5 w-5 text-brand" />
+                  <DocumentHoverPreview key={doc.id} doc={doc}>
+                    <Card
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setPreviewDoc(doc)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") setPreviewDoc(doc);
+                      }}
+                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${
+                        strict ? "border-brand/30" : ""
+                      }`}
+                    >
+                      <div className="relative">
+                        <DocumentThumbnail
+                          path={doc.storage_path}
+                          mimeType={doc.mime_type}
+                          className="w-full h-36"
+                          alt={doc.filename}
+                        />
                         {strict && (
                           <span
-                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-brand text-brand-foreground flex items-center justify-center"
+                            className="absolute top-2 right-2 h-6 w-6 rounded-full bg-brand text-brand-foreground flex items-center justify-center shadow"
                             title="Törvényi megőrzés alatt"
                           >
-                            <Lock className="h-2.5 w-2.5" />
+                            <Lock className="h-3 w-3" />
                           </span>
                         )}
+                        {!strict && (
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(doc);
+                            }}
+                            title="Törlés"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{doc.filename}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Feltöltve:{" "}
-                          {new Date(doc.created_at).toLocaleDateString("hu-HU", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                      <div className="p-3 space-y-2">
+                        <p className="font-medium text-sm truncate" title={doc.filename}>
+                          {doc.filename}
                         </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          <Badge variant="secondary" className="text-[10px] font-normal">
+                            {cat.label}
+                          </Badge>
+                          {strict ? (
+                            <Badge className="text-[10px] font-normal bg-brand text-brand-foreground hover:bg-brand/90 gap-1">
+                              <ShieldCheck className="h-3 w-3" /> ITM zárolt
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-normal text-muted-foreground"
+                            >
+                              Ajánlott
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <CalendarClock className="h-3 w-3" />
+                          {deadline ? (
+                            <span>
+                              {strict ? "Megőrzés:" : "Ajánlott:"} {formatDeadline(deadline)}
+                            </span>
+                          ) : (
+                            <span>{cat.retentionLabel}</span>
+                          )}
+                        </div>
                       </div>
-                      {!strict && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDelete(doc)}
-                          title="Törlés"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      <Badge variant="secondary" className="text-[10px] font-normal">
-                        {cat.label}
-                      </Badge>
-                      {strict ? (
-                        <Badge className="text-[10px] font-normal bg-brand text-brand-foreground hover:bg-brand/90 gap-1">
-                          <ShieldCheck className="h-3 w-3" /> ITM zárolt
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] font-normal text-muted-foreground"
-                        >
-                          Ajánlott tárolás
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <CalendarClock className="h-3 w-3" />
-                      {deadline ? (
-                        <span>
-                          {strict ? "Megőrzés:" : "Ajánlott:"} {formatDeadline(deadline)}
-                        </span>
-                      ) : (
-                        <span>{cat.retentionLabel}</span>
-                      )}
-                    </div>
-                  </Card>
+                    </Card>
+                  </DocumentHoverPreview>
                 );
               })}
             </div>
           )}
         </div>
       </main>
+
+      <DocumentPreviewModal
+        doc={previewDoc}
+        open={!!previewDoc}
+        onOpenChange={(v) => !v && setPreviewDoc(null)}
+      />
+
+      <AlertDialog
+        open={!!pendingConfirm}
+        onOpenChange={(v) => !v && resolveConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-brand" />
+              Kategória megerősítése
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Az AI nem teljesen biztos a fájl kategóriájában (
+                  <strong>{Math.round((pendingConfirm?.confidence ?? 0) * 100)}%</strong>
+                  ).
+                </p>
+                <p className="text-xs truncate">
+                  Fájl: <span className="font-mono">{pendingConfirm?.file.name}</span>
+                </p>
+                {pendingConfirm?.reasoning && (
+                  <p className="text-xs italic">„{pendingConfirm.reasoning}"</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Select value={confirmCategory} onValueChange={setConfirmCategory}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => resolveConfirm(null)}>
+              Mégse
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => resolveConfirm(confirmCategory)}>
+              Megerősítés
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

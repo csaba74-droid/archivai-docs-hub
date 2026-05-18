@@ -22,6 +22,8 @@ export type DocumentRow = {
   size_bytes: number | null;
   mime_type: string | null;
   sha256: string | null;
+  content_text: string | null;
+  ai_confidence: number | null;
   created_at: string;
 };
 
@@ -29,4 +31,13 @@ export type ProfileRow = {
   id: string;
   full_name: string | null;
   company: string | null;
+};
+
+export type AuditLogRow = {
+  id: string;
+  user_id: string;
+  document_id: string | null;
+  action: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
 };
