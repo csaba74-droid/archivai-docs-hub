@@ -58,10 +58,41 @@ create table if not exists public.documents (
 
 -- If table already exists without sha256, add it:
 alter table public.documents add column if not exists sha256 text;
+alter table public.documents add column if not exists original_filename text;
+alter table public.documents add column if not exists content_text text;
+alter table public.documents add column if not exists ai_confidence numeric;
 
 create index if not exists documents_user_id_idx on public.documents(user_id);
 create index if not exists documents_category_idx on public.documents(category);
 create index if not exists documents_sha256_idx on public.documents(sha256);
+create index if not exists documents_fts_idx on public.documents
+  using gin (to_tsvector('simple', coalesce(content_text, '') || ' ' || coalesce(filename, '')));
+
+-- ============ AUDIT LOG ============
+create table if not exists public.audit_log (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  document_id uuid references public.documents(id) on delete set null,
+  action text not null,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists audit_log_user_id_idx on public.audit_log(user_id);
+create index if not exists audit_log_document_id_idx on public.audit_log(document_id);
+create index if not exists audit_log_created_at_idx on public.audit_log(created_at desc);
+
+alter table public.audit_log enable row level security;
+
+drop policy if exists "Users can view own audit log" on public.audit_log;
+create policy "Users can view own audit log"
+  on public.audit_log for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own audit log" on public.audit_log;
+create policy "Users can insert own audit log"
+  on public.audit_log for insert to authenticated
+  with check (auth.uid() = user_id);
 
 alter table public.documents enable row level security;
 
