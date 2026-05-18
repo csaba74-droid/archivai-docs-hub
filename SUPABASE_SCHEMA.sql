@@ -52,11 +52,16 @@ create table if not exists public.documents (
   itm_compliant boolean not null default false,
   size_bytes bigint,
   mime_type text,
+  sha256 text,
   created_at timestamptz not null default now()
 );
 
+-- If table already exists without sha256, add it:
+alter table public.documents add column if not exists sha256 text;
+
 create index if not exists documents_user_id_idx on public.documents(user_id);
 create index if not exists documents_category_idx on public.documents(category);
+create index if not exists documents_sha256_idx on public.documents(sha256);
 
 alter table public.documents enable row level security;
 
