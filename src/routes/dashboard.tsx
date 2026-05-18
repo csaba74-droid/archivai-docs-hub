@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { CATEGORIES, getCategory } from "@/lib/categories";
@@ -37,6 +37,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -51,7 +52,14 @@ function Dashboard() {
       .from("documents")
       .select("*")
       .order("created_at", { ascending: false });
-    if (!error && data) setDocs(data as DocumentRow[]);
+    if (error) {
+      console.error("Document list failed:", error);
+      toast.error("A dokumentumok betöltése nem sikerült", {
+        description: error.message,
+      });
+    } else if (data) {
+      setDocs(data as DocumentRow[]);
+    }
     setLoading(false);
   }, []);
 
@@ -90,9 +98,16 @@ function Dashboard() {
   };
 
   const handleFiles = async (files: FileList | File[]) => {
+    const selectedFiles = Array.from(files);
+    console.info("Upload selected files:", selectedFiles.map((file) => file.name));
+    if (selectedFiles.length === 0) {
+      toast.info("Nem választottál ki fájlt");
+      return;
+    }
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     const user = userData?.user;
     if (userErr || !user) {
+      console.error("Upload blocked: no authenticated user", userErr);
       toast.error("Nincs bejelentkezett felhasználó");
       return;
     }
@@ -100,12 +115,18 @@ function Dashboard() {
     let ok = 0;
     let failed = 0;
     try {
-      for (const file of Array.from(files)) {
+      for (const file of selectedFiles) {
         try {
           const category = inferCategory(file.name);
           const hash = await sha256Hex(file);
           const safeName = file.name.replace(/[^\w.\-]+/g, "_");
           const path = `${user.id}/${Date.now()}-${hash.slice(0, 8)}-${safeName}`;
+          console.info("Uploading file to Supabase Storage:", {
+            bucket: "documents",
+            path,
+            size: file.size,
+            type: file.type || "application/octet-stream",
+          });
           const { error: upErr } = await supabase.storage
             .from("documents")
             .upload(path, file, {
@@ -115,6 +136,7 @@ function Dashboard() {
           if (upErr) throw upErr;
           const itm_compliant =
             file.type === "application/pdf" || file.size < 25 * 1024 * 1024;
+          console.info("Saving document metadata:", { filename: file.name, path, hash });
           const { error: insErr } = await supabase.from("documents").insert({
             user_id: user.id,
             filename: file.name,
@@ -127,6 +149,7 @@ function Dashboard() {
           });
           if (insErr) throw insErr;
           ok++;
+          console.info("Upload completed:", file.name);
         } catch (e: any) {
           failed++;
           console.error("Upload failed:", file.name, e);
@@ -233,15 +256,21 @@ function Dashboard() {
           </div>
           <label>
             <input
+              ref={fileInputRef}
               type="file"
               multiple
-              hidden
-              onChange={(e) => e.target.files && handleFiles(e.target.files)}
+              className="sr-only"
+              onChange={(e) => {
+                if (e.target.files) handleFiles(e.target.files);
+                e.currentTarget.value = "";
+              }}
             />
-            <Button asChild>
-              <span className="cursor-pointer">
+            <Button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
                 <Upload className="h-4 w-4 mr-2" /> Feltöltés
-              </span>
             </Button>
           </label>
         </header>
