@@ -170,8 +170,7 @@ function Dashboard() {
               contentType: file.type || "application/octet-stream",
             });
           if (upErr) throw upErr;
-          const itm_compliant =
-            file.type === "application/pdf" || file.size < 25 * 1024 * 1024;
+          const itm_compliant = isStrict(category);
           console.info("Saving document metadata:", { filename: file.name, path, hash });
           const { error: insErr } = await supabase.from("documents").insert({
             user_id: user.id,
