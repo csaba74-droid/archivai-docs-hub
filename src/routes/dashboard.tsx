@@ -383,20 +383,31 @@ function Dashboard() {
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
                 const Icon = cat.icon;
+                const strict = cat.mode === "strict";
+                const deadline = getRetentionDeadline(doc.category, doc.created_at);
                 return (
                   <Card
                     key={doc.id}
-                    className="p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                    className={`p-4 hover:shadow-md transition-shadow group relative ${
+                      strict ? "border-brand/30" : ""
+                    }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
+                      <div className="h-10 w-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0 relative">
                         <Icon className="h-5 w-5 text-brand" />
+                        {strict && (
+                          <span
+                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-brand text-brand-foreground flex items-center justify-center"
+                            title="Törvényi megőrzés alatt"
+                          >
+                            <Lock className="h-2.5 w-2.5" />
+                          </span>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate group-hover:text-brand transition-colors">
-                          {doc.filename}
-                        </p>
+                        <p className="font-medium text-sm truncate">{doc.filename}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
+                          Feltöltve:{" "}
                           {new Date(doc.created_at).toLocaleDateString("hu-HU", {
                             year: "numeric",
                             month: "short",
@@ -404,22 +415,43 @@ function Dashboard() {
                           })}
                         </p>
                       </div>
+                      {!strict && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDelete(doc)}
+                          title="Törlés"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       <Badge variant="secondary" className="text-[10px] font-normal">
                         {cat.label}
                       </Badge>
-                      {doc.itm_compliant ? (
+                      {strict ? (
                         <Badge className="text-[10px] font-normal bg-brand text-brand-foreground hover:bg-brand/90 gap-1">
-                          <ShieldCheck className="h-3 w-3" /> ITM
+                          <ShieldCheck className="h-3 w-3" /> ITM zárolt
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="text-[10px] font-normal gap-1 text-muted-foreground"
+                          className="text-[10px] font-normal text-muted-foreground"
                         >
-                          <ShieldAlert className="h-3 w-3" /> Nem ITM
+                          Ajánlott tárolás
                         </Badge>
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <CalendarClock className="h-3 w-3" />
+                      {deadline ? (
+                        <span>
+                          {strict ? "Megőrzés:" : "Ajánlott:"} {formatDeadline(deadline)}
+                        </span>
+                      ) : (
+                        <span>{cat.retentionLabel}</span>
                       )}
                     </div>
                   </Card>
