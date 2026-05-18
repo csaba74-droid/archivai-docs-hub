@@ -81,8 +81,7 @@ function Dashboard() {
   const filtered = useMemo(() => {
     return docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
-      if (search && !d.filename.toLowerCase().includes(search.toLowerCase()))
-        return false;
+      if (search && !d.filename.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
   }, [docs, search, activeCat]);
@@ -116,14 +115,9 @@ function Dashboard() {
     }
     if (!confirm(`Biztosan törlöd? \n${doc.filename}`)) return;
     try {
-      const { error: stErr } = await supabase.storage
-        .from("documents")
-        .remove([doc.storage_path]);
+      const { error: stErr } = await supabase.storage.from("documents").remove([doc.storage_path]);
       if (stErr) throw stErr;
-      const { error: dbErr } = await supabase
-        .from("documents")
-        .delete()
-        .eq("id", doc.id);
+      const { error: dbErr } = await supabase.from("documents").delete().eq("id", doc.id);
       if (dbErr) throw dbErr;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       toast.success("Dokumentum törölve");
@@ -135,7 +129,10 @@ function Dashboard() {
 
   const handleFiles = async (files: FileList | File[]) => {
     const selectedFiles = Array.from(files);
-    console.info("Upload selected files:", selectedFiles.map((file) => file.name));
+    console.info(
+      "Upload selected files:",
+      selectedFiles.map((file) => file.name),
+    );
     if (selectedFiles.length === 0) {
       toast.info("Nem választottál ki fájlt");
       return;
@@ -163,12 +160,10 @@ function Dashboard() {
             size: file.size,
             type: file.type || "application/octet-stream",
           });
-          const { error: upErr } = await supabase.storage
-            .from("documents")
-            .upload(path, file, {
-              upsert: false,
-              contentType: file.type || "application/octet-stream",
-            });
+          const { error: upErr } = await supabase.storage.from("documents").upload(path, file, {
+            upsert: false,
+            contentType: file.type || "application/octet-stream",
+          });
           if (upErr) throw upErr;
           const itm_compliant = isStrict(category);
           const documentInsert = {
@@ -187,9 +182,7 @@ function Dashboard() {
             method: "insert",
             payload: documentInsert,
           });
-          const { error: insErr } = await supabase
-            .from("documents")
-            .insert(documentInsert);
+          const { error: insErr } = await supabase.from("documents").insert(documentInsert);
           if (insErr) {
             console.error("Document insert failed:", {
               error: insErr,
@@ -242,9 +235,7 @@ function Dashboard() {
           <button
             onClick={() => setActiveCat(null)}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeCat === null
-                ? "bg-brand-soft text-brand"
-                : "text-foreground hover:bg-muted"
+              activeCat === null ? "bg-brand-soft text-brand" : "text-foreground hover:bg-muted"
             }`}
           >
             <span className="flex items-center gap-2">
@@ -284,9 +275,7 @@ function Dashboard() {
                         <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
                       )}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {counts[cat.id] ?? 0}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{counts[cat.id] ?? 0}</span>
                   </button>
                 );
               })}
@@ -295,9 +284,7 @@ function Dashboard() {
         </nav>
 
         <div className="p-3 border-t">
-          <div className="px-2 pb-2 text-xs text-muted-foreground truncate">
-            {userEmail}
-          </div>
+          <div className="px-2 pb-2 text-xs text-muted-foreground truncate">{userEmail}</div>
           <Button variant="outline" size="sm" onClick={signOut} className="w-full">
             <LogOut className="h-3.5 w-3.5 mr-2" /> Kijelentkezés
           </Button>
@@ -334,7 +321,7 @@ function Dashboard() {
               disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
             >
-                <Upload className="h-4 w-4 mr-2" /> Feltöltés
+              <Upload className="h-4 w-4 mr-2" /> Feltöltés
             </Button>
           </div>
         </header>
@@ -344,9 +331,7 @@ function Dashboard() {
             <h2 className="text-2xl font-bold tracking-tight">
               {activeCat ? getCategory(activeCat).label : "Összes dokumentum"}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {filtered.length} dokumentum
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{filtered.length} dokumentum</p>
           </div>
 
           {/* Dropzone */}
