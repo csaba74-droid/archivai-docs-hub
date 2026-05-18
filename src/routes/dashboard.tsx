@@ -2,7 +2,13 @@ import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
-import { CATEGORIES, getCategory } from "@/lib/categories";
+import {
+  CATEGORIES,
+  getCategory,
+  getRetentionDeadline,
+  formatDeadline,
+  isStrict,
+} from "@/lib/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +19,11 @@ import {
   Upload,
   LogOut,
   ShieldCheck,
-  ShieldAlert,
+  Lock,
   FileIcon,
   Loader2,
+  Trash2,
+  CalendarClock,
 } from "lucide-react";
 
 async function sha256Hex(file: File): Promise<string> {
@@ -87,6 +95,8 @@ function Dashboard() {
 
   const inferCategory = (filename: string): string => {
     const f = filename.toLowerCase();
+    if (/(utility|kozuzem|közüzem|villany|gaz|gáz|viz|víz)/.test(f)) return "kozuzemi";
+    if (/(bank|kivonat|statement)/.test(f)) return "banki";
     if (/(invoice|szamla|számla)/.test(f)) return "szamlak";
     if (/(contract|szerzodes|szerződés)/.test(f)) return "szerzodesek";
     if (/(shipping|szallito|szállító)/.test(f)) return "szallitolevek";
@@ -95,6 +105,32 @@ function Dashboard() {
     if (/(technical|muszaki|műszaki|spec)/.test(f)) return "muszaki";
     if (/(internal|belso|belső|memo)/.test(f)) return "belso";
     return "egyeb";
+  };
+
+  const handleDelete = async (doc: DocumentRow) => {
+    if (isStrict(doc.category)) {
+      toast.error("Ez a dokumentum törvényi megőrzés alatt áll", {
+        description: "Az ITM-besorolású iratokat nem lehet törölni.",
+      });
+      return;
+    }
+    if (!confirm(`Biztosan törlöd? \n${doc.filename}`)) return;
+    try {
+      const { error: stErr } = await supabase.storage
+        .from("documents")
+        .remove([doc.storage_path]);
+      if (stErr) throw stErr;
+      const { error: dbErr } = await supabase
+        .from("documents")
+        .delete()
+        .eq("id", doc.id);
+      if (dbErr) throw dbErr;
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      toast.success("Dokumentum törölve");
+    } catch (e: any) {
+      console.error("Delete failed:", e);
+      toast.error("Törlés sikertelen", { description: e?.message ?? String(e) });
+    }
   };
 
   const handleFiles = async (files: FileList | File[]) => {
@@ -134,8 +170,7 @@ function Dashboard() {
               contentType: file.type || "application/octet-stream",
             });
           if (upErr) throw upErr;
-          const itm_compliant =
-            file.type === "application/pdf" || file.size < 25 * 1024 * 1024;
+          const itm_compliant = isStrict(category);
           console.info("Saving document metadata:", { filename: file.name, path, hash });
           const { error: insErr } = await supabase.from("documents").insert({
             user_id: user.id,
@@ -204,32 +239,45 @@ function Dashboard() {
             <span className="text-xs text-muted-foreground">{docs.length}</span>
           </button>
 
-          <div className="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Kategóriák
-          </div>
-
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const active = activeCat === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
-                  active
-                    ? "bg-brand-soft text-brand font-medium"
-                    : "text-foreground hover:bg-muted"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <Icon className="h-4 w-4" /> {cat.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {counts[cat.id] ?? 0}
-                </span>
-              </button>
-            );
-          })}
+          {(["strict", "normal"] as const).map((mode) => (
+            <div key={mode}>
+              <div className="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                {mode === "strict" ? (
+                  <>
+                    <Lock className="h-3 w-3" /> ITM kötelező
+                  </>
+                ) : (
+                  "Egyéb tárolás"
+                )}
+              </div>
+              {CATEGORIES.filter((c) => c.mode === mode).map((cat) => {
+                const Icon = cat.icon;
+                const active = activeCat === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCat(cat.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                      active
+                        ? "bg-brand-soft text-brand font-medium"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{cat.label}</span>
+                      {cat.mode === "strict" && (
+                        <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
+                      )}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {counts[cat.id] ?? 0}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="p-3 border-t">
@@ -335,20 +383,31 @@ function Dashboard() {
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
                 const Icon = cat.icon;
+                const strict = cat.mode === "strict";
+                const deadline = getRetentionDeadline(doc.category, doc.created_at);
                 return (
                   <Card
                     key={doc.id}
-                    className="p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                    className={`p-4 hover:shadow-md transition-shadow group relative ${
+                      strict ? "border-brand/30" : ""
+                    }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
+                      <div className="h-10 w-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0 relative">
                         <Icon className="h-5 w-5 text-brand" />
+                        {strict && (
+                          <span
+                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-brand text-brand-foreground flex items-center justify-center"
+                            title="Törvényi megőrzés alatt"
+                          >
+                            <Lock className="h-2.5 w-2.5" />
+                          </span>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate group-hover:text-brand transition-colors">
-                          {doc.filename}
-                        </p>
+                        <p className="font-medium text-sm truncate">{doc.filename}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
+                          Feltöltve:{" "}
                           {new Date(doc.created_at).toLocaleDateString("hu-HU", {
                             year: "numeric",
                             month: "short",
@@ -356,22 +415,43 @@ function Dashboard() {
                           })}
                         </p>
                       </div>
+                      {!strict && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDelete(doc)}
+                          title="Törlés"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       <Badge variant="secondary" className="text-[10px] font-normal">
                         {cat.label}
                       </Badge>
-                      {doc.itm_compliant ? (
+                      {strict ? (
                         <Badge className="text-[10px] font-normal bg-brand text-brand-foreground hover:bg-brand/90 gap-1">
-                          <ShieldCheck className="h-3 w-3" /> ITM
+                          <ShieldCheck className="h-3 w-3" /> ITM zárolt
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="text-[10px] font-normal gap-1 text-muted-foreground"
+                          className="text-[10px] font-normal text-muted-foreground"
                         >
-                          <ShieldAlert className="h-3 w-3" /> Nem ITM
+                          Ajánlott tárolás
                         </Badge>
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <CalendarClock className="h-3 w-3" />
+                      {deadline ? (
+                        <span>
+                          {strict ? "Megőrzés:" : "Ajánlott:"} {formatDeadline(deadline)}
+                        </span>
+                      ) : (
+                        <span>{cat.retentionLabel}</span>
                       )}
                     </div>
                   </Card>
