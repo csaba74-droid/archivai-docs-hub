@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { CATEGORIES, getCategory } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,14 @@ import {
   FileIcon,
   Loader2,
 } from "lucide-react";
+
+async function sha256Hex(file: File): Promise<string> {
+  const buf = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -81,33 +90,51 @@ function Dashboard() {
   };
 
   const handleFiles = async (files: FileList | File[]) => {
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    if (!user) return;
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (userErr || !user) {
+      toast.error("Nincs bejelentkezett felhasználó");
+      return;
+    }
     setUploading(true);
+    let ok = 0;
+    let failed = 0;
     try {
       for (const file of Array.from(files)) {
-        const category = inferCategory(file.name);
-        const path = `${user.id}/${Date.now()}-${file.name}`;
-        const { error: upErr } = await supabase.storage
-          .from("documents")
-          .upload(path, file, { upsert: false });
-        if (upErr) {
-          console.error(upErr);
-          continue;
+        try {
+          const category = inferCategory(file.name);
+          const hash = await sha256Hex(file);
+          const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${user.id}/${Date.now()}-${hash.slice(0, 8)}-${safeName}`;
+          const { error: upErr } = await supabase.storage
+            .from("documents")
+            .upload(path, file, {
+              upsert: false,
+              contentType: file.type || "application/octet-stream",
+            });
+          if (upErr) throw upErr;
+          const itm_compliant =
+            file.type === "application/pdf" || file.size < 25 * 1024 * 1024;
+          const { error: insErr } = await supabase.from("documents").insert({
+            user_id: user.id,
+            filename: file.name,
+            storage_path: path,
+            category,
+            itm_compliant,
+            size_bytes: file.size,
+            mime_type: file.type || null,
+            sha256: hash,
+          });
+          if (insErr) throw insErr;
+          ok++;
+        } catch (e: any) {
+          failed++;
+          console.error("Upload failed:", file.name, e);
+          toast.error(`Hiba: ${file.name}`, { description: e?.message ?? String(e) });
         }
-        const itm_compliant =
-          file.type === "application/pdf" || file.size < 25 * 1024 * 1024;
-        await supabase.from("documents").insert({
-          user_id: user.id,
-          filename: file.name,
-          storage_path: path,
-          category,
-          itm_compliant,
-          size_bytes: file.size,
-          mime_type: file.type || null,
-        });
       }
+      if (ok > 0) toast.success(`${ok} fájl feltöltve`);
+      if (failed === 0 && ok === 0) toast.info("Nem volt feltölthető fájl");
       await loadDocs();
     } finally {
       setUploading(false);
