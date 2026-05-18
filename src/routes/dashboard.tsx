@@ -95,6 +95,8 @@ function Dashboard() {
 
   const inferCategory = (filename: string): string => {
     const f = filename.toLowerCase();
+    if (/(utility|kozuzem|közüzem|villany|gaz|gáz|viz|víz)/.test(f)) return "kozuzemi";
+    if (/(bank|kivonat|statement)/.test(f)) return "banki";
     if (/(invoice|szamla|számla)/.test(f)) return "szamlak";
     if (/(contract|szerzodes|szerződés)/.test(f)) return "szerzodesek";
     if (/(shipping|szallito|szállító)/.test(f)) return "szallitolevek";
@@ -103,6 +105,32 @@ function Dashboard() {
     if (/(technical|muszaki|műszaki|spec)/.test(f)) return "muszaki";
     if (/(internal|belso|belső|memo)/.test(f)) return "belso";
     return "egyeb";
+  };
+
+  const handleDelete = async (doc: DocumentRow) => {
+    if (isStrict(doc.category)) {
+      toast.error("Ez a dokumentum törvényi megőrzés alatt áll", {
+        description: "Az ITM-besorolású iratokat nem lehet törölni.",
+      });
+      return;
+    }
+    if (!confirm(`Biztosan törlöd? \n${doc.filename}`)) return;
+    try {
+      const { error: stErr } = await supabase.storage
+        .from("documents")
+        .remove([doc.storage_path]);
+      if (stErr) throw stErr;
+      const { error: dbErr } = await supabase
+        .from("documents")
+        .delete()
+        .eq("id", doc.id);
+      if (dbErr) throw dbErr;
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      toast.success("Dokumentum törölve");
+    } catch (e: any) {
+      console.error("Delete failed:", e);
+      toast.error("Törlés sikertelen", { description: e?.message ?? String(e) });
+    }
   };
 
   const handleFiles = async (files: FileList | File[]) => {
