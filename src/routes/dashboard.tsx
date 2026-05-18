@@ -239,32 +239,45 @@ function Dashboard() {
             <span className="text-xs text-muted-foreground">{docs.length}</span>
           </button>
 
-          <div className="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Kategóriák
-          </div>
-
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const active = activeCat === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
-                  active
-                    ? "bg-brand-soft text-brand font-medium"
-                    : "text-foreground hover:bg-muted"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <Icon className="h-4 w-4" /> {cat.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {counts[cat.id] ?? 0}
-                </span>
-              </button>
-            );
-          })}
+          {(["strict", "normal"] as const).map((mode) => (
+            <div key={mode}>
+              <div className="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                {mode === "strict" ? (
+                  <>
+                    <Lock className="h-3 w-3" /> ITM kötelező
+                  </>
+                ) : (
+                  "Egyéb tárolás"
+                )}
+              </div>
+              {CATEGORIES.filter((c) => c.mode === mode).map((cat) => {
+                const Icon = cat.icon;
+                const active = activeCat === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCat(cat.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                      active
+                        ? "bg-brand-soft text-brand font-medium"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{cat.label}</span>
+                      {cat.mode === "strict" && (
+                        <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
+                      )}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {counts[cat.id] ?? 0}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="p-3 border-t">
