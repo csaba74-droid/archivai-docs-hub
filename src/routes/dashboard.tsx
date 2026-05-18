@@ -175,6 +175,7 @@ function Dashboard() {
           const { error: insErr } = await supabase.from("documents").insert({
             user_id: user.id,
             filename: file.name,
+            original_filename: file.name,
             storage_path: path,
             category,
             itm_compliant,

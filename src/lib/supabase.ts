@@ -15,6 +15,7 @@ export type DocumentRow = {
   id: string;
   user_id: string;
   filename: string;
+  original_filename: string;
   storage_path: string;
   category: string;
   itm_compliant: boolean;
