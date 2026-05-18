@@ -171,8 +171,7 @@ function Dashboard() {
             });
           if (upErr) throw upErr;
           const itm_compliant = isStrict(category);
-          console.info("Saving document metadata:", { filename: file.name, path, hash });
-          const { error: insErr } = await supabase.from("documents").insert({
+          const documentInsert = {
             user_id: user.id,
             filename: file.name,
             original_filename: file.name,
@@ -182,8 +181,17 @@ function Dashboard() {
             size_bytes: file.size,
             mime_type: file.type || null,
             sha256: hash,
+          };
+          console.info("Document insert query:", {
+            table: "documents",
+            method: "insert",
+            payload: documentInsert,
           });
-          if (insErr) throw insErr;
+          const { error: insErr } = await supabase.from("documents").insert(documentInsert);
+          if (insErr) {
+            console.error("Document insert failed:", { error: insErr, payload: documentInsert });
+            throw insErr;
+          }
           ok++;
           console.info("Upload completed:", file.name);
         } catch (e: any) {
