@@ -254,12 +254,14 @@ function Dashboard() {
               className="pl-9 h-10 bg-background"
             />
           </div>
-          <label>
+          <div>
             <input
               ref={fileInputRef}
               type="file"
               multiple
               className="sr-only"
+              aria-hidden="true"
+              tabIndex={-1}
               onChange={(e) => {
                 if (e.target.files) handleFiles(e.target.files);
                 e.currentTarget.value = "";
@@ -272,7 +274,7 @@ function Dashboard() {
             >
                 <Upload className="h-4 w-4 mr-2" /> Feltöltés
             </Button>
-          </label>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
