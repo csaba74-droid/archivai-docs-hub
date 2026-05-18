@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { CATEGORIES, getCategory } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,14 @@ import {
   FileIcon,
   Loader2,
 } from "lucide-react";
+
+async function sha256Hex(file: File): Promise<string> {
+  const buf = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
