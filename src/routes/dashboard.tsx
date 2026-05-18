@@ -155,7 +155,7 @@ function Dashboard() {
         try {
           const category = inferCategory(file.name);
           const hash = await sha256Hex(file);
-          const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+          const safeName = file.name.replace(/[^\w.-]+/g, "_");
           const path = `${user.id}/${Date.now()}-${hash.slice(0, 8)}-${safeName}`;
           console.info("Uploading file to Supabase Storage:", {
             bucket: "documents",
@@ -187,9 +187,14 @@ function Dashboard() {
             method: "insert",
             payload: documentInsert,
           });
-          const { error: insErr } = await supabase.from("documents").insert(documentInsert);
+          const { error: insErr } = await supabase
+            .from("documents")
+            .insert(documentInsert);
           if (insErr) {
-            console.error("Document insert failed:", { error: insErr, payload: documentInsert });
+            console.error("Document insert failed:", {
+              error: insErr,
+              payload: documentInsert,
+            });
             throw insErr;
           }
           ok++;
