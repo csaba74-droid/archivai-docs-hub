@@ -2,7 +2,13 @@ import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
-import { CATEGORIES, getCategory } from "@/lib/categories";
+import {
+  CATEGORIES,
+  getCategory,
+  getRetentionDeadline,
+  formatDeadline,
+  isStrict,
+} from "@/lib/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +19,11 @@ import {
   Upload,
   LogOut,
   ShieldCheck,
-  ShieldAlert,
+  Lock,
   FileIcon,
   Loader2,
+  Trash2,
+  CalendarClock,
 } from "lucide-react";
 
 async function sha256Hex(file: File): Promise<string> {
