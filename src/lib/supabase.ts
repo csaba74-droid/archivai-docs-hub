@@ -20,6 +20,7 @@ export type DocumentRow = {
   itm_compliant: boolean;
   size_bytes: number | null;
   mime_type: string | null;
+  sha256: string | null;
   created_at: string;
 };
 
