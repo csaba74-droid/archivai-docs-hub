@@ -1,6 +1,6 @@
 // PDF utilities using pdfjs-dist (browser-only).
 import * as pdfjsLib from "pdfjs-dist";
-// @ts-expect-error - vite ?url import
+
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 let configured = false;
