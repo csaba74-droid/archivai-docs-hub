@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { CATEGORIES, getCategory } from "@/lib/categories";
