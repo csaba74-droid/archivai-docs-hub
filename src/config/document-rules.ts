@@ -1,6 +1,7 @@
 // SINGLE SOURCE OF TRUTH for document categorization rules.
 // DO NOT auto-modify or regenerate this file. Add new rules HERE only.
 // Runs client-side BEFORE any API call.
+// build-bump: 2026-05-19 force republish to ship 'szerz ' keyword + subscription fix
 
 export const FILENAME_RULES: { keywords: string[]; category: string; itm: boolean; retention_years: number | null }[] = [
   // NOTE: szerződések MUST be checked before számlák, because 'sz.' (számla)
