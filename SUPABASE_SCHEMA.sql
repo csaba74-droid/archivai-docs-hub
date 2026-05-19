@@ -56,17 +56,40 @@ create table if not exists public.documents (
   created_at timestamptz not null default now()
 );
 
--- If table already exists without sha256, add it:
+-- Add columns if missing
 alter table public.documents add column if not exists sha256 text;
 alter table public.documents add column if not exists original_filename text;
 alter table public.documents add column if not exists content_text text;
 alter table public.documents add column if not exists ai_confidence numeric;
+alter table public.documents add column if not exists document_date date;
 
 create index if not exists documents_user_id_idx on public.documents(user_id);
 create index if not exists documents_category_idx on public.documents(category);
 create index if not exists documents_sha256_idx on public.documents(sha256);
 create index if not exists documents_fts_idx on public.documents
   using gin (to_tsvector('simple', coalesce(content_text, '') || ' ' || coalesce(filename, '')));
+
+alter table public.documents enable row level security;
+
+drop policy if exists "Users can view own documents" on public.documents;
+create policy "Users can view own documents"
+  on public.documents for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own documents" on public.documents;
+create policy "Users can insert own documents"
+  on public.documents for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own documents" on public.documents;
+create policy "Users can update own documents"
+  on public.documents for update to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own documents" on public.documents;
+create policy "Users can delete own documents"
+  on public.documents for delete to authenticated
+  using (auth.uid() = user_id);
 
 -- ============ AUDIT LOG ============
 create table if not exists public.audit_log (
@@ -94,37 +117,102 @@ create policy "Users can insert own audit log"
   on public.audit_log for insert to authenticated
   with check (auth.uid() = user_id);
 
-alter table public.documents enable row level security;
+-- ============ CUSTOM CATEGORIES ============
+create table if not exists public.custom_categories (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  color text not null default '#64748b',
+  mode text not null check (mode in ('strict', 'normal')),
+  retention_years int, -- null = no limit / indefinite
+  created_at timestamptz not null default now(),
+  unique (user_id, name)
+);
 
-create policy "Users can view own documents"
-  on public.documents for select to authenticated
+create index if not exists custom_categories_user_id_idx on public.custom_categories(user_id);
+
+alter table public.custom_categories enable row level security;
+
+drop policy if exists "Users select own custom categories" on public.custom_categories;
+create policy "Users select own custom categories"
+  on public.custom_categories for select to authenticated
   using (auth.uid() = user_id);
 
-create policy "Users can insert own documents"
-  on public.documents for insert to authenticated
+drop policy if exists "Users insert own custom categories" on public.custom_categories;
+create policy "Users insert own custom categories"
+  on public.custom_categories for insert to authenticated
   with check (auth.uid() = user_id);
 
-create policy "Users can update own documents"
-  on public.documents for update to authenticated
+drop policy if exists "Users update own custom categories" on public.custom_categories;
+create policy "Users update own custom categories"
+  on public.custom_categories for update to authenticated
   using (auth.uid() = user_id);
 
-create policy "Users can delete own documents"
-  on public.documents for delete to authenticated
+drop policy if exists "Users delete own custom categories" on public.custom_categories;
+create policy "Users delete own custom categories"
+  on public.custom_categories for delete to authenticated
   using (auth.uid() = user_id);
+
+-- ============ SUBSCRIPTIONS ============
+create table if not exists public.subscriptions (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  plan text not null default 'alap' check (plan in ('alap', 'pro', 'vallalati')),
+  status text not null default 'active' check (status in ('active', 'past_due', 'canceled', 'inactive')),
+  current_period_end timestamptz,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.subscriptions enable row level security;
+
+drop policy if exists "Users view own subscription" on public.subscriptions;
+create policy "Users view own subscription"
+  on public.subscriptions for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own subscription" on public.subscriptions;
+create policy "Users insert own subscription"
+  on public.subscriptions for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own subscription" on public.subscriptions;
+create policy "Users update own subscription"
+  on public.subscriptions for update to authenticated
+  using (auth.uid() = user_id);
+
+-- Auto-create active 'alap' subscription on signup
+create or replace function public.handle_new_subscription()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.subscriptions (user_id, plan, status)
+  values (new.id, 'alap', 'active')
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_subscription on auth.users;
+create trigger on_auth_user_subscription
+  after insert on auth.users
+  for each row execute function public.handle_new_subscription();
 
 -- ============ STORAGE BUCKET ============
 insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)
 on conflict (id) do nothing;
 
+drop policy if exists "Users can upload own documents" on storage.objects;
 create policy "Users can upload own documents"
   on storage.objects for insert to authenticated
   with check (bucket_id = 'documents' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "Users can read own documents" on storage.objects;
 create policy "Users can read own documents"
   on storage.objects for select to authenticated
   using (bucket_id = 'documents' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "Users can delete own documents" on storage.objects;
 create policy "Users can delete own documents"
   on storage.objects for delete to authenticated
   using (bucket_id = 'documents' and (storage.foldername(name))[1] = auth.uid()::text);
