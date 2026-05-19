@@ -142,7 +142,21 @@ export function UploadDialog({
       try {
         updateAt(i, { status: "extracting", progress: 10 });
         const isPdf = (file.type || "").includes("pdf") || file.name.toLowerCase().endsWith(".pdf");
-        const contentText = isPdf ? await extractPdfText(file) : "";
+        let contentText = "";
+        if (isPdf) {
+          try {
+            contentText = await extractPdfText(file);
+          } catch (extractErr) {
+            console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
+            contentText = "";
+          }
+        }
+        // Final safety: strip NUL + control chars that Postgres rejects
+        // ("unsupported Unicode escape sequence").
+        contentText = contentText
+          // eslint-disable-next-line no-control-regex
+          .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+          .replace(/[\uD800-\uDFFF]/g, "");
 
         updateAt(i, { status: "ai", progress: 30 });
         let category = "egyeb";
