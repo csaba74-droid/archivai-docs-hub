@@ -24,6 +24,7 @@ export type DocumentRow = {
   sha256: string | null;
   content_text: string | null;
   ai_confidence: number | null;
+  document_date: string | null;
   created_at: string;
 };
 
@@ -40,4 +41,24 @@ export type AuditLogRow = {
   action: string;
   metadata: Record<string, unknown> | null;
   created_at: string;
+};
+
+export type CustomCategoryRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  mode: "strict" | "normal";
+  retention_years: number | null;
+  created_at: string;
+};
+
+export type SubscriptionRow = {
+  user_id: string;
+  plan: "alap" | "pro" | "vallalati";
+  status: "active" | "past_due" | "canceled" | "inactive";
+  current_period_end: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  updated_at: string;
 };

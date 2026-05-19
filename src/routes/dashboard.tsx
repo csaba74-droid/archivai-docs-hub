@@ -1,72 +1,24 @@
-import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
-import {
-  CATEGORIES,
-  getCategory,
-  getRetentionDeadline,
-  formatDeadline,
-  isStrict,
-} from "@/lib/categories";
+import { formatDeadline } from "@/lib/categories";
+import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
+import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Archive,
-  Search,
-  Upload,
-  LogOut,
-  ShieldCheck,
-  Lock,
-  FileIcon,
-  Loader2,
-  Trash2,
-  CalendarClock,
-  Sparkles,
+  Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
+  CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
 } from "lucide-react";
-import { categorizeDocument } from "@/lib/ai.functions";
-import { extractPdfText } from "@/lib/pdf";
 import { logAudit } from "@/lib/audit";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { DocumentHoverPreview } from "@/components/DocumentHoverPreview";
 import { DocumentThumbnail } from "@/components/DocumentThumbnail";
-
-async function sha256Hex(file: File): Promise<string> {
-  const buf = await file.arrayBuffer();
-  const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-const CONFIDENCE_THRESHOLD = 0.8;
-
-type PendingConfirm = {
-  file: File;
-  suggested: string;
-  confidence: number;
-  reasoning?: string;
-  resolve: (chosen: string | null) => void;
-};
+import { UploadDialog } from "@/components/UploadDialog";
+import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -79,39 +31,32 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { customRows, all: allCats, remove: removeCustomCat } = useCategories();
+  const { getCategory, isStrict, getRetentionDeadline } = useCategoryHelpers();
+  const { subscription, active } = useSubscription();
+
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userEmail, setUserEmail] = useState("");
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
-  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
-  const [confirmCategory, setConfirmCategory] = useState<string>("egyeb");
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [newCatOpen, setNewCatOpen] = useState(false);
+
+  const canUpload = active;
 
   const loadDocs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("documents")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      console.error("Document list failed:", error);
-      toast.error("A dokumentumok betöltése nem sikerült", {
-        description: error.message,
-      });
-    } else if (data) {
-      setDocs(data as DocumentRow[]);
-    }
+      .from("documents").select("*").order("created_at", { ascending: false });
+    if (error) toast.error("Betöltési hiba", { description: error.message });
+    else if (data) setDocs(data as DocumentRow[]);
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserEmail(data.user?.email ?? "");
-    });
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ""));
     loadDocs();
   }, [loadDocs]);
 
@@ -120,196 +65,70 @@ function Dashboard() {
     return docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
       if (!q) return true;
-      const hay =
-        (d.filename ?? "").toLowerCase() +
-        " " +
-        (d.original_filename ?? "").toLowerCase() +
-        " " +
-        (d.content_text ?? "").toLowerCase();
+      const hay = `${d.filename ?? ""} ${d.original_filename ?? ""} ${d.content_text ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
   }, [docs, search, activeCat]);
 
   useEffect(() => {
     if (!search.trim()) return;
-    const t = setTimeout(() => {
-      void logAudit("search", null, { query: search, hits: filtered.length });
-    }, 800);
+    const t = setTimeout(() => { void logAudit("search", null, { query: search, hits: filtered.length }); }, 800);
     return () => clearTimeout(t);
   }, [search, filtered.length]);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
-    docs.forEach((d) => (map[d.category] = (map[d.category] ?? 0) + 1));
+    docs.forEach((d) => { map[d.category] = (map[d.category] ?? 0) + 1; });
     return map;
   }, [docs]);
 
   const handleDelete = async (doc: DocumentRow) => {
+    if (!canUpload) {
+      toast.error("Csak olvasási hozzáférés", { description: "Rendezd a fizetést." });
+      return;
+    }
     if (isStrict(doc.category)) {
       void logAudit("delete_blocked", doc.id, { reason: "strict" });
-      toast.error("Ez a dokumentum törvényi megőrzés alatt áll", {
-        description: "Az ITM-besorolású iratokat nem lehet törölni.",
-      });
+      toast.error("Törvényi megőrzés alatt", { description: "ITM-besorolású iratok nem törölhetők." });
       return;
     }
-    if (!confirm(`Biztosan törlöd? \n${doc.filename}`)) return;
+    if (!confirm(`Biztosan törlöd?\n${doc.filename}`)) return;
     try {
-      const { error: stErr } = await supabase.storage
-        .from("documents")
-        .remove([doc.storage_path]);
-      if (stErr) throw stErr;
-      const { error: dbErr } = await supabase
-        .from("documents")
-        .delete()
-        .eq("id", doc.id);
-      if (dbErr) throw dbErr;
+      await supabase.storage.from("documents").remove([doc.storage_path]);
+      const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+      if (error) throw error;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       void logAudit("delete", doc.id, { filename: doc.filename });
-      toast.success("Dokumentum törölve");
+      toast.success("Törölve");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error("Delete failed:", e);
-      toast.error("Törlés sikertelen", { description: msg });
+      toast.error("Törlés sikertelen", { description: e instanceof Error ? e.message : String(e) });
     }
   };
 
-  const askConfirmCategory = (
-    file: File,
-    suggested: string,
-    confidence: number,
-    reasoning?: string,
-  ): Promise<string | null> => {
-    return new Promise((resolve) => {
-      setConfirmCategory(suggested);
-      setPendingConfirm({ file, suggested, confidence, reasoning, resolve });
-    });
-  };
-
-  const resolveConfirm = (chosen: string | null) => {
-    if (pendingConfirm) {
-      pendingConfirm.resolve(chosen);
-      setPendingConfirm(null);
-    }
-  };
-
-  const handleFiles = async (files: FileList | File[]) => {
-    const selectedFiles = Array.from(files);
-    if (selectedFiles.length === 0) {
-      toast.info("Nem választottál ki fájlt");
+  const handleDeleteCustomCat = async (catId: string) => {
+    const realId = catId.startsWith("custom:") ? catId.slice(7) : catId;
+    const inUse = docs.some((d) => d.category === catId);
+    if (inUse) {
+      toast.error("Nem üres kategória", { description: "Csak üres custom kategória törölhető." });
       return;
     }
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    const user = userData?.user;
-    if (userErr || !user) {
-      toast.error("Nincs bejelentkezett felhasználó");
-      return;
-    }
-    setUploading(true);
-    let ok = 0;
+    if (!confirm("Biztosan törlöd ezt a kategóriát?")) return;
     try {
-      for (const file of selectedFiles) {
-        try {
-          const isPdf =
-            (file.type || "").includes("pdf") ||
-            file.name.toLowerCase().endsWith(".pdf");
-          const contentText = isPdf ? await extractPdfText(file) : "";
-
-          // AI categorization
-          let category = "egyeb";
-          let aiConfidence = 0;
-          try {
-            const result = await categorizeDocument({
-              data: {
-                filename: file.name,
-                mimeType: file.type || undefined,
-                sample: contentText.slice(0, 2000) || undefined,
-              },
-            });
-            category = result.category;
-            aiConfidence = result.confidence;
-            void logAudit("categorize", null, {
-              filename: file.name,
-              category,
-              confidence: aiConfidence,
-            });
-
-            if (aiConfidence < CONFIDENCE_THRESHOLD) {
-              const chosen = await askConfirmCategory(
-                file,
-                category,
-                aiConfidence,
-                result.reasoning,
-              );
-              if (chosen === null) {
-                toast.info(`Kihagyva: ${file.name}`);
-                continue;
-              }
-              category = chosen;
-            }
-          } catch (e) {
-            console.warn("AI categorize failed, falling back to 'egyeb'", e);
-          }
-
-          const hash = await sha256Hex(file);
-          const safeName = file.name.replace(/[^\w.-]+/g, "_");
-          const path = `${user.id}/${Date.now()}-${hash.slice(0, 8)}-${safeName}`;
-          const { error: upErr } = await supabase.storage
-            .from("documents")
-            .upload(path, file, {
-              upsert: false,
-              contentType: file.type || "application/octet-stream",
-            });
-          if (upErr) throw upErr;
-          const itm_compliant = isStrict(category);
-          const { data: inserted, error: insErr } = await supabase
-            .from("documents")
-            .insert({
-              user_id: user.id,
-              filename: file.name,
-              original_filename: file.name,
-              storage_path: path,
-              category,
-              itm_compliant,
-              size_bytes: file.size,
-              mime_type: file.type || null,
-              sha256: hash,
-              content_text: contentText || null,
-              ai_confidence: aiConfidence,
-            })
-            .select()
-            .single();
-          if (insErr) throw insErr;
-          ok++;
-          if (inserted) {
-            void logAudit("upload", (inserted as DocumentRow).id, {
-              filename: file.name,
-              category,
-              confidence: aiConfidence,
-            });
-          }
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e);
-          console.error("Upload failed:", file.name, e);
-          toast.error(`Hiba: ${file.name}`, { description: msg });
-        }
-      }
-      if (ok > 0) toast.success(`${ok} fájl feltöltve`);
-      await loadDocs();
-    } finally {
-      setUploading(false);
+      await removeCustomCat(realId);
+      if (activeCat === catId) setActiveCat(null);
+      toast.success("Kategória törölve");
+    } catch (e) {
+      toast.error("Sikertelen", { description: e instanceof Error ? e.message : String(e) });
     }
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/login" });
   };
+
+  const builtInStrict = allCats.filter((c) => !c.custom && c.mode === "strict");
+  const builtInNormal = allCats.filter((c) => !c.custom && c.mode === "normal");
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -328,57 +147,54 @@ function Dashboard() {
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           <button
             onClick={() => setActiveCat(null)}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeCat === null ? "bg-brand-soft text-brand" : "text-foreground hover:bg-muted"
-            }`}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null ? "bg-brand-soft text-brand" : "hover:bg-muted"}`}
           >
-            <span className="flex items-center gap-2">
-              <FileIcon className="h-4 w-4" /> Összes dokumentum
-            </span>
+            <span className="flex items-center gap-2"><FileIcon className="h-4 w-4" /> Összes</span>
             <span className="text-xs text-muted-foreground">{docs.length}</span>
           </button>
 
-          {(["strict", "normal"] as const).map((mode) => (
-            <div key={mode}>
-              <div className="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                {mode === "strict" ? (
-                  <>
-                    <Lock className="h-3 w-3" /> ITM kötelező
-                  </>
-                ) : (
-                  "Egyéb tárolás"
-                )}
-              </div>
-              {CATEGORIES.filter((c) => c.mode === mode).map((cat) => {
-                const Icon = cat.icon;
-                const active = activeCat === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCat(cat.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
-                      active
-                        ? "bg-brand-soft text-brand font-medium"
-                        : "text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{cat.label}</span>
-                      {cat.mode === "strict" && (
-                        <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
-                      )}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{counts[cat.id] ?? 0}</span>
-                  </button>
-                );
-              })}
+          <SectionHeader icon={<Lock className="h-3 w-3" />} title="ITM kötelező" />
+          {builtInStrict.map((cat) => (
+            <CategoryButton key={cat.id} cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => setActiveCat(cat.id)} />
+          ))}
+
+          <SectionHeader title="Egyéb tárolás" />
+          {builtInNormal.map((cat) => (
+            <CategoryButton key={cat.id} cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => setActiveCat(cat.id)} />
+          ))}
+
+          <SectionHeader title="Saját kategóriák" />
+          {customRows.length === 0 && (
+            <p className="px-3 py-1.5 text-xs text-muted-foreground">Még nincs egyéni kategória</p>
+          )}
+          {allCats.filter((c) => c.custom).map((cat) => (
+            <div key={cat.id} className="group relative">
+              <CategoryButton cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => setActiveCat(cat.id)} />
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDeleteCustomCat(cat.id); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:text-destructive"
+                aria-label="Delete category"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
           ))}
+          <button
+            onClick={() => setNewCatOpen(true)}
+            className="w-full mt-1 flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Új kategória
+          </button>
         </nav>
 
-        <div className="p-3 border-t">
-          <div className="px-2 pb-2 text-xs text-muted-foreground truncate">{userEmail}</div>
+        <div className="p-3 border-t space-y-2">
+          <Link to="/subscription" className="block">
+            <Button variant="outline" size="sm" className="w-full">
+              <CreditCard className="h-3.5 w-3.5 mr-2" />
+              {subscription ? PLAN_INFO[subscription.plan].label : "Csomag"}
+            </Button>
+          </Link>
+          <div className="px-2 text-xs text-muted-foreground truncate">{userEmail}</div>
           <Button variant="outline" size="sm" onClick={signOut} className="w-full">
             <LogOut className="h-3.5 w-3.5 mr-2" /> Kijelentkezés
           </Button>
@@ -390,35 +206,22 @@ function Dashboard() {
         <header className="border-b bg-card px-8 py-4 flex items-center gap-4">
           <div className="relative flex-1 max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Keresés név vagy tartalom alapján..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-background"
-            />
+            <Input placeholder="Keresés név vagy tartalom alapján..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 bg-background" />
           </div>
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="sr-only"
-              aria-hidden="true"
-              tabIndex={-1}
-              onChange={(e) => {
-                if (e.target.files) handleFiles(e.target.files);
-                e.currentTarget.value = "";
-              }}
-            />
-            <Button
-              type="button"
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="h-4 w-4 mr-2" /> Feltöltés
-            </Button>
-          </div>
+          <Button onClick={() => setUploadOpen(true)} disabled={!canUpload}>
+            <Upload className="h-4 w-4 mr-2" /> Feltöltés
+          </Button>
         </header>
+
+        {!canUpload && (
+          <div className="bg-destructive/10 border-b border-destructive/30 px-8 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <span><strong>Fizetés szükséges.</strong> Csak olvasási hozzáférés. A dokumentumok biztonságban vannak.</span>
+            </div>
+            <Link to="/subscription"><Button size="sm" variant="destructive">Fizetés rendezése</Button></Link>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div>
@@ -426,132 +229,66 @@ function Dashboard() {
               {activeCat ? getCategory(activeCat).label : "Összes dokumentum"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {filtered.length} dokumentum
-              {search.trim() && ` — találat: "${search}"`}
+              {filtered.length} dokumentum{search.trim() && ` — találat: "${search}"`}
             </p>
           </div>
 
-          {/* Dropzone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={onDrop}
-            className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
-              dragOver
-                ? "border-brand bg-brand-soft"
-                : "border-border bg-card hover:border-brand/40"
-            }`}
-          >
-            {uploading ? (
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <p className="text-sm">Feltöltés és AI kategorizálás folyamatban...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="h-12 w-12 rounded-full bg-brand-soft flex items-center justify-center">
-                  <Upload className="h-5 w-5 text-brand" />
-                </div>
-                <p className="text-sm font-medium">
-                  Húzd ide a fájlokat vagy kattints a Feltöltés gombra
-                </p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" /> AI-vezérelt automatikus kategorizálás
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Grid */}
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
+              <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Még nincsenek dokumentumok itt.</p>
+              {canUpload && (
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => setUploadOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2" /> Első feltöltés
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
                 const strict = cat.mode === "strict";
-                const deadline = getRetentionDeadline(doc.category, doc.created_at);
+                const baseDate = doc.document_date ?? doc.created_at;
+                const deadline = getRetentionDeadline(doc.category, baseDate);
+                const expired = deadline && deadline.getTime() < Date.now();
                 return (
                   <DocumentHoverPreview key={doc.id} doc={doc}>
                     <Card
-                      role="button"
-                      tabIndex={0}
+                      role="button" tabIndex={0}
                       onClick={() => setPreviewDoc(doc)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") setPreviewDoc(doc);
-                      }}
-                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${
-                        strict ? "border-brand/30" : ""
-                      }`}
+                      onKeyDown={(e) => { if (e.key === "Enter") setPreviewDoc(doc); }}
+                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${strict ? "border-brand/30" : ""}`}
                     >
-                      <div className="relative">
-                        <DocumentThumbnail
-                          path={doc.storage_path}
-                          mimeType={doc.mime_type}
-                          className="w-full h-36"
-                          alt={doc.filename}
-                        />
-                        {strict && (
-                          <span
-                            className="absolute top-2 right-2 h-6 w-6 rounded-full bg-brand text-brand-foreground flex items-center justify-center shadow"
-                            title="Törvényi megőrzés alatt"
-                          >
-                            <Lock className="h-3 w-3" />
-                          </span>
-                        )}
-                        {!strict && (
-                          <Button
-                            size="icon"
-                            variant="secondary"
-                            className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(doc);
-                            }}
-                            title="Törlés"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                      <div className="h-36 bg-muted overflow-hidden">
+                        <DocumentThumbnail path={doc.storage_path} mimeType={doc.mime_type} filename={doc.filename} className="w-full h-full" />
                       </div>
-                      <div className="p-3 space-y-2">
-                        <p className="font-medium text-sm truncate" title={doc.filename}>
-                          {doc.filename}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          <Badge variant="secondary" className="text-[10px] font-normal">
+                      <div className="p-3 space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-medium truncate flex-1" title={doc.filename}>{doc.filename}</p>
+                          {strict && <Lock className="h-3.5 w-3.5 text-brand shrink-0 mt-0.5" />}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge variant="secondary" className="text-[10px] py-0 h-4 flex items-center gap-1">
+                            {cat.custom && cat.color && <span className="h-2 w-2 rounded-full" style={{ background: cat.color }} />}
                             {cat.label}
                           </Badge>
-                          {strict ? (
-                            <Badge className="text-[10px] font-normal bg-brand text-brand-foreground hover:bg-brand/90 gap-1">
-                              <ShieldCheck className="h-3 w-3" /> ITM zárolt
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] font-normal text-muted-foreground"
-                            >
-                              Ajánlott
-                            </Badge>
-                          )}
+                          {expired && <Badge variant="destructive" className="text-[10px] py-0 h-4">Lejárt</Badge>}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <CalendarClock className="h-3 w-3" />
-                          {deadline ? (
-                            <span>
-                              {strict ? "Megőrzés:" : "Ajánlott:"} {formatDeadline(deadline)}
-                            </span>
-                          ) : (
-                            <span>{cat.retentionLabel}</span>
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                          <span className="flex items-center gap-1">
+                            <CalendarClock className="h-3 w-3" />
+                            {deadline ? formatDeadline(deadline) : cat.retentionLabel}
+                          </span>
+                          {!strict && canUpload && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
+                              className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           )}
                         </div>
                       </div>
@@ -567,59 +304,44 @@ function Dashboard() {
       <DocumentPreviewModal
         doc={previewDoc}
         open={!!previewDoc}
-        onOpenChange={(v) => !v && setPreviewDoc(null)}
+        onOpenChange={(v) => { if (!v) setPreviewDoc(null); }}
+        onUpdated={(updated) => {
+          setDocs((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+          setPreviewDoc(updated);
+        }}
+        canEdit={canUpload}
       />
-
-      <AlertDialog
-        open={!!pendingConfirm}
-        onOpenChange={(v) => !v && resolveConfirm(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-brand" />
-              Kategória megerősítése
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>
-                  Az AI nem teljesen biztos a fájl kategóriájában (
-                  <strong>{Math.round((pendingConfirm?.confidence ?? 0) * 100)}%</strong>
-                  ).
-                </p>
-                <p className="text-xs truncate">
-                  Fájl: <span className="font-mono">{pendingConfirm?.file.name}</span>
-                </p>
-                {pendingConfirm?.reasoning && (
-                  <p className="text-xs italic">„{pendingConfirm.reasoning}"</p>
-                )}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-2">
-            <Select value={confirmCategory} onValueChange={setConfirmCategory}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => resolveConfirm(null)}>
-              Mégse
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => resolveConfirm(confirmCategory)}>
-              Megerősítés
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onComplete={loadDocs} />
+      <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
     </div>
+  );
+}
+
+function SectionHeader({ icon, title }: { icon?: React.ReactNode; title: string }) {
+  return (
+    <div className="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+      {icon} {title}
+    </div>
+  );
+}
+
+function CategoryButton({ cat, active, count, onClick }: { cat: ReturnType<typeof useCategoryHelpers>["all"][number]; active: boolean; count: number; onClick: () => void }) {
+  const Icon = cat.icon;
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${active ? "bg-brand-soft text-brand font-medium" : "hover:bg-muted"}`}
+    >
+      <span className="flex items-center gap-2 min-w-0">
+        {cat.custom && cat.color ? (
+          <span className="h-3 w-3 rounded-full shrink-0" style={{ background: cat.color }} />
+        ) : (
+          <Icon className="h-4 w-4 shrink-0" />
+        )}
+        <span className="truncate">{cat.label}</span>
+        {cat.mode === "strict" && <Lock className="h-3 w-3 text-muted-foreground shrink-0" />}
+      </span>
+      <span className="text-xs text-muted-foreground">{count}</span>
+    </button>
   );
 }
