@@ -221,10 +221,19 @@ export function UploadDialog({
           void logAudit("upload", (inserted as DocumentRow).id, { filename: file.name, category, confidence: aiConfidence });
         }
         updateAt(i, { status: "done", progress: 100 });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+      } catch (e: unknown) {
+        const err = e as { message?: string; error?: string; statusText?: string; name?: string } | Error | string | null;
+        let msg = "Ismeretlen hiba";
+        if (typeof err === "string") msg = err;
+        else if (err && typeof err === "object") {
+          msg = (err as { message?: string }).message
+            || (err as { error?: string }).error
+            || (err as { statusText?: string }).statusText
+            || JSON.stringify(err);
+        }
         console.error("Upload failed", file.name, e);
         updateAt(i, { status: "error", progress: 0, error: msg });
+        toast.error(`${file.name}: ${msg}`);
       }
     }
     setRunning(false);
