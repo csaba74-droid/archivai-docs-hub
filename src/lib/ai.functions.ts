@@ -64,6 +64,14 @@ export const categorizeDocument = createServerFn({ method: "POST" })
       throw new Error("Active subscription required");
     }
 
+    // HARD RULE: filename keyword match short-circuits the AI call.
+    const hard = matchFilenameRule(data.filename);
+    if (hard) {
+      return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
+    }
+
+
+
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) {
       return { category: "egyeb", confidence: 0, reasoning: "missing api key", documentDate: null };
