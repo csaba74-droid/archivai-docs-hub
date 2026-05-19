@@ -26,11 +26,15 @@ const BUILT_IN: AllowedCategory[] = [
   { id: "egyeb", label: "Egyéb (other)", mode: "normal" },
 ];
 
-const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
-  "Számlák": "szamlak",
-  "Szerződések": "szerzodesek",
-  "Szállítólevelek": "szallitolevek",
-  "Munkaügyi iratok": "munkaugyi",
+const HARD_CATEGORY_ID_ALIAS: Record<string, string> = {
+  szamlak: "szamlak",
+  szerzodesek: "szerzodesek",
+  szallitolevelek: "szallitolevek",
+  munkaugyi_iratok: "munkaugyi",
+  adobevallesok: "adobevallasok",
+  kozuzemi_szamlak: "kozuzemi",
+  banki_dokumentumok: "banki",
+  muszaki_dokumentumok: "muszaki",
 };
 
 
