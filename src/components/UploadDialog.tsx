@@ -28,7 +28,7 @@ import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supaba
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
-import { matchFilenameRule } from "@/lib/filename-rules";
+import { matchFilenameCategory } from "@/lib/filename-rules";
 import { logAudit } from "@/lib/audit";
 import {
   CalendarClock,
@@ -57,6 +57,13 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
 }
 
 const CONFIDENCE_THRESHOLD = 0.8;
+
+const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
+  "Számlák": "szamlak",
+  "Szerződések": "szerzodesek",
+  "Szállítólevelek": "szallitolevek",
+  "Munkaügyi iratok": "munkaugyi",
+};
 
 const STATUS_LABEL: Record<FileProgress["status"], string> = {
   queued: "Várakozik",
@@ -160,6 +167,13 @@ export function UploadDialog({
       toast.info("Nincs kiválasztott fájl");
       return;
     }
+    const filenameMatches = files.map(({ file }) => {
+      const label = matchFilenameCategory(file.name);
+      const category = label ? HARD_CATEGORY_ID_BY_LABEL[label] : null;
+      console.log("FILENAME CHECK:", file.name, "RESULT:", label ?? "(no match → AI)");
+      if (label) toast.success(`📂 Kategória azonosítva: ${label}`);
+      return { label, category };
+    });
     const { data: ud } = await supabase.auth.getUser();
     const user = ud.user;
     if (!user) {
@@ -173,6 +187,8 @@ export function UploadDialog({
     for (let i = 0; i < files.length; i++) {
       const file = files[i].file;
       try {
+        const hardCategory = filenameMatches[i]?.category ?? null;
+
         updateAt(i, { status: "extracting", progress: 10 });
         const isPdf = (file.type || "").includes("pdf") || file.name.toLowerCase().endsWith(".pdf");
         let contentText = "";
@@ -191,46 +207,46 @@ export function UploadDialog({
 
         updateAt(i, { status: "ai", progress: 30 });
 
-        const hardCategory = matchFilenameRule(file.name);
-        console.log("FILENAME CHECK:", file.name, "RESULT:", hardCategory ?? "(no match → AI)");
-
         let category = hardCategory ?? "egyeb";
         let aiConfidence = hardCategory ? 1 : 0;
         let detectedDate: string | null = null;
         let aiReasoning: string | undefined = hardCategory ? "filename keyword match" : undefined;
         try {
-          const result = await categorizeDocument({
-            data: {
-              filename: file.name,
-              mimeType: file.type || undefined,
-              sample: contentText.slice(0, 3000) || undefined,
-              customCategories: customForAi,
-            },
-          });
-          if (!hardCategory) {
+          if (hardCategory) {
+            updateAt(i, { suggestedCategory: category, detectedDate: null });
+            void logAudit("categorize", null, { filename: file.name, category, confidence: 1, hardRule: true });
+          } else {
+            const result = await categorizeDocument({
+              data: {
+                filename: file.name,
+                mimeType: file.type || undefined,
+                sample: contentText.slice(0, 3000) || undefined,
+                customCategories: customForAi,
+              },
+            });
             category = result.category;
             aiConfidence = result.confidence;
             aiReasoning = result.reasoning;
-          }
-          detectedDate = result.documentDate ?? null;
-          updateAt(i, { suggestedCategory: category, detectedDate });
-          void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence, hardRule: !!hardCategory });
+            detectedDate = result.documentDate ?? null;
+            updateAt(i, { suggestedCategory: category, detectedDate });
+            void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence, hardRule: false });
 
-          if (aiConfidence < CONFIDENCE_THRESHOLD || detectedDate) {
-            const { category: chosen, documentDate: confirmedDate } = await askConfirm({
-              fileName: file.name,
-              suggested: category,
-              confidence: aiConfidence,
-              reasoning: aiReasoning,
-              detectedDate,
-              docDate: documentDate,
-            });
-            if (chosen === null) {
-              updateAt(i, { status: "error", progress: 0, error: "Kihagyva" });
-              continue;
+            if (aiConfidence < CONFIDENCE_THRESHOLD || detectedDate) {
+              const { category: chosen, documentDate: confirmedDate } = await askConfirm({
+                fileName: file.name,
+                suggested: category,
+                confidence: aiConfidence,
+                reasoning: aiReasoning,
+                detectedDate,
+                docDate: documentDate,
+              });
+              if (chosen === null) {
+                updateAt(i, { status: "error", progress: 0, error: "Kihagyva" });
+                continue;
+              }
+              category = chosen;
+              if (confirmedDate) detectedDate = confirmedDate;
             }
-            category = chosen;
-            if (confirmedDate) detectedDate = confirmedDate;
           }
         } catch (e) {
           console.warn("AI categorize failed, fallback", e);
