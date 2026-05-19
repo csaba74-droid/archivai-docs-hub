@@ -96,7 +96,18 @@ export const categorizeDocument = createServerFn({ method: "POST" })
 
 
 
-    const key = getRuntimeSecret("ANTHROPIC_API_KEY");
+    const workerEnv = (globalThis as typeof globalThis & { [WORKER_ENV_SYMBOL]?: Record<string, unknown> })[
+      WORKER_ENV_SYMBOL
+    ];
+    const rawWorkerKey = workerEnv?.ANTHROPIC_API_KEY;
+    console.log("ANTHROPIC_API_KEY Worker binding:", {
+      type: typeof rawWorkerKey,
+      present: typeof rawWorkerKey === "string" && rawWorkerKey.trim().length > 0,
+      length: typeof rawWorkerKey === "string" ? rawWorkerKey.length : 0,
+      startsWith: typeof rawWorkerKey === "string" ? rawWorkerKey.slice(0, 8) : null,
+      endsWith: typeof rawWorkerKey === "string" ? rawWorkerKey.slice(-4) : null,
+    });
+    const key = typeof rawWorkerKey === "string" ? rawWorkerKey.trim() : undefined;
     if (!key) {
       return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: "missing api key", documentDate: null };
     }
