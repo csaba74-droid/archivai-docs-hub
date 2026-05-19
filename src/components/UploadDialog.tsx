@@ -369,7 +369,7 @@ export function UploadDialog({
       <Dialog open={open} onOpenChange={(v) => { if (!running) { onOpenChange(v); if (!v) reset(); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Dokumentumok feltöltése</DialogTitle>
+            <DialogTitle>Dokumentumok feltöltése v2</DialogTitle>
             <DialogDescription>
               Az AI automatikusan kategorizál és kinyeri a dokumentum dátumát.
             </DialogDescription>
