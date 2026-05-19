@@ -197,11 +197,14 @@ export function UploadDialog({
       return;
     }
     const filenameMatches = files.map(({ file }) => {
-      const label = matchFilenameCategory(file.name);
-      const category = label ? HARD_CATEGORY_ID_BY_LABEL[label] : null;
-      console.log("FILENAME CHECK:", file.name, "RESULT:", label ?? "(no match → AI)");
-      if (label) toast.success(`📂 Kategória azonosítva: ${label}`);
-      return { label, category };
+      const match = matchFilenameCategory(file.name);
+      const category = match ? (CATEGORY_ID_ALIAS[match.category] ?? match.category) : null;
+      console.log("FILENAME CHECK:", file.name, "RESULT:", category ?? "(no match → AI)");
+      if (category) {
+        const label = allCats.find((c) => c.id === category)?.label ?? category;
+        toast.success(`📂 Kategória azonosítva: ${label}`);
+      }
+      return { category };
     });
     const { data: ud } = await supabase.auth.getUser();
     const user = ud.user;
