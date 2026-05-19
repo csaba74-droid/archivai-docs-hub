@@ -516,6 +516,36 @@ export function UploadDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Post-upload: AI-detected document date confirmation */}
+      <Dialog open={!!datePrompt} onOpenChange={(v) => { if (!v) resolveDatePrompt(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-brand" /> 📅 Dátum azonosítva
+            </DialogTitle>
+            <DialogDescription>{datePrompt?.fileName}</DialogDescription>
+          </DialogHeader>
+          {datePrompt && (
+            <div className="space-y-2 py-2 text-sm">
+              <p>
+                A dokumentumon azonosított dátum: <span className="font-semibold">{datePrompt.detectedDate}</span>.
+              </p>
+              <p className="text-muted-foreground">
+                Jelenlegi dátum: {datePrompt.currentDate}. Ezt használjuk a megőrzési idő számításához?
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => resolveDatePrompt(false)}>
+              Nem, maradjon a mai dátum
+            </Button>
+            <Button onClick={() => resolveDatePrompt(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              Igen, használjuk
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
