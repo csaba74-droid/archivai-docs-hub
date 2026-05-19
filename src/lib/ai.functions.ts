@@ -219,6 +219,6 @@ ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000
       return { category, confidence, reasoning: hard ? "filename keyword match" : parsed.reasoning, documentDate };
     } catch (e) {
       console.error("categorize failed", e);
-      return { category: "egyeb", confidence: 0, reasoning: String(e), documentDate: null };
+      return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: String(e), documentDate: null };
     }
   });
