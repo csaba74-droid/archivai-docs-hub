@@ -42,7 +42,29 @@ function Dashboard() {
   const [userEmail, setUserEmail] = useState("");
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
+
+  const openUploadWith = useCallback((files?: File[] | null) => {
+    setPendingFiles(files && files.length > 0 ? files : null);
+    setUploadOpen(true);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      if (!canUpload) {
+        toast.error("Csak olvasási hozzáférés", { description: "Rendezd a fizetést." });
+        return;
+      }
+      const files = Array.from(e.dataTransfer.files ?? []);
+      if (files.length > 0) openUploadWith(files);
+    },
+    [canUpload, openUploadWith],
+  );
+
 
   const canUpload = active;
 
