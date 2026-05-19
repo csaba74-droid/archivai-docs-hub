@@ -51,11 +51,16 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
 
 const CONFIDENCE_THRESHOLD = 0.8;
 
-const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
-  "Számlák": "szamlak",
-  "Szerződések": "szerzodesek",
-  "Szállítólevelek": "szallitolevek",
-  "Munkaügyi iratok": "munkaugyi",
+// Map document-rules category ids → canonical BUILT_IN_CATEGORIES ids in categories.ts
+const CATEGORY_ID_ALIAS: Record<string, string> = {
+  szamlak: "szamlak",
+  szerzodesek: "szerzodesek",
+  szallitolevelek: "szallitolevek",
+  munkaugyi_iratok: "munkaugyi",
+  adobevallesok: "adobevallasok",
+  kozuzemi_szamlak: "kozuzemi",
+  banki_dokumentumok: "banki",
+  muszaki_dokumentumok: "muszaki",
 };
 
 const STATUS_LABEL: Record<FileProgress["status"], string> = {
