@@ -35,10 +35,40 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data }): Promise<CategorizeResult> => {
+    // Auth guard: require an authenticated user (prevents AI API key abuse)
+    const authHeader = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
+    const token = authHeader?.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7)
+      : null;
+    if (!token) {
+      throw new Error("Unauthorized");
+    }
+    const supabaseUrl = process.env.SUPABASE_URL ?? "https://jofxnjtktwuzmjjcgofw.supabase.co";
+    const supabaseAnon =
+      process.env.SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_UvtuR3PW0qi6ia8Y07kwFQ_p5dbL2Ix";
+    const authClient = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      throw new Error("Unauthorized");
+    }
+    // Require active subscription (AI is a paid feature)
+    const { data: sub } = await authClient
+      .from("subscriptions")
+      .select("status, plan")
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+    if (!sub || sub.status !== "active") {
+      throw new Error("Active subscription required");
+    }
+
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) {
       return { category: "egyeb", confidence: 0, reasoning: "missing api key", documentDate: null };
     }
+
 
     const customList = (data.customCategories ?? []).map((c) => ({
       id: `custom:${c.id}`,
