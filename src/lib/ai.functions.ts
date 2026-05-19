@@ -202,20 +202,21 @@ ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000
       if (!res.ok) {
         const text = await res.text();
         console.error("Anthropic error", res.status, text);
-        return { category: "egyeb", confidence: 0, reasoning: `http ${res.status}`, documentDate: null };
+        return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: `http ${res.status}`, documentDate: null };
       }
       const json = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
       const text = json.content?.find((p) => p.type === "text")?.text?.trim() ?? "";
       const match = text.match(/\{[\s\S]*\}/);
-      if (!match) return { category: "egyeb", confidence: 0, documentDate: null };
+      if (!match) return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, documentDate: null };
       const parsed = JSON.parse(match[0]) as Partial<CategorizeResult>;
-      const category = parsed.category && allowedIds.has(parsed.category) ? parsed.category : "egyeb";
-      const confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0));
+      const aiCategory = parsed.category && allowedIds.has(parsed.category) ? parsed.category : "egyeb";
+      const category = hard ?? aiCategory;
+      const confidence = hard ? 1 : Math.max(0, Math.min(1, Number(parsed.confidence) || 0));
       let documentDate: string | null = null;
       if (parsed.documentDate && /^\d{4}-\d{2}-\d{2}$/.test(parsed.documentDate)) {
         documentDate = parsed.documentDate;
       }
-      return { category, confidence, reasoning: parsed.reasoning, documentDate };
+      return { category, confidence, reasoning: hard ? "filename keyword match" : parsed.reasoning, documentDate };
     } catch (e) {
       console.error("categorize failed", e);
       return { category: "egyeb", confidence: 0, reasoning: String(e), documentDate: null };
