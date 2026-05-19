@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
-import { createClient } from "@supabase/supabase-js";
 import { matchFilenameCategory } from "@/config/document-rules";
+
 
 
 export type CategorizeResult = {
