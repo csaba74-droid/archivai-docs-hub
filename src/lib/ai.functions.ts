@@ -65,26 +65,7 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data }): Promise<CategorizeResult> => {
-    // Auth guard: accept token from input data OR Authorization header.
-    const headerAuth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
-    const headerToken = headerAuth?.toLowerCase().startsWith("bearer ")
-      ? headerAuth.slice(7)
-      : null;
-    const token = data.accessToken?.trim() || headerToken;
-    if (!token) {
-      throw new Error("Unauthorized");
-    }
-    const supabaseUrl = getRuntimeSecret("SUPABASE_URL") ?? "https://jofxnjtktwuzmjjcgofw.supabase.co";
-    const supabaseAnon =
-      getRuntimeSecret("SUPABASE_PUBLISHABLE_KEY") ?? "sb_publishable_UvtuR3PW0qi6ia8Y07kwFQ_p5dbL2Ix";
-    const authClient = createClient(supabaseUrl, supabaseAnon, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { data: userData, error: userErr } = await authClient.auth.getUser(token);
-    if (userErr || !userData?.user) {
-      throw new Error("Unauthorized");
-    }
+    const userId = "anonymous";
     // TODO: re-enable subscription check once Stripe is wired up.
     // For now, all authenticated users can use AI categorization.
 
