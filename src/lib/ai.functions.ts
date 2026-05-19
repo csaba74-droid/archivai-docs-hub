@@ -68,15 +68,9 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     if (userErr || !userData?.user) {
       throw new Error("Unauthorized");
     }
-    // Require active subscription (AI is a paid feature)
-    const { data: sub } = await authClient
-      .from("subscriptions")
-      .select("status, plan")
-      .eq("user_id", userData.user.id)
-      .maybeSingle();
-    if (!sub || sub.status !== "active") {
-      throw new Error("Active subscription required");
-    }
+    // TODO: re-enable subscription check once Stripe is wired up.
+    // For now, all authenticated users can use AI categorization.
+
 
     // HARD RULE: filename keyword match locks the category and skips AI.
     const hardMatch = matchFilenameCategory(data.filename);
