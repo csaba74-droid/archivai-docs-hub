@@ -48,13 +48,15 @@ const FILENAME_RULES: { category: string; keywords: string[] }[] = [
   },
 ];
 
-function matchFilenameRule(filename: string): string | null {
+export function matchFilenameRule(filename: string): string | null {
   const lower = filename.toLowerCase();
   for (const rule of FILENAME_RULES) {
     if (rule.keywords.some((k) => lower.includes(k.toLowerCase()))) return rule.category;
   }
   return null;
 }
+
+export const FILENAME_CATEGORY_RULES = FILENAME_RULES;
 
 
 
