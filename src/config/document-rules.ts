@@ -3,19 +3,21 @@
 // Runs client-side BEFORE any API call.
 
 export const FILENAME_RULES: { keywords: string[]; category: string; itm: boolean; retention_years: number | null }[] = [
+  // NOTE: szerződések MUST be checked before számlák, because 'sz.' (számla)
+  // is a substring of 'szerz.' and would otherwise mis-match contracts as invoices.
+  {
+    keywords: ['contract', 'szerződés', 'szerzodes', 'szerz ', 'szerz.', 'szerz', 'agreement', 'megállapodás', 'megallapodas', 'keretszerződés', 'keretsz', 'bérleti', 'berleti', 'adásvétel', 'adasvetel', 'vállalkozási', 'vallalkozasi', 'megbízási', 'megbizasi'],
+    category: 'szerzodesek',
+    itm: true,
+    retention_years: 10,
+  },
   {
     keywords: ['invoice', 'számla', 'szamla', 'szla', 'sz.', 'fakt', 'faktura', 'rechnung', 'factura', 'nyugta', 'bill', 'receipt', 'proforma', 'díjbekérő', 'dijbekero', 'vegszamla', 'végszámla', 'sztorno', 'storno', 'credit note', 'debit note'],
     category: 'szamlak',
     itm: true,
     retention_years: 10,
   },
-  {
-    keywords: ['contract', 'szerződés', 'szerzodes', 'szerz', 'szerz.', 'agreement', 'megállapodás', 'megallapodas', 'keretszerződés', 'keretsz', 'bérleti', 'berleti', 'adásvétel', 'adasvetel', 'vállalkozási', 'vallalkozasi', 'megbízási', 'megbizasi'],
 
-    category: 'szerzodesek',
-    itm: true,
-    retention_years: 10,
-  },
   {
     keywords: ['delivery', 'szállítólevél', 'szallitolevel', 'szállító', 'szallito', 'ekáer', 'ekaer', 'fuvarlevél', 'fuvarlevel', 'cmr', 'packing list', 'csomagjegyzék', 'csomagjegyzek', 'átadás', 'atadas'],
     category: 'szallitolevelek',
