@@ -28,7 +28,7 @@ import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supaba
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
-import { matchFilenameRule } from "@/lib/filename-rules";
+import { matchFilenameCategory } from "@/lib/filename-rules";
 import { logAudit } from "@/lib/audit";
 import {
   CalendarClock,
@@ -57,6 +57,13 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
 }
 
 const CONFIDENCE_THRESHOLD = 0.8;
+
+const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
+  "Számlák": "szamlak",
+  "Szerződések": "szerzodesek",
+  "Szállítólevelek": "szallitolevek",
+  "Munkaügyi iratok": "munkaugyi",
+};
 
 const STATUS_LABEL: Record<FileProgress["status"], string> = {
   queued: "Várakozik",
@@ -173,6 +180,11 @@ export function UploadDialog({
     for (let i = 0; i < files.length; i++) {
       const file = files[i].file;
       try {
+        const hardCategoryLabel = matchFilenameCategory(file.name);
+        const hardCategory = hardCategoryLabel ? HARD_CATEGORY_ID_BY_LABEL[hardCategoryLabel] : null;
+        console.log("FILENAME CHECK:", file.name, "RESULT:", hardCategoryLabel ?? "(no match → AI)");
+        if (hardCategoryLabel) toast.success(`📂 Kategória azonosítva: ${hardCategoryLabel}`);
+
         updateAt(i, { status: "extracting", progress: 10 });
         const isPdf = (file.type || "").includes("pdf") || file.name.toLowerCase().endsWith(".pdf");
         let contentText = "";
@@ -191,14 +203,15 @@ export function UploadDialog({
 
         updateAt(i, { status: "ai", progress: 30 });
 
-        const hardCategory = matchFilenameRule(file.name);
-        console.log("FILENAME CHECK:", file.name, "RESULT:", hardCategory ?? "(no match → AI)");
-
         let category = hardCategory ?? "egyeb";
         let aiConfidence = hardCategory ? 1 : 0;
         let detectedDate: string | null = null;
         let aiReasoning: string | undefined = hardCategory ? "filename keyword match" : undefined;
         try {
+          if (hardCategory) {
+            updateAt(i, { suggestedCategory: category, detectedDate: null });
+            void logAudit("categorize", null, { filename: file.name, category, confidence: 1, hardRule: true });
+          } else {
           const result = await categorizeDocument({
             data: {
               filename: file.name,
@@ -231,6 +244,7 @@ export function UploadDialog({
             }
             category = chosen;
             if (confirmedDate) detectedDate = confirmedDate;
+          }
           }
         } catch (e) {
           console.warn("AI categorize failed, fallback", e);
