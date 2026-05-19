@@ -23,7 +23,7 @@ import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supaba
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
-import { matchFilenameCategory } from "@/lib/filename-rules";
+import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
 import {
   CalendarClock,
@@ -51,11 +51,16 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
 
 const CONFIDENCE_THRESHOLD = 0.8;
 
-const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
-  "Számlák": "szamlak",
-  "Szerződések": "szerzodesek",
-  "Szállítólevelek": "szallitolevek",
-  "Munkaügyi iratok": "munkaugyi",
+// Map document-rules category ids → canonical BUILT_IN_CATEGORIES ids in categories.ts
+const CATEGORY_ID_ALIAS: Record<string, string> = {
+  szamlak: "szamlak",
+  szerzodesek: "szerzodesek",
+  szallitolevelek: "szallitolevek",
+  munkaugyi_iratok: "munkaugyi",
+  adobevallesok: "adobevallasok",
+  kozuzemi_szamlak: "kozuzemi",
+  banki_dokumentumok: "banki",
+  muszaki_dokumentumok: "muszaki",
 };
 
 const STATUS_LABEL: Record<FileProgress["status"], string> = {
@@ -192,11 +197,14 @@ export function UploadDialog({
       return;
     }
     const filenameMatches = files.map(({ file }) => {
-      const label = matchFilenameCategory(file.name);
-      const category = label ? HARD_CATEGORY_ID_BY_LABEL[label] : null;
-      console.log("FILENAME CHECK:", file.name, "RESULT:", label ?? "(no match → AI)");
-      if (label) toast.success(`📂 Kategória azonosítva: ${label}`);
-      return { label, category };
+      const match = matchFilenameCategory(file.name);
+      const category = match ? (CATEGORY_ID_ALIAS[match.category] ?? match.category) : null;
+      console.log("FILENAME CHECK:", file.name, "RESULT:", category ?? "(no match → AI)");
+      if (category) {
+        const label = allCats.find((c) => c.id === category)?.label ?? category;
+        toast.success(`📂 Kategória azonosítva: ${label}`);
+      }
+      return { category };
     });
     const { data: ud } = await supabase.auth.getUser();
     const user = ud.user;
@@ -362,30 +370,30 @@ export function UploadDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 overflow-y-auto pr-1">
-            {/* TOP: Drag-and-drop zone */}
+          <div className="space-y-3 flex flex-col min-h-0 flex-1">
+            {/* TOP: Compact drag-and-drop zone (max 150px) */}
             <div
               onDragOver={(e) => { e.preventDefault(); if (!running) setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={onDrop}
-              className={`rounded-xl border-2 border-dashed p-8 flex flex-col items-center justify-center text-center transition-colors ${
+              style={{ maxHeight: 150 }}
+              className={`rounded-xl border-2 border-dashed px-4 py-3 flex flex-row items-center gap-4 transition-colors ${
                 isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/30 bg-muted/20"
               } ${running ? "opacity-60 pointer-events-none" : ""}`}
             >
-              <UploadCloud className="h-12 w-12 text-muted-foreground mb-3" />
-              <p className="text-lg font-semibold mb-4">Húzd ide a fájlokat</p>
+              <UploadCloud className="h-8 w-8 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Húzd ide a fájlokat</p>
+                <p className="text-xs text-muted-foreground">PDF, DOCX, XLSX, JPG, PNG — több fájl is</p>
+              </div>
               <Button
                 type="button"
-                size="lg"
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
                 disabled={running}
               >
-                <FolderOpen className="h-5 w-5 mr-2" /> Fájlok kiválasztása
+                <FolderOpen className="h-4 w-4 mr-2" /> Fájlok kiválasztása
               </Button>
-              <p className="text-xs text-muted-foreground mt-3">
-                PDF, DOCX, XLSX, JPG, PNG — egyszerre több fájl is feltölthető
-              </p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -395,9 +403,26 @@ export function UploadDialog({
               />
             </div>
 
-            {/* MIDDLE: Selected files */}
+            {/* Document date — always visible, above file list */}
+            <div className="rounded-lg border bg-muted/20 px-3 py-2 flex items-center gap-3">
+              <Label className="flex items-center gap-2 text-sm whitespace-nowrap m-0">
+                <CalendarClock className="h-4 w-4" /> 📅 Dokumentum dátuma
+              </Label>
+              <Input
+                type="date"
+                value={documentDate}
+                onChange={(e) => setDocumentDate(e.target.value)}
+                disabled={running}
+                className="h-8 w-auto"
+              />
+              <p className="text-xs text-muted-foreground hidden md:block">
+                A megőrzési határidő ettől számítódik.
+              </p>
+            </div>
+
+            {/* Selected files — scrolls only if needed */}
             {files.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0">
                 <p className="text-sm font-medium text-muted-foreground">
                   Kiválasztott fájlok ({files.length})
                 </p>
@@ -448,23 +473,8 @@ export function UploadDialog({
                 ))}
               </div>
             )}
-
-            {/* BOTTOM: Document date */}
-            <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-              <Label className="flex items-center gap-2">
-                <CalendarClock className="h-4 w-4" /> 📅 Dokumentum dátuma
-              </Label>
-              <Input
-                type="date"
-                value={documentDate}
-                onChange={(e) => setDocumentDate(e.target.value)}
-                disabled={running}
-              />
-              <p className="text-xs text-muted-foreground">
-                Ha a dokumentum keltezése eltér a mai dátumtól, módosítsd itt. A megőrzési határidő ettől számítódik.
-              </p>
-            </div>
           </div>
+
 
           <DialogFooter>
             <Button variant="outline" onClick={() => { if (!running) { onOpenChange(false); reset(); } }} disabled={running}>

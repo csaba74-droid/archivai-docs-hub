@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
-import { matchFilenameCategory } from "./filename-rules";
+import { matchFilenameCategory } from "@/config/document-rules";
 
 
 export type CategorizeResult = {
@@ -26,11 +26,15 @@ const BUILT_IN: AllowedCategory[] = [
   { id: "egyeb", label: "Egyéb (other)", mode: "normal" },
 ];
 
-const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
-  "Számlák": "szamlak",
-  "Szerződések": "szerzodesek",
-  "Szállítólevelek": "szallitolevek",
-  "Munkaügyi iratok": "munkaugyi",
+const HARD_CATEGORY_ID_ALIAS: Record<string, string> = {
+  szamlak: "szamlak",
+  szerzodesek: "szerzodesek",
+  szallitolevelek: "szallitolevek",
+  munkaugyi_iratok: "munkaugyi",
+  adobevallesok: "adobevallasok",
+  kozuzemi_szamlak: "kozuzemi",
+  banki_dokumentumok: "banki",
+  muszaki_dokumentumok: "muszaki",
 };
 
 
@@ -75,8 +79,8 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     }
 
     // HARD RULE: filename keyword match locks the category and skips AI.
-    const hardLabel = matchFilenameCategory(data.filename);
-    const hard = hardLabel ? HARD_CATEGORY_ID_BY_LABEL[hardLabel] : null;
+    const hardMatch = matchFilenameCategory(data.filename);
+    const hard = hardMatch ? (HARD_CATEGORY_ID_ALIAS[hardMatch.category] ?? hardMatch.category) : null;
     if (hard) {
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
