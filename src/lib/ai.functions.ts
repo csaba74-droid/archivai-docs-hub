@@ -45,17 +45,65 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     const allowed: AllowedCategory[] = [...BUILT_IN, ...customList];
     const allowedIds = new Set(allowed.map((a) => a.id));
 
-    const system = `You categorize Hungarian business documents.
-Allowed category ids:
-${allowed.map((a) => `- ${a.id}: ${a.label}`).join("\n")}
+    const customKeywordsBlock = customList.length
+      ? `\n\nCUSTOM USER CATEGORIES (also check filename + content for the category name and any obvious synonyms):\n${customList
+          .map((c) => `- ${c.id}: ${c.label}`)
+          .join("\n")}`
+      : "";
 
-Also try to extract the document's own date (invoice date, contract date, statement date, NOT the upload date) from the filename or content sample. Format as ISO YYYY-MM-DD. If unsure, return null.
+    const system = `You are an expert classifier for Hungarian business documents (magyar üzleti dokumentumok). You receive a FILENAME, MIME type, and a CONTENT SAMPLE extracted from the file. You must check BOTH the filename AND the content for keywords. Hungarian diacritics, casing, and English/German/Spanish equivalents all count as matches.
 
-Respond with strict JSON: {"category":"<id>","confidence":<0..1>,"reasoning":"<short>","documentDate":"YYYY-MM-DD" or null}`;
+Allowed category ids and their detection keywords (match ANY keyword in filename OR content):
 
-    const userPrompt = `Filename: ${data.filename}
+1) szamlak — SZÁMLÁK (Invoices), 10 év kötelező megőrzés, ITM strict
+   Keywords: invoice, számla, rechnung, factura, bill, receipt, nyugta, proforma, díjbekérő, "előleg számla", végszámla, "storno számla", "credit note", "debit note", "NAV online számla"
+   Strong signal: presence of invoice number ("számlaszám", "Invoice No"), VAT/ÁFA line, nettó/bruttó totals, "fizetési határidő", "teljesítés kelte". If document clearly has price + VAT + invoice number → ALWAYS szamlak even without keyword match.
+
+2) szerzodesek — SZERZŐDÉSEK (Contracts), 10 év, strict
+   Keywords: contract, agreement, szerződés, megállapodás, keretszerződés, "bérleti szerződés", adásvételi, "vállalkozási szerződés", "megbízási szerződés"
+
+3) szallitolevek — SZÁLLÍTÓLEVELEK (Delivery notes), 10 év, strict
+   Keywords: delivery, szállítólevél, fuvarlevél, EKÁER, CMR, "packing list", csomagjegyzék, "szállítási dokumentum", "átadás-átvétel"
+
+4) munkaugyi — MUNKAÜGYI IRATOK (HR/employment), határozatlan, strict
+   Keywords: munkaszerződés, "employment contract", payslip, bérjegyzék, munkabér, HR, munkaügyi, "jelenléti ív", "szabadság nyilvántartás", "kilépő papír", "belépő nyilatkozat"
+
+5) adobevallasok — ADÓBEVALLÁSOK (Tax returns), 6 év, strict
+   Keywords: NAV, APEH, "tax return", adóbevallás, bevallás, "08-as bevallás", "áfa bevallás", "iparűzési adó", "társasági adó", "szja bevallás", "1953", "2265"
+
+6) kozuzemi — KÖZÜZEMI SZÁMLÁK (Utility bills), 5 év ajánlott
+   Keywords: közüzemi, villany, víz, gáz, távhő, "internet számla", "telefon számla", E.ON, MVM, ELMŰ, ÉMÁSZ, NKM, TIGÁZ, Telekom, Vodafone, Telenor, UPC, Digi
+   Note: utility provider invoices go HERE, not szamlak.
+
+7) banki — BANKI DOKUMENTUMOK (Bank docs), 5 év ajánlott
+   Keywords: bank, bankszámlakivonat, számlakivonat, hitelszerződés, kölcsönszerződés, törlesztési, OTP, K&H, Raiffeisen, UniCredit, CIB, MKB, Erste, SWIFT, IBAN
+
+8) muszaki — MŰSZAKI DOKUMENTUMOK (Technical), nincs korlát
+   Keywords: kézikönyv, manual, műszaki, specifikáció, tervrajz, dokumentáció, "használati utasítás", "garancia levél", szerviz
+
+9) belso — BELSŐ IRATOK (Internal), nincs korlát
+   Keywords: belső, feljegyzés, emlékeztető, előterjesztés, szabályzat, SZMSZ, házirend, protokoll, "belső utasítás"
+
+10) egyeb — EGYÉB (Other) — only when nothing else clearly matches.${customKeywordsBlock}
+
+CONFIDENCE RULES:
+- Any clear keyword match in filename OR content → confidence ≥ 0.90.
+- Invoice-shape detected (price + VAT/ÁFA + invoice number) → szamlak, confidence ≥ 0.92.
+- Ambiguous between two categories → choose the most specific (utility-provider invoice → kozuzemi over szamlak; bank statement → banki) and use 0.70–0.85.
+- Truly unclear / no signal → egyeb with confidence < 0.5.
+- Never invent matches. If you cannot justify a keyword/structural cue, lower the confidence.
+
+DATE EXTRACTION:
+- Extract the document's OWN date: invoice date ("számla kelte", "kelt", "issue date", "invoice date"), contract signing date, statement period end, tax return period end. NOT the upload date and NOT due date ("fizetési határidő") unless no other date exists.
+- Accept Hungarian formats (2024.03.15, 2024. március 15., 15/03/2024, etc.) and normalize to ISO YYYY-MM-DD.
+- If unsure, return null. Do not guess.
+
+OUTPUT: Respond with STRICT JSON only, no prose, no markdown:
+{"category":"<id from list above>","confidence":<0..1 number>,"reasoning":"<short Hungarian explanation, mention which keyword matched>","documentDate":"YYYY-MM-DD" or null}`;
+
+    const userPrompt = `FILENAME: ${data.filename}
 MIME: ${data.mimeType ?? "unknown"}
-${data.sample ? `Content sample:\n${data.sample.slice(0, 3000)}` : ""}`;
+${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000)}` : "CONTENT SAMPLE: (none — classify from filename only)"}`;
 
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
