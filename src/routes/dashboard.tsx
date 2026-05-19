@@ -259,15 +259,27 @@ function Dashboard() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Még nincsenek dokumentumok itt.</p>
-              {canUpload && (
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => setUploadOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" /> Első feltöltés
-                </Button>
-              )}
-            </div>
+            <DropZone
+              variant="large"
+              dragOver={dragOver}
+              disabled={!canUpload}
+              onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => canUpload && openUploadWith(null)}
+            />
+          ) : (
+            <>
+              <DropZone
+                variant="compact"
+                dragOver={dragOver}
+                disabled={!canUpload}
+                onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => canUpload && openUploadWith(null)}
+              />
+
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((doc) => {
