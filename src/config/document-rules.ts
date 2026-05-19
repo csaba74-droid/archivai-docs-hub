@@ -4,13 +4,14 @@
 
 export const FILENAME_RULES: { keywords: string[]; category: string; itm: boolean; retention_years: number | null }[] = [
   {
-    keywords: ['invoice', 'számla', 'szamla', 'rechnung', 'factura', 'nyugta', 'bill', 'receipt', 'proforma', 'díjbekérő', 'dijbekero', 'vegszamla', 'végszámla', 'sztorno', 'storno', 'credit note', 'debit note'],
+    keywords: ['invoice', 'számla', 'szamla', 'szla', 'sz.', 'fakt', 'faktura', 'rechnung', 'factura', 'nyugta', 'bill', 'receipt', 'proforma', 'díjbekérő', 'dijbekero', 'vegszamla', 'végszámla', 'sztorno', 'storno', 'credit note', 'debit note'],
     category: 'szamlak',
     itm: true,
     retention_years: 10,
   },
   {
-    keywords: ['contract', 'szerződés', 'szerzodes', 'agreement', 'megállapodás', 'megallapodas', 'keretszerződés', 'keretsz', 'bérleti', 'berleti', 'adásvétel', 'adasvetel', 'vállalkozási', 'vallalkozasi', 'megbízási', 'megbizasi'],
+    keywords: ['contract', 'szerződés', 'szerzodes', 'szerz', 'szerz.', 'agreement', 'megállapodás', 'megallapodas', 'keretszerződés', 'keretsz', 'bérleti', 'berleti', 'adásvétel', 'adasvetel', 'vállalkozási', 'vallalkozasi', 'megbízási', 'megbizasi'],
+
     category: 'szerzodesek',
     itm: true,
     retention_years: 10,
