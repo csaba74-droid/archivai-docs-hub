@@ -410,35 +410,21 @@ export function UploadDialog({
               </div>
             )}
 
-            {/* BOTTOM: Advanced settings */}
-            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Settings2 className="h-4 w-4" />
-                  Haladó beállítások
-                  <ChevronDown className={`h-4 w-4 transition-transform ${advancedOpen ? "rotate-180" : ""}`} />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-3">
-                <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <CalendarClock className="h-4 w-4" /> Dokumentum dátuma
-                  </Label>
-                  <Input
-                    type="date"
-                    value={documentDate}
-                    onChange={(e) => setDocumentDate(e.target.value)}
-                    disabled={running}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Ha a dokumentum keltezése eltér a mai dátumtól, add meg itt. A megőrzési határidő ettől a dátumtól számítódik.
-                  </p>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+            {/* BOTTOM: Document date */}
+            <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
+              <Label className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4" /> 📅 Dokumentum dátuma
+              </Label>
+              <Input
+                type="date"
+                value={documentDate}
+                onChange={(e) => setDocumentDate(e.target.value)}
+                disabled={running}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ha a dokumentum keltezése eltér a mai dátumtól, módosítsd itt. A megőrzési határidő ettől számítódik.
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
