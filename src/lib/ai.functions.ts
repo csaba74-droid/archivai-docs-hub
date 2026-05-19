@@ -37,6 +37,21 @@ const HARD_CATEGORY_ID_ALIAS: Record<string, string> = {
   muszaki_dokumentumok: "muszaki",
 };
 
+const WORKER_ENV_SYMBOL = Symbol.for("archivai.workerEnv");
+
+function getRuntimeSecret(name: string): string | undefined {
+  const workerEnv = (globalThis as typeof globalThis & { [WORKER_ENV_SYMBOL]?: Record<string, unknown> })[
+    WORKER_ENV_SYMBOL
+  ];
+  const fromWorkerEnv = workerEnv?.[name];
+  if (typeof fromWorkerEnv === "string" && fromWorkerEnv.trim()) return fromWorkerEnv.trim();
+
+  const fromProcessEnv = process.env[name];
+  if (typeof fromProcessEnv === "string" && fromProcessEnv.trim()) return fromProcessEnv.trim();
+
+  return undefined;
+}
+
 
 
 export const categorizeDocument = createServerFn({ method: "POST" })
@@ -57,9 +72,9 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     if (!token) {
       throw new Error("Unauthorized");
     }
-    const supabaseUrl = process.env.SUPABASE_URL ?? "https://jofxnjtktwuzmjjcgofw.supabase.co";
+    const supabaseUrl = getRuntimeSecret("SUPABASE_URL") ?? "https://jofxnjtktwuzmjjcgofw.supabase.co";
     const supabaseAnon =
-      process.env.SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_UvtuR3PW0qi6ia8Y07kwFQ_p5dbL2Ix";
+      getRuntimeSecret("SUPABASE_PUBLISHABLE_KEY") ?? "sb_publishable_UvtuR3PW0qi6ia8Y07kwFQ_p5dbL2Ix";
     const authClient = createClient(supabaseUrl, supabaseAnon, {
       global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false, autoRefreshToken: false },
@@ -81,7 +96,7 @@ export const categorizeDocument = createServerFn({ method: "POST" })
 
 
 
-    const key = process.env.ANTHROPIC_API_KEY;
+    const key = getRuntimeSecret("ANTHROPIC_API_KEY");
     if (!key) {
       return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: "missing api key", documentDate: null };
     }
