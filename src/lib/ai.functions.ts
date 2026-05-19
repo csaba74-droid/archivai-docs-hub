@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
-import { createClient } from "@supabase/supabase-js";
 import { matchFilenameCategory } from "@/config/document-rules";
+
 
 
 export type CategorizeResult = {
@@ -52,8 +51,6 @@ function getRuntimeSecret(name: string): string | undefined {
   return undefined;
 }
 
-
-
 export const categorizeDocument = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
@@ -65,11 +62,6 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data }): Promise<CategorizeResult> => {
-    const userId = "anonymous";
-    // TODO: re-enable subscription check once Stripe is wired up.
-    // For now, all authenticated users can use AI categorization.
-
-
     // HARD RULE: filename keyword match locks the category and skips AI.
     const hardMatch = matchFilenameCategory(data.filename);
     const hard = hardMatch ? (HARD_CATEGORY_ID_ALIAS[hardMatch.category] ?? hardMatch.category) : null;
@@ -77,23 +69,12 @@ export const categorizeDocument = createServerFn({ method: "POST" })
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
 
-
-
-    const workerEnv = (globalThis as typeof globalThis & { [WORKER_ENV_SYMBOL]?: Record<string, unknown> })[
-      WORKER_ENV_SYMBOL
-    ];
-    const rawWorkerKey = workerEnv?.ANTHROPIC_API_KEY;
-    console.log("ANTHROPIC_API_KEY Worker binding:", {
-      type: typeof rawWorkerKey,
-      present: typeof rawWorkerKey === "string" && rawWorkerKey.trim().length > 0,
-      length: typeof rawWorkerKey === "string" ? rawWorkerKey.length : 0,
-      startsWith: typeof rawWorkerKey === "string" ? rawWorkerKey.slice(0, 8) : null,
-      endsWith: typeof rawWorkerKey === "string" ? rawWorkerKey.slice(-4) : null,
-    });
-    const key = typeof rawWorkerKey === "string" ? rawWorkerKey.trim() : undefined;
-    if (!key) {
-      return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: "missing api key", documentDate: null };
+    const lovableKey = getRuntimeSecret("LOVABLE_API_KEY");
+    if (!lovableKey) {
+      console.error("LOVABLE_API_KEY missing from worker env");
+      return { category: "egyeb", confidence: 0, reasoning: "missing LOVABLE_API_KEY", documentDate: null };
     }
+
 
 
     const customList = (data.customCategories ?? []).map((c) => ({
@@ -165,27 +146,27 @@ MIME: ${data.mimeType ?? "unknown"}
 ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000)}` : "CONTENT SAMPLE: (none — classify from filename only)"}`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
+          Authorization: `Bearer ${lovableKey}`,
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 400,
-          system,
-          messages: [{ role: "user", content: userPrompt }],
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: userPrompt },
+          ],
         }),
       });
       if (!res.ok) {
         const text = await res.text();
-        console.error("Anthropic error", res.status, text);
+        console.error("Lovable AI gateway error", res.status, text);
         return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: `http ${res.status}`, documentDate: null };
       }
-      const json = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
-      const text = json.content?.find((p) => p.type === "text")?.text?.trim() ?? "";
+      const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const text = json.choices?.[0]?.message?.content?.trim() ?? "";
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, documentDate: null };
       const parsed = JSON.parse(match[0]) as Partial<CategorizeResult>;
@@ -202,3 +183,4 @@ ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000
       return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: String(e), documentDate: null };
     }
   });
+
