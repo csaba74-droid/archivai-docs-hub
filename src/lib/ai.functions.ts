@@ -30,7 +30,10 @@ const BUILT_IN: AllowedCategory[] = [
 const FILENAME_RULES: { category: string; keywords: string[] }[] = [
   {
     category: "szamlak",
-    keywords: ["invoice", "számla", "szamla", "rechnung", "factura"],
+    keywords: [
+      "invoice", "számla", "szamla", "rechnung", "factura",
+      "nyugta", "bill", "receipt", "proforma", "díjbekérő", "dijbekero",
+    ],
   },
   {
     category: "szerzodesek",
@@ -38,7 +41,10 @@ const FILENAME_RULES: { category: string; keywords: string[] }[] = [
   },
   {
     category: "szallitolevek",
-    keywords: ["ekáer", "ekaer", "szállítólevél", "szallitolevel", "delivery", "fuvarlevél", "fuvarlevel", "cmr"],
+    keywords: [
+      "delivery", "szállítólevél", "szallitolevel", "szallito",
+      "ekáer", "ekaer", "fuvarlevél", "fuvarlevel", "cmr",
+    ],
   },
 ];
 
