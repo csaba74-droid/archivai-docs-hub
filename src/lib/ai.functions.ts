@@ -25,6 +25,33 @@ const BUILT_IN: AllowedCategory[] = [
   { id: "egyeb", label: "Egyéb (other)", mode: "normal" },
 ];
 
+// Hard-coded filename keyword rules. If any matches, we skip the AI call entirely
+// and return the mapped category at 100% confidence.
+const FILENAME_RULES: { category: string; keywords: string[] }[] = [
+  {
+    category: "szamlak",
+    keywords: ["invoice", "számla", "szamla", "rechnung", "factura"],
+  },
+  {
+    category: "szerzodesek",
+    keywords: ["contract", "szerződés", "szerzodes", "agreement", "megállapodás", "megallapodas"],
+  },
+  {
+    category: "szallitolevek",
+    keywords: ["ekáer", "ekaer", "szállítólevél", "szallitolevel", "delivery", "fuvarlevél", "fuvarlevel", "cmr"],
+  },
+];
+
+function matchFilenameRule(filename: string): string | null {
+  const lower = filename.toLowerCase();
+  for (const rule of FILENAME_RULES) {
+    if (rule.keywords.some((k) => lower.includes(k.toLowerCase()))) return rule.category;
+  }
+  return null;
+}
+
+
+
 export const categorizeDocument = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
