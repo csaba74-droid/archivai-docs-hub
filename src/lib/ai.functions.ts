@@ -112,7 +112,7 @@ export const categorizeDocument = createServerFn({ method: "POST" })
 
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) {
-      return { category: "egyeb", confidence: 0, reasoning: "missing api key", documentDate: null };
+      return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: "missing api key", documentDate: null };
     }
 
 
