@@ -230,9 +230,10 @@ function Dashboard() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Keresés név vagy tartalom alapján..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 bg-background" />
           </div>
-          <Button onClick={() => setUploadOpen(true)} disabled={!canUpload}>
+          <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
             <Upload className="h-4 w-4 mr-2" /> Feltöltés
           </Button>
+
         </header>
 
         {!canUpload && (
