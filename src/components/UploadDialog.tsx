@@ -255,21 +255,18 @@ export function UploadDialog({
             updateAt(i, { suggestedCategory: category, detectedDate });
             void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence, hardRule: false });
 
-            if (aiConfidence < CONFIDENCE_THRESHOLD || detectedDate) {
-              const { category: chosen, documentDate: confirmedDate } = await askConfirm({
+            if (aiConfidence < CONFIDENCE_THRESHOLD) {
+              const chosen = await askConfirm({
                 fileName: file.name,
                 suggested: category,
                 confidence: aiConfidence,
                 reasoning: aiReasoning,
-                detectedDate,
-                docDate: documentDate,
               });
               if (chosen === null) {
                 updateAt(i, { status: "error", progress: 0, error: "Kihagyva" });
                 continue;
               }
               category = chosen;
-              if (confirmedDate) detectedDate = confirmedDate;
             }
           }
         } catch (e) {
@@ -277,8 +274,9 @@ export function UploadDialog({
           updateAt(i, { suggestedCategory: category });
         }
 
-        // Retention base date: AI-detected or user-set in Advanced settings.
-        const finalDocDate = detectedDate ?? documentDate;
+        // Save with the user-visible document date. The AI-detected date
+        // (if different) is confirmed with the user after upload.
+        const finalDocDate = documentDate;
 
         updateAt(i, { status: "uploading", progress: 60 });
         const buf = await file.arrayBuffer();
