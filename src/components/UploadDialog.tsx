@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Select,
   SelectContent,
@@ -25,7 +30,17 @@ import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
 import { matchFilenameRule } from "@/lib/filename-rules";
 import { logAudit } from "@/lib/audit";
-import { CalendarClock, FileText, Loader2, Sparkles } from "lucide-react";
+import {
+  CalendarClock,
+  ChevronDown,
+  FileText,
+  FolderOpen,
+  Loader2,
+  Settings2,
+  Sparkles,
+  UploadCloud,
+  X,
+} from "lucide-react";
 
 type FileProgress = {
   file: File;
@@ -53,6 +68,12 @@ const STATUS_LABEL: Record<FileProgress["status"], string> = {
   error: "Hiba",
 };
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function UploadDialog({
   open,
   onOpenChange,
@@ -69,6 +90,9 @@ export function UploadDialog({
   const [files, setFiles] = useState<FileProgress[]>([]);
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [running, setRunning] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingConfirm, setPendingConfirm] = useState<{
     fileName: string;
     suggested: string;
@@ -84,6 +108,7 @@ export function UploadDialog({
   const reset = () => {
     setFiles([]);
     setDocumentDate(new Date().toISOString().slice(0, 10));
+    setAdvancedOpen(false);
   };
 
   useEffect(() => {
@@ -92,12 +117,19 @@ export function UploadDialog({
     }
   }, [open, initialFiles]);
 
-  const handleSelect = (selected: FileList | File[] | null) => {
+  const addFiles = (selected: FileList | File[] | null) => {
     if (!selected) return;
     const arr = Array.from(selected);
-    setFiles(arr.map((file) => ({ file, status: "queued", progress: 0 })));
+    if (arr.length === 0) return;
+    setFiles((prev) => [
+      ...prev,
+      ...arr.map((file) => ({ file, status: "queued" as const, progress: 0 })),
+    ]);
   };
 
+  const removeAt = (i: number) => {
+    setFiles((prev) => prev.filter((_, idx) => idx !== i));
+  };
 
   const updateAt = (i: number, patch: Partial<FileProgress>) => {
     setFiles((prev) => prev.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));
@@ -152,8 +184,6 @@ export function UploadDialog({
             contentText = "";
           }
         }
-        // Final safety: strip NUL + control chars that Postgres rejects
-        // ("unsupported Unicode escape sequence").
         contentText = contentText
           // eslint-disable-next-line no-control-regex
           .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
@@ -161,9 +191,6 @@ export function UploadDialog({
 
         updateAt(i, { status: "ai", progress: 30 });
 
-        // CLIENT-SIDE HARD RULE — runs FIRST, always. Defends against any
-        // server-side failure (auth, subscription, network) putting an obvious
-        // invoice into "Egyéb".
         const hardCategory = matchFilenameRule(file.name);
         console.log("FILENAME CHECK:", file.name, "RESULT:", hardCategory ?? "(no match → AI)");
 
@@ -180,7 +207,6 @@ export function UploadDialog({
               customCategories: customForAi,
             },
           });
-          // Hard rule wins for the category; AI still contributes the date.
           if (!hardCategory) {
             category = result.category;
             aiConfidence = result.confidence;
@@ -208,10 +234,10 @@ export function UploadDialog({
           }
         } catch (e) {
           console.warn("AI categorize failed, fallback", e);
-          // Hard rule category is already set above; keep it.
           updateAt(i, { suggestedCategory: category });
         }
 
+        // Retention base date: AI-detected or user-set in Advanced settings.
         const finalDocDate = detectedDate ?? documentDate;
 
         updateAt(i, { status: "uploading", progress: 60 });
@@ -270,6 +296,13 @@ export function UploadDialog({
     onComplete();
   };
 
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (running) return;
+    addFiles(e.dataTransfer.files);
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!running) { onOpenChange(v); if (!v) reset(); } }}>
@@ -277,56 +310,85 @@ export function UploadDialog({
           <DialogHeader>
             <DialogTitle>Dokumentumok feltöltése</DialogTitle>
             <DialogDescription>
-              Több fájl is feltölthető egyszerre. Az AI automatikusan kategorizál és próbálja kinyerni a dokumentum dátumát.
+              Az AI automatikusan kategorizál és kinyeri a dokumentum dátumát.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 overflow-y-auto pr-2">
-            <div>
-              <Label className="flex items-center gap-2 mb-2">
-                <CalendarClock className="h-4 w-4" /> Dokumentum dátuma (alapértelmezett)
-              </Label>
-              <Input
-                type="date"
-                value={documentDate}
-                onChange={(e) => setDocumentDate(e.target.value)}
+          <div className="space-y-4 overflow-y-auto pr-1">
+            {/* TOP: Drag-and-drop zone */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); if (!running) setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={onDrop}
+              className={`rounded-xl border-2 border-dashed p-8 flex flex-col items-center justify-center text-center transition-colors ${
+                isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/30 bg-muted/20"
+              } ${running ? "opacity-60 pointer-events-none" : ""}`}
+            >
+              <UploadCloud className="h-12 w-12 text-muted-foreground mb-3" />
+              <p className="text-lg font-semibold mb-4">Húzd ide a fájlokat</p>
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 disabled={running}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                A megőrzési határidő ettől a dátumtól számítódik (nem a feltöltés dátumától). Az AI is megpróbálja kinyerni a tényleges dátumot.
+              >
+                <FolderOpen className="h-5 w-5 mr-2" /> Fájlok kiválasztása
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                PDF, DOCX, XLSX, JPG, PNG — egyszerre több fájl is feltölthető
               </p>
-            </div>
-
-            <div>
-              <Label className="mb-2 block">Fájlok</Label>
-              <Input
+              <input
+                ref={fileInputRef}
                 type="file"
                 multiple
-                disabled={running}
-                onChange={(e) => handleSelect(e.target.files)}
+                className="hidden"
+                onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
               />
             </div>
 
+            {/* MIDDLE: Selected files */}
             {files.length > 0 && (
               <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Kiválasztott fájlok ({files.length})
+                </p>
                 {files.map((f, i) => (
-                  <div key={i} className="border rounded-md p-3 space-y-1.5">
+                  <div key={i} className="border rounded-lg p-3 space-y-1.5 bg-card">
                     <div className="flex items-center justify-between gap-2 text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate font-medium">{f.file.name}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {formatBytes(f.file.size)}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                         {f.status === "ai" && <Sparkles className="h-3 w-3" />}
                         {(f.status === "extracting" || f.status === "uploading" || f.status === "saving") && (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         )}
-                        <span className={f.status === "error" ? "text-destructive" : ""}>
-                          {STATUS_LABEL[f.status]}
-                        </span>
+                        {f.status !== "queued" && (
+                          <span className={f.status === "error" ? "text-destructive" : ""}>
+                            {STATUS_LABEL[f.status]}
+                          </span>
+                        )}
+                        {!running && f.status !== "done" && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6"
+                            onClick={() => removeAt(i)}
+                            aria-label="Eltávolítás"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
-                    <Progress value={f.progress} className="h-1.5" />
+                    {(running || f.status === "done" || f.status === "error") && (
+                      <Progress value={f.progress} className="h-1.5" />
+                    )}
                     {f.error && <p className="text-xs text-destructive">{f.error}</p>}
                     {f.suggestedCategory && (
                       <p className="text-xs text-muted-foreground">
@@ -338,11 +400,47 @@ export function UploadDialog({
                 ))}
               </div>
             )}
+
+            {/* BOTTOM: Advanced settings */}
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Settings2 className="h-4 w-4" />
+                  Haladó beállítások
+                  <ChevronDown className={`h-4 w-4 transition-transform ${advancedOpen ? "rotate-180" : ""}`} />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <CalendarClock className="h-4 w-4" /> Dokumentum dátuma
+                  </Label>
+                  <Input
+                    type="date"
+                    value={documentDate}
+                    onChange={(e) => setDocumentDate(e.target.value)}
+                    disabled={running}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ha a dokumentum keltezése eltér a mai dátumtól, add meg itt. A megőrzési határidő ettől a dátumtól számítódik.
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { if (!running) { onOpenChange(false); reset(); } }} disabled={running}>Bezárás</Button>
-            <Button onClick={startUpload} disabled={running || files.length === 0}>
+            <Button variant="outline" onClick={() => { if (!running) { onOpenChange(false); reset(); } }} disabled={running}>
+              Bezárás
+            </Button>
+            <Button
+              onClick={startUpload}
+              disabled={running || files.length === 0}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-muted disabled:text-muted-foreground"
+            >
               {running ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Folyamatban...</> : "Feltöltés indítása"}
             </Button>
           </DialogFooter>
