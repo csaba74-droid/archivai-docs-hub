@@ -8,6 +8,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
+import { CategoriesProvider } from "@/hooks/use-categories";
+import { SubscriptionProvider } from "@/hooks/use-subscription";
 
 import appCss from "../styles.css?url";
 
@@ -118,8 +120,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster richColors position="top-right" />
+      <SubscriptionProvider>
+        <CategoriesProvider>
+          <Outlet />
+          <Toaster richColors position="top-right" />
+        </CategoriesProvider>
+      </SubscriptionProvider>
     </QueryClientProvider>
   );
 }
