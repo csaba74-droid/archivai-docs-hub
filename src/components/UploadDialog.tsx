@@ -250,13 +250,19 @@ export function UploadDialog({
             void logAudit("categorize", null, { filename: file.name, category, confidence: 1, hardRule: true });
           } else {
             console.log("CALLING AI FOR:", file.name, "sampleLen:", contentText.length);
+            const { data: { session } } = await supabase.auth.getSession();
+            const accessToken = session?.access_token;
+            if (!accessToken) {
+              throw new Error("Nincs aktív munkamenet — jelentkezz be újra.");
+            }
             const result = await categorizeDocument({
-
+              headers: { Authorization: `Bearer ${accessToken}` },
               data: {
                 filename: file.name,
                 mimeType: file.type || undefined,
                 sample: contentText.slice(0, 3000) || undefined,
                 customCategories: customForAi,
+                accessToken,
               },
             });
             console.log("AI RESULT:", result.category, result.confidence, result.reasoning, "documentDate:", result.documentDate, "raw:", result);
