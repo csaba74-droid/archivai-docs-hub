@@ -146,27 +146,27 @@ MIME: ${data.mimeType ?? "unknown"}
 ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000)}` : "CONTENT SAMPLE: (none — classify from filename only)"}`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
+          Authorization: `Bearer ${lovableKey}`,
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 400,
-          system,
-          messages: [{ role: "user", content: userPrompt }],
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: userPrompt },
+          ],
         }),
       });
       if (!res.ok) {
         const text = await res.text();
-        console.error("Anthropic error", res.status, text);
+        console.error("Lovable AI gateway error", res.status, text);
         return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: `http ${res.status}`, documentDate: null };
       }
-      const json = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
-      const text = json.content?.find((p) => p.type === "text")?.text?.trim() ?? "";
+      const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const text = json.choices?.[0]?.message?.content?.trim() ?? "";
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, documentDate: null };
       const parsed = JSON.parse(match[0]) as Partial<CategorizeResult>;
@@ -183,3 +183,4 @@ ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000
       return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: String(e), documentDate: null };
     }
   });
+
