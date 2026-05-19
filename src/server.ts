@@ -7,6 +7,16 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+type WorkerEnv = Record<string, unknown>;
+
+const WORKER_ENV_SYMBOL = Symbol.for("archivai.workerEnv");
+
+function exposeWorkerEnv(env: unknown) {
+  if (env && typeof env === "object") {
+    (globalThis as typeof globalThis & { [WORKER_ENV_SYMBOL]?: WorkerEnv })[WORKER_ENV_SYMBOL] = env as WorkerEnv;
+  }
+}
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -69,6 +79,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      exposeWorkerEnv(env);
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
