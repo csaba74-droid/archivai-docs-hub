@@ -2,11 +2,9 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Check, CreditCard, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
-import { toast } from "sonner";
-import { useState } from "react";
 
 export const Route = createFileRoute("/subscription")({
   beforeLoad: async () => {
@@ -24,46 +22,7 @@ const PLAN_FEATURES: Record<keyof typeof PLAN_INFO, string[]> = {
 };
 
 function SubscriptionPage() {
-  const { subscription, reload, active } = useSubscription();
-  const [busy, setBusy] = useState<string | null>(null);
-
-  const setPlan = async (plan: "alap" | "pro" | "vallalati") => {
-    setBusy(plan);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setBusy(null); return; }
-    const { error } = await supabase
-      .from("subscriptions")
-      .upsert({
-        user_id: u.user.id,
-        plan,
-        status: "active",
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    setBusy(null);
-    if (error) {
-      toast.error("Csomag váltás sikertelen", { description: error.message });
-      return;
-    }
-    toast.success(`Csomag frissítve: ${PLAN_INFO[plan].label}`);
-    await reload();
-  };
-
-  // For demo: toggle past_due to test access control
-  const togglePaymentStatus = async () => {
-    if (!subscription) return;
-    const newStatus = subscription.status === "active" ? "past_due" : "active";
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("user_id", subscription.user_id);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success(`Állapot: ${newStatus}`);
-    await reload();
-  };
+  const { subscription, active } = useSubscription();
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,18 +52,14 @@ function SubscriptionPage() {
                 )}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={togglePaymentStatus}>
-                <CreditCard className="h-4 w-4 mr-2" /> Fizetési állapot váltása (teszt)
-              </Button>
-            </div>
           </div>
           <div className="mt-3 rounded-md bg-muted p-3 text-xs text-muted-foreground">
-            ⓘ Stripe integráció később kerül bekötésre. Most a csomag és fizetési állapot manuálisan változtatható tesztelési célból.
+            ⓘ A csomagváltást a Stripe fizetési integráció bekötése után tudjuk élesíteni. Addig is keress minket emailben:{" "}
+            <a href="mailto:hello@archivai.hu" className="underline">hello@archivai.hu</a>.
           </div>
         </Card>
 
-        {/* Plan picker */}
+        {/* Plan picker (read-only until Stripe is wired) */}
         <div className="grid md:grid-cols-3 gap-4">
           {(["alap", "pro", "vallalati"] as const).map((plan) => {
             const info = PLAN_INFO[plan];
@@ -127,11 +82,10 @@ function SubscriptionPage() {
                 </ul>
                 <Button
                   className="mt-5 w-full"
-                  variant={isCurrent ? "secondary" : "default"}
-                  disabled={isCurrent || busy === plan}
-                  onClick={() => setPlan(plan)}
+                  variant={isCurrent ? "secondary" : "outline"}
+                  disabled
                 >
-                  {isCurrent ? "Jelenlegi csomag" : busy === plan ? "Váltás..." : "Váltás erre"}
+                  {isCurrent ? "Jelenlegi csomag" : "Hamarosan elérhető"}
                 </Button>
               </Card>
             );
