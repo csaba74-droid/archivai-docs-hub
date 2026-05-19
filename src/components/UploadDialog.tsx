@@ -12,11 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,11 +27,9 @@ import { matchFilenameCategory } from "@/lib/filename-rules";
 import { logAudit } from "@/lib/audit";
 import {
   CalendarClock,
-  ChevronDown,
   FileText,
   FolderOpen,
   Loader2,
-  Settings2,
   Sparkles,
   UploadCloud,
   X,
@@ -98,24 +91,25 @@ export function UploadDialog({
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [running, setRunning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingConfirm, setPendingConfirm] = useState<{
     fileName: string;
     suggested: string;
     confidence: number;
     reasoning?: string;
-    detectedDate?: string | null;
-    docDate: string;
-    resolve: (v: { category: string | null; documentDate: string }) => void;
+    resolve: (v: string | null) => void;
   } | null>(null);
   const [confirmCategory, setConfirmCategory] = useState("egyeb");
-  const [confirmDate, setConfirmDate] = useState("");
+  const [datePrompt, setDatePrompt] = useState<{
+    documentId: string;
+    fileName: string;
+    detectedDate: string;
+    currentDate: string;
+  } | null>(null);
 
   const reset = () => {
     setFiles([]);
     setDocumentDate(new Date().toISOString().slice(0, 10));
-    setAdvancedOpen(false);
   };
 
   useEffect(() => {
@@ -147,20 +141,50 @@ export function UploadDialog({
     suggested: string;
     confidence: number;
     reasoning?: string;
-    detectedDate?: string | null;
-    docDate: string;
   }) =>
-    new Promise<{ category: string | null; documentDate: string }>((resolve) => {
+    new Promise<string | null>((resolve) => {
       setConfirmCategory(params.suggested);
-      setConfirmDate(params.detectedDate ?? params.docDate);
       setPendingConfirm({ ...params, resolve });
     });
 
   const resolveConfirm = (chosen: string | null) => {
     if (!pendingConfirm) return;
-    pendingConfirm.resolve({ category: chosen, documentDate: confirmDate });
+    pendingConfirm.resolve(chosen);
     setPendingConfirm(null);
   };
+
+  const askDateConfirm = (params: {
+    documentId: string;
+    fileName: string;
+    detectedDate: string;
+    currentDate: string;
+  }) =>
+    new Promise<boolean>((resolve) => {
+      setDatePrompt(params);
+      datePromptResolveRef.current = resolve;
+    });
+
+  const datePromptResolveRef = useRef<((v: boolean) => void) | null>(null);
+
+  const resolveDatePrompt = async (accept: boolean) => {
+    const prompt = datePrompt;
+    const resolver = datePromptResolveRef.current;
+    setDatePrompt(null);
+    datePromptResolveRef.current = null;
+    if (accept && prompt) {
+      const { error } = await supabase
+        .from("documents")
+        .update({ document_date: prompt.detectedDate })
+        .eq("id", prompt.documentId);
+      if (error) {
+        toast.error(`Dátum frissítés sikertelen: ${error.message}`);
+      } else {
+        toast.success(`📅 Dátum frissítve: ${prompt.detectedDate}`);
+      }
+    }
+    resolver?.(accept);
+  };
+
 
   const startUpload = async () => {
     if (files.length === 0) {
@@ -231,21 +255,18 @@ export function UploadDialog({
             updateAt(i, { suggestedCategory: category, detectedDate });
             void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence, hardRule: false });
 
-            if (aiConfidence < CONFIDENCE_THRESHOLD || detectedDate) {
-              const { category: chosen, documentDate: confirmedDate } = await askConfirm({
+            if (aiConfidence < CONFIDENCE_THRESHOLD) {
+              const chosen = await askConfirm({
                 fileName: file.name,
                 suggested: category,
                 confidence: aiConfidence,
                 reasoning: aiReasoning,
-                detectedDate,
-                docDate: documentDate,
               });
               if (chosen === null) {
                 updateAt(i, { status: "error", progress: 0, error: "Kihagyva" });
                 continue;
               }
               category = chosen;
-              if (confirmedDate) detectedDate = confirmedDate;
             }
           }
         } catch (e) {
@@ -253,8 +274,9 @@ export function UploadDialog({
           updateAt(i, { suggestedCategory: category });
         }
 
-        // Retention base date: AI-detected or user-set in Advanced settings.
-        const finalDocDate = detectedDate ?? documentDate;
+        // Save with the user-visible document date. The AI-detected date
+        // (if different) is confirmed with the user after upload.
+        const finalDocDate = documentDate;
 
         updateAt(i, { status: "uploading", progress: 60 });
         const buf = await file.arrayBuffer();
@@ -292,6 +314,16 @@ export function UploadDialog({
           void logAudit("upload", (inserted as DocumentRow).id, { filename: file.name, category, confidence: aiConfidence });
         }
         updateAt(i, { status: "done", progress: 100 });
+
+        // Post-upload: if AI detected a date different from the user's chosen date, ask.
+        if (inserted && detectedDate && detectedDate !== finalDocDate) {
+          await askDateConfirm({
+            documentId: (inserted as DocumentRow).id,
+            fileName: file.name,
+            detectedDate,
+            currentDate: finalDocDate,
+          });
+        }
       } catch (e: unknown) {
         const err = e as { message?: string; error?: string; statusText?: string; name?: string } | Error | string | null;
         let msg = "Ismeretlen hiba";
@@ -417,35 +449,21 @@ export function UploadDialog({
               </div>
             )}
 
-            {/* BOTTOM: Advanced settings */}
-            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Settings2 className="h-4 w-4" />
-                  Haladó beállítások
-                  <ChevronDown className={`h-4 w-4 transition-transform ${advancedOpen ? "rotate-180" : ""}`} />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-3">
-                <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <CalendarClock className="h-4 w-4" /> Dokumentum dátuma
-                  </Label>
-                  <Input
-                    type="date"
-                    value={documentDate}
-                    onChange={(e) => setDocumentDate(e.target.value)}
-                    disabled={running}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Ha a dokumentum keltezése eltér a mai dátumtól, add meg itt. A megőrzési határidő ettől a dátumtól számítódik.
-                  </p>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+            {/* BOTTOM: Document date */}
+            <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
+              <Label className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4" /> 📅 Dokumentum dátuma
+              </Label>
+              <Input
+                type="date"
+                value={documentDate}
+                onChange={(e) => setDocumentDate(e.target.value)}
+                disabled={running}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ha a dokumentum keltezése eltér a mai dátumtól, módosítsd itt. A megőrzési határidő ettől számítódik.
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
@@ -490,18 +508,41 @@ export function UploadDialog({
                   <p className="text-xs text-muted-foreground mt-1">AI: {pendingConfirm.reasoning}</p>
                 )}
               </div>
-              <div>
-                <Label>
-                  Dokumentum dátuma
-                  {pendingConfirm.detectedDate && <span className="text-xs text-brand ml-2">(AI által felismert)</span>}
-                </Label>
-                <Input type="date" value={confirmDate} onChange={(e) => setConfirmDate(e.target.value)} />
-              </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => resolveConfirm(null)}>Kihagyás</Button>
             <Button onClick={() => resolveConfirm(confirmCategory)}>Mentés</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post-upload: AI-detected document date confirmation */}
+      <Dialog open={!!datePrompt} onOpenChange={(v) => { if (!v) resolveDatePrompt(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-brand" /> 📅 Dátum azonosítva
+            </DialogTitle>
+            <DialogDescription>{datePrompt?.fileName}</DialogDescription>
+          </DialogHeader>
+          {datePrompt && (
+            <div className="space-y-2 py-2 text-sm">
+              <p>
+                A dokumentumon azonosított dátum: <span className="font-semibold">{datePrompt.detectedDate}</span>.
+              </p>
+              <p className="text-muted-foreground">
+                Jelenlegi dátum: {datePrompt.currentDate}. Ezt használjuk a megőrzési idő számításához?
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => resolveDatePrompt(false)}>
+              Nem, maradjon a mai dátum
+            </Button>
+            <Button onClick={() => resolveDatePrompt(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              Igen, használjuk
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
