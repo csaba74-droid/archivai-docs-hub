@@ -314,6 +314,16 @@ export function UploadDialog({
           void logAudit("upload", (inserted as DocumentRow).id, { filename: file.name, category, confidence: aiConfidence });
         }
         updateAt(i, { status: "done", progress: 100 });
+
+        // Post-upload: if AI detected a date different from the user's chosen date, ask.
+        if (inserted && detectedDate && detectedDate !== finalDocDate) {
+          await askDateConfirm({
+            documentId: (inserted as DocumentRow).id,
+            fileName: file.name,
+            detectedDate,
+            currentDate: finalDocDate,
+          });
+        }
       } catch (e: unknown) {
         const err = e as { message?: string; error?: string; statusText?: string; name?: string } | Error | string | null;
         let msg = "Ismeretlen hiba";
