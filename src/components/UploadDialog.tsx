@@ -27,11 +27,9 @@ import { matchFilenameCategory } from "@/lib/filename-rules";
 import { logAudit } from "@/lib/audit";
 import {
   CalendarClock,
-  ChevronDown,
   FileText,
   FolderOpen,
   Loader2,
-  Settings2,
   Sparkles,
   UploadCloud,
   X,
