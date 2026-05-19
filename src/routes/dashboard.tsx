@@ -263,19 +263,9 @@ function Dashboard() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : filtered.length === 0 ? (
-            <DropZone
-              variant="large"
-              dragOver={dragOver}
-              disabled={!canUpload}
-              onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => canUpload && openUploadWith(null)}
-            />
-          ) : (
-            <>
+            <div className="rounded-xl border bg-card p-4 space-y-3">
               <DropZone
-                variant="compact"
+                variant="large"
                 dragOver={dragOver}
                 disabled={!canUpload}
                 onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
@@ -283,6 +273,30 @@ function Dashboard() {
                 onDrop={handleDrop}
                 onClick={() => canUpload && openUploadWith(null)}
               />
+              <div className="flex justify-center">
+                <Button onClick={() => openUploadWith(null)} disabled={!canUpload} size="lg">
+                  <Upload className="h-4 w-4 mr-2" /> Feltöltés
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-xl border bg-card p-3 flex items-center gap-3">
+                <div className="flex-1">
+                  <DropZone
+                    variant="compact"
+                    dragOver={dragOver}
+                    disabled={!canUpload}
+                    onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    onClick={() => canUpload && openUploadWith(null)}
+                  />
+                </div>
+                <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
+                  <Upload className="h-4 w-4 mr-2" /> Feltöltés
+                </Button>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
