@@ -46,6 +46,8 @@ function Dashboard() {
   const [dragOver, setDragOver] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
 
+  const canUpload = active;
+
   const openUploadWith = useCallback((files?: File[] | null) => {
     setPendingFiles(files && files.length > 0 ? files : null);
     setUploadOpen(true);
@@ -65,8 +67,6 @@ function Dashboard() {
     [canUpload, openUploadWith],
   );
 
-
-  const canUpload = active;
 
   const loadDocs = useCallback(async () => {
     setLoading(true);
