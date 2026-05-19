@@ -115,7 +115,7 @@ ${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 300,
+          max_tokens: 400,
           system,
           messages: [{ role: "user", content: userPrompt }],
         }),
