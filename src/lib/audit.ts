@@ -18,13 +18,18 @@ export async function logAudit(
     const { data } = await supabase.auth.getUser();
     const user = data?.user;
     if (!user) return;
-    await supabase.from("audit_log").insert({
+    const payload = {
       user_id: user.id,
-      document_id: documentId,
-      action,
-      metadata: metadata ?? null,
-    });
+      document_id: documentId ?? null,
+      action: String(action),
+      metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null,
+    };
+    const { error } = await supabase.from("audit_log").insert(payload);
+    if (error) {
+      console.warn("audit log insert failed:", error.message, error.details, payload);
+    }
   } catch (e) {
     console.warn("audit log failed:", e);
   }
 }
+
