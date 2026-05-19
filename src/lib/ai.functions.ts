@@ -37,6 +37,21 @@ const HARD_CATEGORY_ID_ALIAS: Record<string, string> = {
   muszaki_dokumentumok: "muszaki",
 };
 
+const WORKER_ENV_SYMBOL = Symbol.for("archivai.workerEnv");
+
+function getRuntimeSecret(name: string): string | undefined {
+  const workerEnv = (globalThis as typeof globalThis & { [WORKER_ENV_SYMBOL]?: Record<string, unknown> })[
+    WORKER_ENV_SYMBOL
+  ];
+  const fromWorkerEnv = workerEnv?.[name];
+  if (typeof fromWorkerEnv === "string" && fromWorkerEnv.trim()) return fromWorkerEnv.trim();
+
+  const fromProcessEnv = process.env[name];
+  if (typeof fromProcessEnv === "string" && fromProcessEnv.trim()) return fromProcessEnv.trim();
+
+  return undefined;
+}
+
 
 
 export const categorizeDocument = createServerFn({ method: "POST" })
