@@ -218,6 +218,7 @@ export function UploadDialog({
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i].file;
+      console.log("STARTING UPLOAD FOR:", file.name);
       try {
         const hardCategory = filenameMatches[i]?.category ?? null;
 
@@ -248,7 +249,9 @@ export function UploadDialog({
             updateAt(i, { suggestedCategory: category, detectedDate: null });
             void logAudit("categorize", null, { filename: file.name, category, confidence: 1, hardRule: true });
           } else {
+            console.log("CALLING AI FOR:", file.name, "sampleLen:", contentText.length);
             const result = await categorizeDocument({
+
               data: {
                 filename: file.name,
                 mimeType: file.type || undefined,
