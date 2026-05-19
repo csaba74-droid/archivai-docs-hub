@@ -171,15 +171,17 @@ create policy "Users view own subscription"
   on public.subscriptions for select to authenticated
   using (auth.uid() = user_id);
 
+-- Insert: handled by the signup trigger only. Do NOT allow authenticated users
+-- to insert subscriptions (otherwise they could self-provision a paid plan).
 drop policy if exists "Users insert own subscription" on public.subscriptions;
-create policy "Users insert own subscription"
-  on public.subscriptions for insert to authenticated
-  with check (auth.uid() = user_id);
 
+-- Update: NOT allowed from the client. Plan/status changes must come from a
+-- trusted backend (Stripe webhook handler running with the service role key).
 drop policy if exists "Users update own subscription" on public.subscriptions;
-create policy "Users update own subscription"
-  on public.subscriptions for update to authenticated
-  using (auth.uid() = user_id);
+
+-- Delete: never allowed from the client.
+drop policy if exists "Users delete own subscription" on public.subscriptions;
+
 
 -- Auto-create active 'alap' subscription on signup
 create or replace function public.handle_new_subscription()
