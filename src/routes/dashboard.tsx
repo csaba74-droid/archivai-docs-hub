@@ -225,15 +225,19 @@ function Dashboard() {
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="border-b bg-card px-8 py-4 flex items-center gap-4">
+        <header className="border-b bg-card px-8 py-4 flex items-center gap-2">
           <div className="relative flex-1 max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Keresés név vagy tartalom alapján..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 bg-background" />
+            <Input
+              placeholder="Keresés név vagy tartalom alapján..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-10 bg-background"
+            />
           </div>
-          <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
-            <Upload className="h-4 w-4 mr-2" /> Feltöltés
+          <Button variant="secondary" onClick={() => { /* search is live; button is for explicit submit/log */ void logAudit("search", null, { query: search, manual: true }); }}>
+            <Search className="h-4 w-4 mr-2" /> Keresés
           </Button>
-
         </header>
 
         {!canUpload && (
