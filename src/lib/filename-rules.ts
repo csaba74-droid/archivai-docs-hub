@@ -1,32 +1,63 @@
 // Client-safe filename keyword rules for document categorization.
-// Kept in a separate module so client bundles do not pull in any server-only
-// imports from ai.functions.ts.
+// No server imports, no framework imports — only pure string checks.
 
-export const FILENAME_CATEGORY_RULES: { category: string; keywords: string[] }[] = [
-  {
-    category: "szamlak",
-    keywords: [
-      "invoice", "számla", "szamla", "rechnung", "factura",
-      "nyugta", "bill", "receipt", "proforma", "díjbekérő", "dijbekero",
-    ],
-  },
-  {
-    category: "szerzodesek",
-    keywords: ["contract", "szerződés", "szerzodes", "agreement", "megállapodás", "megallapodas"],
-  },
-  {
-    category: "szallitolevek",
-    keywords: [
-      "delivery", "szállítólevél", "szallitolevel", "szallito",
-      "ekáer", "ekaer", "fuvarlevél", "fuvarlevel", "cmr",
-    ],
-  },
-];
-
-export function matchFilenameRule(filename: string): string | null {
+export function matchFilenameCategory(filename: string): string | null {
   const lower = filename.toLowerCase();
-  for (const rule of FILENAME_CATEGORY_RULES) {
-    if (rule.keywords.some((k) => lower.includes(k.toLowerCase()))) return rule.category;
+
+  if (
+    lower.includes("invoice") ||
+    lower.includes("számla") ||
+    lower.includes("szamla") ||
+    lower.includes("rechnung") ||
+    lower.includes("factura") ||
+    lower.includes("nyugta") ||
+    lower.includes("bill") ||
+    lower.includes("receipt") ||
+    lower.includes("proforma") ||
+    lower.includes("díjbekérő") ||
+    lower.includes("dijbekero")
+  ) {
+    return "Számlák";
   }
+
+  if (
+    lower.includes("contract") ||
+    lower.includes("szerződés") ||
+    lower.includes("szerzodes") ||
+    lower.includes("agreement") ||
+    lower.includes("megállapodás") ||
+    lower.includes("megallapodas") ||
+    lower.includes("keretszerződés")
+  ) {
+    return "Szerződések";
+  }
+
+  if (
+    lower.includes("delivery") ||
+    lower.includes("szállítólevél") ||
+    lower.includes("szallitolevel") ||
+    lower.includes("szállító") ||
+    lower.includes("szallito") ||
+    lower.includes("ekáer") ||
+    lower.includes("ekaer") ||
+    lower.includes("fuvarlevél") ||
+    lower.includes("fuvarlevel") ||
+    lower.includes("cmr")
+  ) {
+    return "Szállítólevelek";
+  }
+
+  if (
+    lower.includes("munkaszerződés") ||
+    lower.includes("munkaszerzodes") ||
+    lower.includes("bérjegyzék") ||
+    lower.includes("berjegyzek") ||
+    lower.includes("payslip") ||
+    lower.includes("payroll") ||
+    lower.includes("munkabér")
+  ) {
+    return "Munkaügyi iratok";
+  }
+
   return null;
 }
