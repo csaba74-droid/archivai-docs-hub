@@ -25,8 +25,14 @@ const BUILT_IN: AllowedCategory[] = [
   { id: "egyeb", label: "Egyéb (other)", mode: "normal" },
 ];
 
-import { matchFilenameRule } from "./filename-rules";
-export { matchFilenameRule, FILENAME_CATEGORY_RULES } from "./filename-rules";
+import { matchFilenameCategory } from "./filename-rules";
+
+const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
+  "Számlák": "szamlak",
+  "Szerződések": "szerzodesek",
+  "Szállítólevelek": "szallitolevek",
+  "Munkaügyi iratok": "munkaugyi",
+};
 
 
 
@@ -73,7 +79,8 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     // If there is no content sample, short-circuit. If we have a sample,
     // still call the AI so we can extract the document date, then force the
     // category back to the hard-matched value.
-    const hard = matchFilenameRule(data.filename);
+    const hardLabel = matchFilenameCategory(data.filename);
+    const hard = hardLabel ? HARD_CATEGORY_ID_BY_LABEL[hardLabel] : null;
     if (hard && !data.sample) {
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
