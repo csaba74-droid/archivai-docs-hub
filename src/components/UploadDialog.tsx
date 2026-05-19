@@ -91,24 +91,25 @@ export function UploadDialog({
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [running, setRunning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingConfirm, setPendingConfirm] = useState<{
     fileName: string;
     suggested: string;
     confidence: number;
     reasoning?: string;
-    detectedDate?: string | null;
-    docDate: string;
-    resolve: (v: { category: string | null; documentDate: string }) => void;
+    resolve: (v: string | null) => void;
   } | null>(null);
   const [confirmCategory, setConfirmCategory] = useState("egyeb");
-  const [confirmDate, setConfirmDate] = useState("");
+  const [datePrompt, setDatePrompt] = useState<{
+    documentId: string;
+    fileName: string;
+    detectedDate: string;
+    currentDate: string;
+  } | null>(null);
 
   const reset = () => {
     setFiles([]);
     setDocumentDate(new Date().toISOString().slice(0, 10));
-    setAdvancedOpen(false);
   };
 
   useEffect(() => {
@@ -140,20 +141,50 @@ export function UploadDialog({
     suggested: string;
     confidence: number;
     reasoning?: string;
-    detectedDate?: string | null;
-    docDate: string;
   }) =>
-    new Promise<{ category: string | null; documentDate: string }>((resolve) => {
+    new Promise<string | null>((resolve) => {
       setConfirmCategory(params.suggested);
-      setConfirmDate(params.detectedDate ?? params.docDate);
       setPendingConfirm({ ...params, resolve });
     });
 
   const resolveConfirm = (chosen: string | null) => {
     if (!pendingConfirm) return;
-    pendingConfirm.resolve({ category: chosen, documentDate: confirmDate });
+    pendingConfirm.resolve(chosen);
     setPendingConfirm(null);
   };
+
+  const askDateConfirm = (params: {
+    documentId: string;
+    fileName: string;
+    detectedDate: string;
+    currentDate: string;
+  }) =>
+    new Promise<boolean>((resolve) => {
+      setDatePrompt(params);
+      datePromptResolveRef.current = resolve;
+    });
+
+  const datePromptResolveRef = useRef<((v: boolean) => void) | null>(null);
+
+  const resolveDatePrompt = async (accept: boolean) => {
+    const prompt = datePrompt;
+    const resolver = datePromptResolveRef.current;
+    setDatePrompt(null);
+    datePromptResolveRef.current = null;
+    if (accept && prompt) {
+      const { error } = await supabase
+        .from("documents")
+        .update({ document_date: prompt.detectedDate })
+        .eq("id", prompt.documentId);
+      if (error) {
+        toast.error(`Dátum frissítés sikertelen: ${error.message}`);
+      } else {
+        toast.success(`📅 Dátum frissítve: ${prompt.detectedDate}`);
+      }
+    }
+    resolver?.(accept);
+  };
+
 
   const startUpload = async () => {
     if (files.length === 0) {
