@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
+import { matchFilenameCategory } from "./filename-rules";
 
 
 export type CategorizeResult = {
@@ -24,8 +25,6 @@ const BUILT_IN: AllowedCategory[] = [
   { id: "belso", label: "Belső iratok (internal)", mode: "normal" },
   { id: "egyeb", label: "Egyéb (other)", mode: "normal" },
 ];
-
-import { matchFilenameCategory } from "./filename-rules";
 
 const HARD_CATEGORY_ID_BY_LABEL: Record<string, string> = {
   "Számlák": "szamlak",
@@ -75,13 +74,10 @@ export const categorizeDocument = createServerFn({ method: "POST" })
       throw new Error("Active subscription required");
     }
 
-    // HARD RULE: filename keyword match locks the category.
-    // If there is no content sample, short-circuit. If we have a sample,
-    // still call the AI so we can extract the document date, then force the
-    // category back to the hard-matched value.
+    // HARD RULE: filename keyword match locks the category and skips AI.
     const hardLabel = matchFilenameCategory(data.filename);
     const hard = hardLabel ? HARD_CATEGORY_ID_BY_LABEL[hardLabel] : null;
-    if (hard && !data.sample) {
+    if (hard) {
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
 
