@@ -23,7 +23,7 @@ import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supaba
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
-import { matchFilenameCategory } from "@/lib/filename-rules";
+import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
 import {
   CalendarClock,
