@@ -22,7 +22,8 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supabase";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
-import { categorizeDocument, matchFilenameRule } from "@/lib/ai.functions";
+import { categorizeDocument } from "@/lib/ai.functions";
+import { matchFilenameRule } from "@/lib/filename-rules";
 import { logAudit } from "@/lib/audit";
 import { CalendarClock, FileText, Loader2, Sparkles } from "lucide-react";
 
