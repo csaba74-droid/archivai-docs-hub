@@ -42,9 +42,31 @@ function Dashboard() {
   const [userEmail, setUserEmail] = useState("");
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
 
   const canUpload = active;
+
+  const openUploadWith = useCallback((files?: File[] | null) => {
+    setPendingFiles(files && files.length > 0 ? files : null);
+    setUploadOpen(true);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      if (!canUpload) {
+        toast.error("Csak olvasási hozzáférés", { description: "Rendezd a fizetést." });
+        return;
+      }
+      const files = Array.from(e.dataTransfer.files ?? []);
+      if (files.length > 0) openUploadWith(files);
+    },
+    [canUpload, openUploadWith],
+  );
+
 
   const loadDocs = useCallback(async () => {
     setLoading(true);
@@ -208,9 +230,10 @@ function Dashboard() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Keresés név vagy tartalom alapján..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 bg-background" />
           </div>
-          <Button onClick={() => setUploadOpen(true)} disabled={!canUpload}>
+          <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
             <Upload className="h-4 w-4 mr-2" /> Feltöltés
           </Button>
+
         </header>
 
         {!canUpload && (
@@ -236,15 +259,27 @@ function Dashboard() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Még nincsenek dokumentumok itt.</p>
-              {canUpload && (
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => setUploadOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" /> Első feltöltés
-                </Button>
-              )}
-            </div>
+            <DropZone
+              variant="large"
+              dragOver={dragOver}
+              disabled={!canUpload}
+              onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => canUpload && openUploadWith(null)}
+            />
+          ) : (
+            <>
+              <DropZone
+                variant="compact"
+                dragOver={dragOver}
+                disabled={!canUpload}
+                onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => canUpload && openUploadWith(null)}
+              />
+
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((doc) => {
@@ -297,7 +332,9 @@ function Dashboard() {
                 );
               })}
             </div>
+            </>
           )}
+
         </div>
       </main>
 
@@ -311,11 +348,61 @@ function Dashboard() {
         }}
         canEdit={canUpload}
       />
-      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onComplete={loadDocs} />
+      <UploadDialog
+        open={uploadOpen}
+        onOpenChange={(v) => { setUploadOpen(v); if (!v) setPendingFiles(null); }}
+        onComplete={loadDocs}
+        initialFiles={pendingFiles}
+      />
       <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
     </div>
   );
 }
+
+function DropZone({
+  variant,
+  dragOver,
+  disabled,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onClick,
+}: {
+  variant: "large" | "compact";
+  dragOver: boolean;
+  disabled: boolean;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onClick: () => void;
+}) {
+  const large = variant === "large";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      disabled={disabled}
+      className={`w-full rounded-xl border-2 border-dashed transition-colors flex flex-col items-center justify-center text-center
+        ${large ? "py-20 px-6" : "py-6 px-4"}
+        ${dragOver ? "border-brand bg-brand-soft/50" : "border-border bg-muted/30 hover:bg-muted/60"}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+    >
+      <Upload className={`${large ? "h-12 w-12" : "h-5 w-5"} text-brand mb-2`} />
+      <p className={`${large ? "text-base font-medium" : "text-sm font-medium"}`}>
+        Húzd ide a fájlokat vagy kattints a Feltöltés gombra
+      </p>
+      {large && (
+        <p className="text-xs text-muted-foreground mt-2">
+          PDF, Word, Excel, képek — egy vagy több fájl egyszerre
+        </p>
+      )}
+    </button>
+  );
+}
+
 
 function SectionHeader({ icon, title }: { icon?: React.ReactNode; title: string }) {
   return (

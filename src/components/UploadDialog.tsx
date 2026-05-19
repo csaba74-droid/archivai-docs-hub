@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -56,10 +56,12 @@ export function UploadDialog({
   open,
   onOpenChange,
   onComplete,
+  initialFiles,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onComplete: () => void;
+  initialFiles?: File[] | null;
 }) {
   const { customRows, all: allCats } = useCategories();
   const { isStrict } = useCategoryHelpers();
@@ -83,11 +85,18 @@ export function UploadDialog({
     setDocumentDate(new Date().toISOString().slice(0, 10));
   };
 
+  useEffect(() => {
+    if (open && initialFiles && initialFiles.length > 0) {
+      setFiles(initialFiles.map((file) => ({ file, status: "queued", progress: 0 })));
+    }
+  }, [open, initialFiles]);
+
   const handleSelect = (selected: FileList | File[] | null) => {
     if (!selected) return;
     const arr = Array.from(selected);
     setFiles(arr.map((file) => ({ file, status: "queued", progress: 0 })));
   };
+
 
   const updateAt = (i: number, patch: Partial<FileProgress>) => {
     setFiles((prev) => prev.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));

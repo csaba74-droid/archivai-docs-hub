@@ -25,6 +25,33 @@ const BUILT_IN: AllowedCategory[] = [
   { id: "egyeb", label: "Egyéb (other)", mode: "normal" },
 ];
 
+// Hard-coded filename keyword rules. If any matches, we skip the AI call entirely
+// and return the mapped category at 100% confidence.
+const FILENAME_RULES: { category: string; keywords: string[] }[] = [
+  {
+    category: "szamlak",
+    keywords: ["invoice", "számla", "szamla", "rechnung", "factura"],
+  },
+  {
+    category: "szerzodesek",
+    keywords: ["contract", "szerződés", "szerzodes", "agreement", "megállapodás", "megallapodas"],
+  },
+  {
+    category: "szallitolevek",
+    keywords: ["ekáer", "ekaer", "szállítólevél", "szallitolevel", "delivery", "fuvarlevél", "fuvarlevel", "cmr"],
+  },
+];
+
+function matchFilenameRule(filename: string): string | null {
+  const lower = filename.toLowerCase();
+  for (const rule of FILENAME_RULES) {
+    if (rule.keywords.some((k) => lower.includes(k.toLowerCase()))) return rule.category;
+  }
+  return null;
+}
+
+
+
 export const categorizeDocument = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
@@ -63,6 +90,14 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     if (!sub || sub.status !== "active") {
       throw new Error("Active subscription required");
     }
+
+    // HARD RULE: filename keyword match short-circuits the AI call.
+    const hard = matchFilenameRule(data.filename);
+    if (hard) {
+      return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
+    }
+
+
 
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) {
