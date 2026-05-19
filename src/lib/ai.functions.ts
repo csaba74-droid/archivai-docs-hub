@@ -99,9 +99,12 @@ export const categorizeDocument = createServerFn({ method: "POST" })
       throw new Error("Active subscription required");
     }
 
-    // HARD RULE: filename keyword match short-circuits the AI call.
+    // HARD RULE: filename keyword match locks the category.
+    // If there is no content sample, short-circuit. If we have a sample,
+    // still call the AI so we can extract the document date, then force the
+    // category back to the hard-matched value.
     const hard = matchFilenameRule(data.filename);
-    if (hard) {
+    if (hard && !data.sample) {
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
 
