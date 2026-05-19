@@ -61,14 +61,16 @@ export const categorizeDocument = createServerFn({ method: "POST" })
       mimeType?: string;
       sample?: string;
       customCategories?: { id: string; name: string; mode: "strict" | "normal" }[];
+      accessToken?: string;
     }) => input,
   )
   .handler(async ({ data }): Promise<CategorizeResult> => {
-    // Auth guard: require an authenticated user (prevents AI API key abuse)
-    const authHeader = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
-    const token = authHeader?.toLowerCase().startsWith("bearer ")
-      ? authHeader.slice(7)
+    // Auth guard: accept token from input data OR Authorization header.
+    const headerAuth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
+    const headerToken = headerAuth?.toLowerCase().startsWith("bearer ")
+      ? headerAuth.slice(7)
       : null;
+    const token = data.accessToken?.trim() || headerToken;
     if (!token) {
       throw new Error("Unauthorized");
     }
