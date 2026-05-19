@@ -348,11 +348,61 @@ function Dashboard() {
         }}
         canEdit={canUpload}
       />
-      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onComplete={loadDocs} />
+      <UploadDialog
+        open={uploadOpen}
+        onOpenChange={(v) => { setUploadOpen(v); if (!v) setPendingFiles(null); }}
+        onComplete={loadDocs}
+        initialFiles={pendingFiles}
+      />
       <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
     </div>
   );
 }
+
+function DropZone({
+  variant,
+  dragOver,
+  disabled,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onClick,
+}: {
+  variant: "large" | "compact";
+  dragOver: boolean;
+  disabled: boolean;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onClick: () => void;
+}) {
+  const large = variant === "large";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      disabled={disabled}
+      className={`w-full rounded-xl border-2 border-dashed transition-colors flex flex-col items-center justify-center text-center
+        ${large ? "py-20 px-6" : "py-6 px-4"}
+        ${dragOver ? "border-brand bg-brand-soft/50" : "border-border bg-muted/30 hover:bg-muted/60"}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+    >
+      <Upload className={`${large ? "h-12 w-12" : "h-5 w-5"} text-brand mb-2`} />
+      <p className={`${large ? "text-base font-medium" : "text-sm font-medium"}`}>
+        Húzd ide a fájlokat vagy kattints a Feltöltés gombra
+      </p>
+      {large && (
+        <p className="text-xs text-muted-foreground mt-2">
+          PDF, Word, Excel, képek — egy vagy több fájl egyszerre
+        </p>
+      )}
+    </button>
+  );
+}
+
 
 function SectionHeader({ icon, title }: { icon?: React.ReactNode; title: string }) {
   return (
