@@ -508,13 +508,6 @@ export function UploadDialog({
                   <p className="text-xs text-muted-foreground mt-1">AI: {pendingConfirm.reasoning}</p>
                 )}
               </div>
-              <div>
-                <Label>
-                  Dokumentum dátuma
-                  {pendingConfirm.detectedDate && <span className="text-xs text-brand ml-2">(AI által felismert)</span>}
-                </Label>
-                <Input type="date" value={confirmDate} onChange={(e) => setConfirmDate(e.target.value)} />
-              </div>
             </div>
           )}
           <DialogFooter>
