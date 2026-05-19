@@ -51,8 +51,6 @@ function getRuntimeSecret(name: string): string | undefined {
   return undefined;
 }
 
-
-
 export const categorizeDocument = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
@@ -64,11 +62,6 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data }): Promise<CategorizeResult> => {
-    const userId = "anonymous";
-    // TODO: re-enable subscription check once Stripe is wired up.
-    // For now, all authenticated users can use AI categorization.
-
-
     // HARD RULE: filename keyword match locks the category and skips AI.
     const hardMatch = matchFilenameCategory(data.filename);
     const hard = hardMatch ? (HARD_CATEGORY_ID_ALIAS[hardMatch.category] ?? hardMatch.category) : null;
@@ -76,23 +69,12 @@ export const categorizeDocument = createServerFn({ method: "POST" })
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
 
-
-
-    const workerEnv = (globalThis as typeof globalThis & { [WORKER_ENV_SYMBOL]?: Record<string, unknown> })[
-      WORKER_ENV_SYMBOL
-    ];
-    const rawWorkerKey = workerEnv?.ANTHROPIC_API_KEY;
-    console.log("ANTHROPIC_API_KEY Worker binding:", {
-      type: typeof rawWorkerKey,
-      present: typeof rawWorkerKey === "string" && rawWorkerKey.trim().length > 0,
-      length: typeof rawWorkerKey === "string" ? rawWorkerKey.length : 0,
-      startsWith: typeof rawWorkerKey === "string" ? rawWorkerKey.slice(0, 8) : null,
-      endsWith: typeof rawWorkerKey === "string" ? rawWorkerKey.slice(-4) : null,
-    });
-    const key = typeof rawWorkerKey === "string" ? rawWorkerKey.trim() : undefined;
-    if (!key) {
-      return { category: hard ?? "egyeb", confidence: hard ? 1 : 0, reasoning: "missing api key", documentDate: null };
+    const lovableKey = getRuntimeSecret("LOVABLE_API_KEY");
+    if (!lovableKey) {
+      console.error("LOVABLE_API_KEY missing from worker env");
+      return { category: "egyeb", confidence: 0, reasoning: "missing LOVABLE_API_KEY", documentDate: null };
     }
+
 
 
     const customList = (data.customCategories ?? []).map((c) => ({
