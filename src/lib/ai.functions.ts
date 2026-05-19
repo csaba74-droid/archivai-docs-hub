@@ -79,8 +79,8 @@ export const categorizeDocument = createServerFn({ method: "POST" })
     }
 
     // HARD RULE: filename keyword match locks the category and skips AI.
-    const hardLabel = matchFilenameCategory(data.filename);
-    const hard = hardLabel ? HARD_CATEGORY_ID_BY_LABEL[hardLabel] : null;
+    const hardMatch = matchFilenameCategory(data.filename);
+    const hard = hardMatch ? (HARD_CATEGORY_ID_ALIAS[hardMatch.category] ?? hardMatch.category) : null;
     if (hard) {
       return { category: hard, confidence: 1, reasoning: "filename keyword match", documentDate: null };
     }
