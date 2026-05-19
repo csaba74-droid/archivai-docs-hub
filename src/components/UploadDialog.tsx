@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supabase";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
-import { categorizeDocument } from "@/lib/ai.functions";
+import { categorizeDocument, matchFilenameRule } from "@/lib/ai.functions";
 import { logAudit } from "@/lib/audit";
 import { CalendarClock, FileText, Loader2, Sparkles } from "lucide-react";
 
@@ -159,9 +159,17 @@ export function UploadDialog({
           .replace(/[\uD800-\uDFFF]/g, "");
 
         updateAt(i, { status: "ai", progress: 30 });
-        let category = "egyeb";
-        let aiConfidence = 0;
+
+        // CLIENT-SIDE HARD RULE — runs FIRST, always. Defends against any
+        // server-side failure (auth, subscription, network) putting an obvious
+        // invoice into "Egyéb".
+        const hardCategory = matchFilenameRule(file.name);
+        console.log("FILENAME CHECK:", file.name, "RESULT:", hardCategory ?? "(no match → AI)");
+
+        let category = hardCategory ?? "egyeb";
+        let aiConfidence = hardCategory ? 1 : 0;
         let detectedDate: string | null = null;
+        let aiReasoning: string | undefined = hardCategory ? "filename keyword match" : undefined;
         try {
           const result = await categorizeDocument({
             data: {
@@ -171,18 +179,22 @@ export function UploadDialog({
               customCategories: customForAi,
             },
           });
-          category = result.category;
-          aiConfidence = result.confidence;
+          // Hard rule wins for the category; AI still contributes the date.
+          if (!hardCategory) {
+            category = result.category;
+            aiConfidence = result.confidence;
+            aiReasoning = result.reasoning;
+          }
           detectedDate = result.documentDate ?? null;
           updateAt(i, { suggestedCategory: category, detectedDate });
-          void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence });
+          void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence, hardRule: !!hardCategory });
 
           if (aiConfidence < CONFIDENCE_THRESHOLD || detectedDate) {
             const { category: chosen, documentDate: confirmedDate } = await askConfirm({
               fileName: file.name,
               suggested: category,
               confidence: aiConfidence,
-              reasoning: result.reasoning,
+              reasoning: aiReasoning,
               detectedDate,
               docDate: documentDate,
             });
@@ -195,6 +207,8 @@ export function UploadDialog({
           }
         } catch (e) {
           console.warn("AI categorize failed, fallback", e);
+          // Hard rule category is already set above; keep it.
+          updateAt(i, { suggestedCategory: category });
         }
 
         const finalDocDate = detectedDate ?? documentDate;
