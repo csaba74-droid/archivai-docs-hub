@@ -256,10 +256,12 @@ export function UploadDialog({
                 customCategories: customForAi,
               },
             });
+            console.log("AI RESULT:", result.category, result.confidence, result.reasoning, "documentDate:", result.documentDate, "raw:", result);
             category = result.category;
             aiConfidence = result.confidence;
             aiReasoning = result.reasoning;
             detectedDate = result.documentDate ?? null;
+
             updateAt(i, { suggestedCategory: category, detectedDate });
             void logAudit("categorize", null, { filename: file.name, category, confidence: aiConfidence, hardRule: false });
 
