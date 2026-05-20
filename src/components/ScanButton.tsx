@@ -160,7 +160,19 @@ async function imageToPdfFile(imageBlob: Blob, baseName: string): Promise<File> 
   return new File([pdfBlob], filename, { type: "application/pdf" });
 }
 
-export function ScanButton({ onFilesReady, disabled }: { onFilesReady: (files: File[]) => void; disabled?: boolean }) {
+export function ScanButton({
+  onFilesReady,
+  disabled,
+  iconOnly = false,
+  className,
+  variant = "outline",
+}: {
+  onFilesReady: (files: File[]) => void;
+  disabled?: boolean;
+  iconOnly?: boolean;
+  className?: string;
+  variant?: "outline" | "default" | "secondary" | "ghost";
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [desktopOpen, setDesktopOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -192,9 +204,20 @@ export function ScanButton({ onFilesReady, disabled }: { onFilesReady: (files: F
 
   return (
     <>
-      <Button onClick={handleClick} disabled={disabled || processing} variant="outline">
-        {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
-        Szkennelés
+      <Button
+        onClick={handleClick}
+        disabled={disabled || processing}
+        variant={variant}
+        className={className}
+        size={iconOnly ? "icon" : "default"}
+        aria-label="Szkennelés"
+      >
+        {processing ? (
+          <Loader2 className={`h-4 w-4 ${iconOnly ? "" : "mr-2"} animate-spin`} />
+        ) : (
+          <Camera className={`h-4 w-4 ${iconOnly ? "" : "mr-2"}`} />
+        )}
+        {!iconOnly && "Szkennelés"}
       </Button>
       <input
         ref={inputRef}
