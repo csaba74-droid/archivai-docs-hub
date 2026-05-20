@@ -226,13 +226,36 @@ export function UploadDialog({
         const hardCategory = filenameMatches[i]?.category ?? null;
 
         updateAt(i, { status: "extracting", progress: 10 });
-        const isPdf = (file.type || "").includes("pdf") || file.name.toLowerCase().endsWith(".pdf");
+        const lowerName = file.name.toLowerCase();
+        const mime = (file.type || "").toLowerCase();
+        const isPdf = mime.includes("pdf") || lowerName.endsWith(".pdf");
+        const isImage =
+          mime.startsWith("image/") ||
+          /\.(jpe?g|png|webp|bmp|tiff?|heic)$/i.test(lowerName);
         let contentText = "";
         if (isPdf) {
           try {
             contentText = await extractPdfText(file);
           } catch (extractErr) {
             console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
+            contentText = "";
+          }
+          // Scanned PDF (no embedded text) → OCR first page
+          if (contentText.trim().length < 30) {
+            console.log("PDF has no text layer, running OCR fallback");
+            try {
+              const ocr = await ocrPdfFirstPage(file);
+              if (ocr) contentText = ocr;
+            } catch (ocrErr) {
+              console.warn("PDF OCR fallback failed", ocrErr);
+            }
+          }
+        } else if (isImage) {
+          try {
+            console.log("Image upload — running OCR");
+            contentText = await ocrImage(file);
+          } catch (ocrErr) {
+            console.warn("Image OCR failed", ocrErr);
             contentText = "";
           }
         }
