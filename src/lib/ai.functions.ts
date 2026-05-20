@@ -140,9 +140,14 @@ CONFIDENCE RULES:
 - Never invent matches. If you cannot justify a keyword/structural cue, lower the confidence.
 
 DATE EXTRACTION:
-- Extract the document's OWN date: invoice date ("számla kelte", "kelt", "issue date", "invoice date"), contract signing date, statement period end, tax return period end. NOT the upload date and NOT due date ("fizetési határidő") unless no other date exists.
+- Extract the document's OWN date. Priority order of date labels (use the FIRST one found):
+  1. "Date of issue", "Issue date", "Issued", "számla kelte", "kelt", "invoice date", "Dátum"
+  2. Contract signing date, statement period end, tax return period end
+  3. "Date due", "Due date", "fizetési határidő" — ONLY if no issue date exists
+- NEVER use the upload date.
 - Accept Hungarian formats (2024.03.15, 2024. március 15., 15/03/2024, etc.) and normalize to ISO YYYY-MM-DD.
-- YYMMDD SHORT FORM: A 6-digit number IS a valid date IF AND ONLY IF it appears directly after a date label — specifically "Date", "Dátum", "Kelt", "Issue Date", or "Invoice Date" (allowing only a colon, dash, or whitespace between the label and the number). Parse as YYMMDD: years 00–49 → 20YY, years 50–99 → 19YY. Validate that MM is 01–12 and DD is 01–31; if not, reject.
+- ENGLISH LONG FORM with month names: "Date of issue: May 18, 2026" → 2026-05-18. Recognize: January, February, March, April, May, June, July, August, September, October, November, December (also 3-letter abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec). Formats: "May 18, 2026", "18 May 2026", "May 18 2026".
+- YYMMDD SHORT FORM: A 6-digit number IS a valid date IF AND ONLY IF it appears directly after a date label — specifically "Date", "Dátum", "Kelt", "Issue Date", "Date of issue", or "Invoice Date" (allowing only a colon, dash, or whitespace between the label and the number). Parse as YYMMDD: years 00–49 → 20YY, years 50–99 → 19YY. Validate that MM is 01–12 and DD is 01–31; if not, reject.
   * Example MATCH: "Date: 151111" → 2015-11-11. "Dátum 240315" → 2024-03-15.
   * Example REJECT: a 6-digit number near "Invoice No", "Customer No", "Számlaszám", "Ügyfélszám", "Order No", "Ref" — these are IDs, NOT dates. "34401", "2590", "2024/00123", "INV-2024-001" are NEVER dates.
 - CRITICAL — do NOT confuse numeric IDs with dates:
