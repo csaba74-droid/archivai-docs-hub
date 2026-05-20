@@ -38,15 +38,16 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   const create: Ctx["create"] = useCallback(async ({ name, color, mode, retentionYears }) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw new Error("not auth");
-    const { error } = await supabase.from("custom_categories").insert({
+    const { data, error } = await supabase.from("custom_categories").insert({
       user_id: u.user.id,
       name,
       color,
       mode,
       retention_years: retentionYears,
-    });
+    }).select().single();
     if (error) throw error;
     await reload();
+    return `custom:${(data as CustomCategoryRow).id}`;
   }, [reload]);
 
   const remove: Ctx["remove"] = useCallback(async (id) => {
