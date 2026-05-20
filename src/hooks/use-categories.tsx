@@ -75,7 +75,7 @@ export function useCategories() {
       customRows: [] as CustomCategoryRow[],
       all: BUILT_IN_CATEGORIES,
       reload: async () => {},
-      create: async () => {},
+      create: async () => "",
       remove: async () => {},
     };
   }
