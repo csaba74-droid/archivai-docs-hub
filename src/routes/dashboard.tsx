@@ -109,18 +109,24 @@ function Dashboard() {
       toast.error("Csak olvasási hozzáférés", { description: "Rendezd a fizetést." });
       return;
     }
-    if (isStrict(doc.category)) {
+    const baseDate = doc.document_date ?? doc.created_at;
+    const deadline = getRetentionDeadline(doc.category, baseDate);
+    const expired = deadline && deadline.getTime() < Date.now();
+    if (isStrict(doc.category) && !expired) {
       void logAudit("delete_blocked", doc.id, { reason: "strict" });
       toast.error("Törvényi megőrzés alatt", { description: "ITM-besorolású iratok nem törölhetők." });
       return;
     }
-    if (!confirm(`Biztosan törlöd?\n${doc.filename}`)) return;
+    const confirmMsg = expired
+      ? `Ez a dokumentum megőrzési ideje lejárt (${formatDeadline(deadline!)}). Biztosan törli?`
+      : `Biztosan törlöd?\n${doc.filename}`;
+    if (!confirm(confirmMsg)) return;
     try {
       await supabase.storage.from("documents").remove([doc.storage_path]);
       const { error } = await supabase.from("documents").delete().eq("id", doc.id);
       if (error) throw error;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
-      void logAudit("delete", doc.id, { filename: doc.filename });
+      void logAudit("delete", doc.id, { filename: doc.filename, expired: !!expired });
       toast.success("Törölve");
     } catch (e) {
       toast.error("Törlés sikertelen", { description: e instanceof Error ? e.message : String(e) });
