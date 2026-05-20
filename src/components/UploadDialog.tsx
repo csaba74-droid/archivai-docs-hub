@@ -375,7 +375,7 @@ export function UploadDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!running) { onOpenChange(v); if (!v) reset(); } }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col max-sm:max-w-full max-sm:w-screen max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:border-0 max-sm:p-4">
           <DialogHeader>
             <DialogTitle>Dokumentumok feltöltése v2</DialogTitle>
             <DialogDescription>
