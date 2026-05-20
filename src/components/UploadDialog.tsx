@@ -25,6 +25,7 @@ import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
 import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
+import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 import {
   CalendarClock,
   FileText,
@@ -105,6 +106,7 @@ export function UploadDialog({
     resolve: (v: string | null) => void;
   } | null>(null);
   const [confirmCategory, setConfirmCategory] = useState("egyeb");
+  const [newCatOpen, setNewCatOpen] = useState(false);
   const [datePrompt, setDatePrompt] = useState<{
     documentId: string;
     fileName: string;
@@ -528,6 +530,17 @@ export function UploadDialog({
                 {pendingConfirm.reasoning && (
                   <p className="text-xs text-muted-foreground mt-1">AI: {pendingConfirm.reasoning}</p>
                 )}
+                {(confirmCategory === "egyeb" || pendingConfirm.suggested === "egyeb") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={() => setNewCatOpen(true)}
+                  >
+                    + Új kategória létrehozása
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -538,31 +551,41 @@ export function UploadDialog({
         </DialogContent>
       </Dialog>
 
+      {/* Inline new-category dialog for "Egyéb" cases */}
+      <CustomCategoryDialog
+        open={newCatOpen}
+        onOpenChange={setNewCatOpen}
+        onCreated={(newId) => setConfirmCategory(newId)}
+      />
+
       {/* Post-upload: AI-detected document date confirmation */}
       <Dialog open={!!datePrompt} onOpenChange={(v) => { if (!v) resolveDatePrompt(false); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-brand" /> 📅 Dátum azonosítva
-            </DialogTitle>
+            <DialogTitle>📅 Melyik dátumtól számítsuk a megőrzési időt?</DialogTitle>
             <DialogDescription>{datePrompt?.fileName}</DialogDescription>
           </DialogHeader>
           {datePrompt && (
-            <div className="space-y-2 py-2 text-sm">
+            <div className="py-2 text-sm">
               <p>
-                A dokumentumon azonosított dátum: <span className="font-semibold">{datePrompt.detectedDate}</span>.
-              </p>
-              <p className="text-muted-foreground">
-                Jelenlegi dátum: {datePrompt.currentDate}. Ezt használjuk a megőrzési idő számításához?
+                Az AI ezt a dátumot azonosította a dokumentumon:{" "}
+                <span className="font-semibold">{datePrompt.detectedDate}</span>
               </p>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => resolveDatePrompt(false)}>
-              Nem, maradjon a mai dátum
+          <DialogFooter className="flex flex-row gap-2 sm:justify-stretch">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => resolveDatePrompt(true)}
+            >
+              📄 {datePrompt?.detectedDate} — dokumentum dátuma
             </Button>
-            <Button onClick={() => resolveDatePrompt(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              Igen, használjuk
+            <Button
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => resolveDatePrompt(false)}
+            >
+              📅 {new Date().toISOString().slice(0, 10)} — mai dátum
             </Button>
           </DialogFooter>
         </DialogContent>

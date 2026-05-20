@@ -19,9 +19,11 @@ const COLOR_OPTIONS = ["#64748b", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#
 export function CustomCategoryDialog({
   open,
   onOpenChange,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onCreated?: (categoryId: string) => void;
 }) {
   const { create } = useCategories();
   const [name, setName] = useState("");
@@ -38,13 +40,14 @@ export function CustomCategoryDialog({
     setSaving(true);
     try {
       const retentionYears = retention === "none" ? null : parseInt(retention, 10);
-      await create({ name: name.trim(), color, mode, retentionYears });
+      const newId = await create({ name: name.trim(), color, mode, retentionYears });
       toast.success("Kategória létrehozva");
       setName("");
       setColor(COLOR_OPTIONS[0]);
       setMode("normal");
       setRetention("none");
       onOpenChange(false);
+      onCreated?.(newId);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error("Sikertelen", { description: msg });
