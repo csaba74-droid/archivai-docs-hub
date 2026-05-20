@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supabase";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
+import { ocrImage, ocrPdfFirstPage } from "@/lib/ocr";
 import { categorizeDocument } from "@/lib/ai.functions";
 import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
