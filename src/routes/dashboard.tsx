@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline } from "@/lib/categories";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
@@ -20,6 +21,8 @@ import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 import { UploadDialog } from "@/components/UploadDialog";
 import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 import { ScanButton } from "@/components/ScanButton";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
