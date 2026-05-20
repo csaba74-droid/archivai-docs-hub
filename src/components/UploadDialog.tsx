@@ -23,6 +23,7 @@ import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supaba
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
 import { ocrImage, ocrPdfFirstPage } from "@/lib/ocr";
+import { getScanOcrText } from "@/lib/scan-cache";
 import { categorizeDocument } from "@/lib/ai.functions";
 import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
@@ -234,20 +235,28 @@ export function UploadDialog({
           /\.(jpe?g|png|webp|bmp|tiff?|heic)$/i.test(lowerName);
         let contentText = "";
         if (isPdf) {
-          try {
-            contentText = await extractPdfText(file);
-          } catch (extractErr) {
-            console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
-            contentText = "";
-          }
-          // Scanned PDF (no embedded text) → OCR first page
-          if (contentText.trim().length < 30) {
-            console.log("PDF has no text layer, running OCR fallback");
+          // Camera scans: OCR was already done on the upright image before
+          // wrapping in PDF. Reuse it instead of re-rendering the page.
+          const preOcr = getScanOcrText(file);
+          if (preOcr) {
+            console.log("Using cached scan OCR text, length:", preOcr.length);
+            contentText = preOcr;
+          } else {
             try {
-              const ocr = await ocrPdfFirstPage(file);
-              if (ocr) contentText = ocr;
-            } catch (ocrErr) {
-              console.warn("PDF OCR fallback failed", ocrErr);
+              contentText = await extractPdfText(file);
+            } catch (extractErr) {
+              console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
+              contentText = "";
+            }
+            // Scanned PDF (no embedded text) → OCR first page
+            if (contentText.trim().length < 30) {
+              console.log("PDF has no text layer, running OCR fallback");
+              try {
+                const ocr = await ocrPdfFirstPage(file);
+                if (ocr) contentText = ocr;
+              } catch (ocrErr) {
+                console.warn("PDF OCR fallback failed", ocrErr);
+              }
             }
           }
         } else if (isImage) {

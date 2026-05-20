@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
+import { ocrImage } from "@/lib/ocr";
+import { setScanOcrText } from "@/lib/scan-cache";
 
 const PUBLIC_URL = "archivai-docs-hub.lovable.app";
 
@@ -16,91 +18,67 @@ function isMobileDevice(): boolean {
 }
 
 /**
- * Read EXIF orientation from a JPEG ArrayBuffer.
- * Returns 1-8 or 1 (default) if not found.
+ * Load a camera image into an upright bitmap. Uses createImageBitmap with
+ * `imageOrientation: "from-image"` so the browser applies EXIF orientation
+ * for us (works on iOS Safari 13.4+, Chrome 79+, modern Android). Falls back
+ * to a plain HTMLImageElement load if unsupported.
  */
-function readExifOrientation(buf: ArrayBuffer): number {
-  const view = new DataView(buf);
-  if (view.byteLength < 4 || view.getUint16(0) !== 0xffd8) return 1;
-  let offset = 2;
-  while (offset < view.byteLength) {
-    const marker = view.getUint16(offset);
-    offset += 2;
-    if (marker === 0xffe1) {
-      // APP1 (EXIF)
-      const size = view.getUint16(offset);
-      const exifStart = offset + 2;
-      if (view.getUint32(exifStart) !== 0x45786966) return 1; // "Exif"
-      const tiffOffset = exifStart + 6;
-      const little = view.getUint16(tiffOffset) === 0x4949;
-      const get16 = (o: number) => view.getUint16(o, little);
-      const get32 = (o: number) => view.getUint32(o, little);
-      if (get16(tiffOffset + 2) !== 0x002a) return 1;
-      const ifdOffset = tiffOffset + get32(tiffOffset + 4);
-      const tagCount = get16(ifdOffset);
-      for (let i = 0; i < tagCount; i++) {
-        const entry = ifdOffset + 2 + i * 12;
-        if (get16(entry) === 0x0112) {
-          return get16(entry + 8);
-        }
-      }
-      return 1;
-    } else if ((marker & 0xff00) !== 0xff00) {
-      break;
-    } else {
-      offset += view.getUint16(offset);
+async function loadUprightBitmap(
+  file: File,
+): Promise<{ width: number; height: number; draw: (ctx: CanvasRenderingContext2D, dw: number, dh: number) => void; dispose: () => void }> {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      return {
+        width: bitmap.width,
+        height: bitmap.height,
+        draw: (ctx, dw, dh) => ctx.drawImage(bitmap, 0, 0, dw, dh),
+        dispose: () => bitmap.close?.(),
+      };
+    } catch (e) {
+      console.warn("createImageBitmap with EXIF failed, falling back", e);
     }
   }
-  return 1;
-}
-
-/**
- * Draw an HTMLImageElement onto a canvas applying EXIF orientation
- * and converting to grayscale. Returns a JPEG blob compressed under maxBytes.
- */
-async function processImage(file: File, maxBytes = 2 * 1024 * 1024): Promise<Blob> {
-  const buf = await file.arrayBuffer();
-  const orientation = file.type === "image/jpeg" ? readExifOrientation(buf) : 1;
-
+  const url = URL.createObjectURL(file);
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image();
     el.onload = () => resolve(el);
     el.onerror = reject;
-    el.src = URL.createObjectURL(file);
+    el.src = url;
   });
+  return {
+    width: img.naturalWidth,
+    height: img.naturalHeight,
+    draw: (ctx, dw, dh) => ctx.drawImage(img, 0, 0, dw, dh),
+    dispose: () => URL.revokeObjectURL(url),
+  };
+}
 
-  // Downscale large captures (long edge max 2000px)
+/**
+ * Decode camera image with correct EXIF orientation, downscale, convert to
+ * grayscale, and return a JPEG blob under `maxBytes`.
+ */
+async function processImage(file: File, maxBytes = 2 * 1024 * 1024): Promise<Blob> {
+  const bm = await loadUprightBitmap(file);
+
   const MAX_EDGE = 2000;
-  let w = img.naturalWidth;
-  let h = img.naturalHeight;
-  const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
-  w = Math.round(w * scale);
-  h = Math.round(h * scale);
+  const scale = Math.min(1, MAX_EDGE / Math.max(bm.width, bm.height));
+  const w = Math.max(1, Math.round(bm.width * scale));
+  const h = Math.max(1, Math.round(bm.height * scale));
 
-  const swap = orientation >= 5 && orientation <= 8;
   const canvas = document.createElement("canvas");
-  canvas.width = swap ? h : w;
-  canvas.height = swap ? w : h;
+  canvas.width = w;
+  canvas.height = h;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas not supported");
-
-  // Apply orientation transform
-  switch (orientation) {
-    case 2: ctx.transform(-1, 0, 0, 1, w, 0); break;
-    case 3: ctx.transform(-1, 0, 0, -1, w, h); break;
-    case 4: ctx.transform(1, 0, 0, -1, 0, h); break;
-    case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
-    case 6: ctx.transform(0, 1, -1, 0, h, 0); break;
-    case 7: ctx.transform(0, -1, -1, 0, h, w); break;
-    case 8: ctx.transform(0, -1, 1, 0, 0, w); break;
+  if (!ctx) {
+    bm.dispose();
+    throw new Error("Canvas not supported");
   }
-  ctx.drawImage(img, 0, 0, w, h);
-  URL.revokeObjectURL(img.src);
+  bm.draw(ctx, w, h);
+  bm.dispose();
 
   // Grayscale
-  const cw = canvas.width;
-  const ch = canvas.height;
-  const imageData = ctx.getImageData(0, 0, cw, ch);
+  const imageData = ctx.getImageData(0, 0, w, h);
   const d = imageData.data;
   for (let i = 0; i < d.length; i += 4) {
     const gray = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
@@ -108,7 +86,6 @@ async function processImage(file: File, maxBytes = 2 * 1024 * 1024): Promise<Blo
   }
   ctx.putImageData(imageData, 0, 0);
 
-  // Iteratively compress to under maxBytes
   let quality = 0.85;
   let blob: Blob = await new Promise((res) =>
     canvas.toBlob((b) => res(b!), "image/jpeg", quality),
@@ -192,7 +169,18 @@ export function ScanButton({
     setProcessing(true);
     try {
       const processed = await processImage(file);
+      // OCR the upright, processed image BEFORE wrapping it in a PDF.
+      // Image-based PDFs have no extractable text, so without this the AI
+      // would only see the filename. Failure is non-fatal.
+      let ocrText = "";
+      try {
+        ocrText = await ocrImage(processed);
+        console.log("scan OCR text length:", ocrText.length);
+      } catch (ocrErr) {
+        console.warn("scan OCR failed", ocrErr);
+      }
       const pdf = await imageToPdfFile(processed, file.name || "szken");
+      if (ocrText) setScanOcrText(pdf, ocrText);
       onFilesReady([pdf]);
     } catch (err) {
       console.error("scan failed", err);
