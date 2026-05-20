@@ -19,6 +19,7 @@ import { DocumentHoverPreview } from "@/components/DocumentHoverPreview";
 import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 import { UploadDialog } from "@/components/UploadDialog";
 import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
+import { ScanButton } from "@/components/ScanButton";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -279,10 +280,11 @@ function Dashboard() {
                 onDrop={handleDrop}
                 onClick={() => canUpload && openUploadWith(null)}
               />
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-2 flex-wrap">
                 <Button onClick={() => openUploadWith(null)} disabled={!canUpload} size="lg">
                   <Upload className="h-4 w-4 mr-2" /> Feltöltés
                 </Button>
+                <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
               </div>
             </div>
           ) : (
@@ -302,6 +304,7 @@ function Dashboard() {
                 <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
                   <Upload className="h-4 w-4 mr-2" /> Feltöltés
                 </Button>
+                <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((doc) => {
