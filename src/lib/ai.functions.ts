@@ -96,11 +96,14 @@ export const categorizeDocument = createServerFn({ method: "POST" })
 Allowed category ids and their detection keywords (match ANY keyword in filename OR content):
 
 1) szamlak — SZÁMLÁK (Invoices), 10 év kötelező megőrzés, ITM strict
-   Keywords: invoice, számla, rechnung, factura, bill, receipt, nyugta, proforma, díjbekérő, "előleg számla", végszámla, "storno számla", "credit note", "debit note", "NAV online számla"
-   Strong signal: presence of invoice number ("számlaszám", "Invoice No"), VAT/ÁFA line, nettó/bruttó totals, "fizetési határidő", "teljesítés kelte". If document clearly has price + VAT + invoice number → ALWAYS szamlak even without keyword match.
+   Keywords: invoice, INVOICE, "Invoice No", "Invoice Number", "Customer No", "Customer Number", számla, rechnung, factura, bill, receipt, nyugta, proforma, díjbekérő, "előleg számla", végszámla, "storno számla", "credit note", "debit note", "NAV online számla"
+   STRONG SIGNAL (override everything): If content contains "INVOICE" or "Invoice No" or "Customer No" AND a price/quantity table (qty, unit price, amount, total) → ALWAYS szamlak with confidence ≥ 0.95.
+   Also: invoice number ("számlaszám", "Invoice No"), VAT/ÁFA line, nettó/bruttó totals, "fizetési határidő", "teljesítés kelte". If document clearly has price + VAT + invoice number → ALWAYS szamlak even without keyword match (confidence ≥ 0.92).
 
 2) szerzodesek — SZERZŐDÉSEK (Contracts), 10 év, strict
-   Keywords: contract, agreement, szerződés, megállapodás, keretszerződés, "bérleti szerződés", adásvételi, "vállalkozási szerződés", "megbízási szerződés"
+   Keywords: contract, agreement, szerződés, megállapodás, keretszerződés, "bérleti szerződés", "adás-vételi szerződés", "adásvételi szerződés", adásvételi, "vállalkozási szerződés", "megbízási szerződés"
+   STRONG SIGNAL: "adás-vételi" or "adásvételi" in filename OR content → szerzodesek with confidence ≥ 0.90.
+   IMPORTANT: Only classify as szerzodesek if the document contains ACTUAL CONTRACT LANGUAGE: named parties (Eladó/Vevő, Megbízó/Megbízott, Bérbeadó/Bérlő), mutual obligations/rights, signature lines, contract clauses (§, pontok). A document merely titled "feljegyzés" or "emlékeztető" WITHOUT these elements is NOT szerzodesek — it goes to belso.
 
 3) szallitolevek — SZÁLLÍTÓLEVELEK (Delivery notes), 10 év, strict
    Keywords: delivery, szállítólevél, fuvarlevél, EKÁER, CMR, "packing list", csomagjegyzék, "szállítási dokumentum", "átadás-átvétel"
@@ -122,13 +125,16 @@ Allowed category ids and their detection keywords (match ANY keyword in filename
    Keywords: kézikönyv, manual, műszaki, specifikáció, tervrajz, dokumentáció, "használati utasítás", "garancia levél", szerviz
 
 9) belso — BELSŐ IRATOK (Internal), nincs korlát
-   Keywords: belső, feljegyzés, emlékeztető, előterjesztés, szabályzat, SZMSZ, házirend, protokoll, "belső utasítás"
+   Keywords: "belső irat", belső, feljegyzés, emlékeztető, előterjesztés, szabályzat, SZMSZ, házirend, protokoll, "belső utasítás", memo, jegyzőkönyv
+   STRONG SIGNAL: Documents titled "feljegyzés", "emlékeztető", or "belső irat" WITHOUT contract parties/obligations/signatures → belso (confidence ≥ 0.90), NOT szerzodesek.
 
 10) egyeb — EGYÉB (Other) — only when nothing else clearly matches.${customKeywordsBlock}
 
 CONFIDENCE RULES:
+- Strong INVOICE signal (INVOICE/Invoice No/Customer No + price table) → szamlak, confidence ≥ 0.95.
 - Any clear keyword match in filename OR content → confidence ≥ 0.90.
 - Invoice-shape detected (price + VAT/ÁFA + invoice number) → szamlak, confidence ≥ 0.92.
+- "adás-vételi"/"adásvételi" → szerzodesek, confidence ≥ 0.90.
 - Ambiguous between two categories → choose the most specific (utility-provider invoice → kozuzemi over szamlak; bank statement → banki) and use 0.70–0.85.
 - Truly unclear / no signal → egyeb with confidence < 0.5.
 - Never invent matches. If you cannot justify a keyword/structural cue, lower the confidence.
@@ -136,6 +142,11 @@ CONFIDENCE RULES:
 DATE EXTRACTION:
 - Extract the document's OWN date: invoice date ("számla kelte", "kelt", "issue date", "invoice date"), contract signing date, statement period end, tax return period end. NOT the upload date and NOT due date ("fizetési határidő") unless no other date exists.
 - Accept Hungarian formats (2024.03.15, 2024. március 15., 15/03/2024, etc.) and normalize to ISO YYYY-MM-DD.
+- CRITICAL — do NOT confuse numeric IDs with dates:
+  * Invoice numbers like "151111", "34401", "2024/00123", "INV-2024-001" are NOT dates.
+  * 6-digit numbers without separators (e.g., "151111") are NOT YYMMDD dates — ignore them.
+  * Customer numbers, order numbers, reference codes are NOT dates.
+  * Only extract a date if it appears in a recognizable calendar format with separators (., /, -, space) AND is contextually labeled as a date (kelt, dátum, date, issued, signed, etc.) OR appears near such labels.
 - If unsure, return null. Do not guess.
 
 OUTPUT: Respond with STRICT JSON only, no prose, no markdown:
