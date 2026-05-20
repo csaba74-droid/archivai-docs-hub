@@ -23,6 +23,7 @@ import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supaba
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { extractPdfText } from "@/lib/pdf";
 import { ocrImage, ocrPdfFirstPage } from "@/lib/ocr";
+import { getScanOcrText } from "@/lib/scan-cache";
 import { categorizeDocument } from "@/lib/ai.functions";
 import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
