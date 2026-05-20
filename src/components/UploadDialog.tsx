@@ -25,6 +25,7 @@ import { extractPdfText } from "@/lib/pdf";
 import { categorizeDocument } from "@/lib/ai.functions";
 import { matchFilenameCategory } from "@/config/document-rules";
 import { logAudit } from "@/lib/audit";
+import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 import {
   CalendarClock,
   FileText,
