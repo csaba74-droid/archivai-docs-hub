@@ -106,6 +106,7 @@ export function UploadDialog({
     resolve: (v: string | null) => void;
   } | null>(null);
   const [confirmCategory, setConfirmCategory] = useState("egyeb");
+  const [newCatOpen, setNewCatOpen] = useState(false);
   const [datePrompt, setDatePrompt] = useState<{
     documentId: string;
     fileName: string;
