@@ -55,8 +55,10 @@ async function loadUprightBitmap(
 }
 
 /**
- * Decode camera image with correct EXIF orientation, downscale, convert to
- * grayscale, and return a JPEG blob under `maxBytes`.
+ * Decode camera image with correct EXIF orientation, downscale, and convert
+ * to a clean scan-like black-and-white image. Pipeline: EXIF-upright ->
+ * downscale -> grayscale + contrast + brightness filter -> adaptive
+ * threshold that flattens paper to pure white and sharpens ink to near-black.
  */
 async function processImage(file: File, maxBytes = 2 * 1024 * 1024): Promise<Blob> {
   const bm = await loadUprightBitmap(file);
@@ -74,15 +76,49 @@ async function processImage(file: File, maxBytes = 2 * 1024 * 1024): Promise<Blo
     bm.dispose();
     throw new Error("Canvas not supported");
   }
+  // CSS-style filter at draw time for a clean scan look.
+  try {
+    (ctx as CanvasRenderingContext2D).filter =
+      "grayscale(100%) contrast(150%) brightness(110%)";
+  } catch {
+    /* older browsers: pixel pass below handles it */
+  }
   bm.draw(ctx, w, h);
   bm.dispose();
+  try {
+    (ctx as CanvasRenderingContext2D).filter = "none";
+  } catch {
+    /* noop */
+  }
 
-  // Grayscale
+  // Adaptive threshold based on mean luminance: paper -> pure white,
+  // ink -> near-black, with a smooth mid-band to preserve text edges.
   const imageData = ctx.getImageData(0, 0, w, h);
   const d = imageData.data;
+
+  let sum = 0;
+  let samples = 0;
+  for (let i = 0; i < d.length; i += 16) {
+    sum += d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+    samples++;
+  }
+  const mean = samples ? sum / samples : 180;
+  const whiteCut = Math.min(235, Math.max(170, mean + 5));
+  const blackCut = Math.max(60, Math.min(140, mean - 60));
+  const span = Math.max(1, whiteCut - blackCut);
+
   for (let i = 0; i < d.length; i += 4) {
     const gray = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
-    d[i] = d[i + 1] = d[i + 2] = gray;
+    let v: number;
+    if (gray >= whiteCut) {
+      v = 255;
+    } else if (gray <= blackCut) {
+      v = 15;
+    } else {
+      const t = (gray - blackCut) / span;
+      v = Math.round(15 + Math.pow(t, 0.8) * (255 - 15));
+    }
+    d[i] = d[i + 1] = d[i + 2] = v;
   }
   ctx.putImageData(imageData, 0, 0);
 
