@@ -49,7 +49,7 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
   return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-const CONFIDENCE_THRESHOLD = 0.8;
+const CONFIDENCE_THRESHOLD = 0.75;
 
 // Map document-rules category ids → canonical BUILT_IN_CATEGORIES ids in categories.ts
 const CATEGORY_ID_ALIAS: Record<string, string> = {
