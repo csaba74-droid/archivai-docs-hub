@@ -14,7 +14,7 @@ type Ctx = {
   customRows: CustomCategoryRow[];
   all: Category[];
   reload: () => Promise<void>;
-  create: (input: { name: string; color: string; mode: "strict" | "normal"; retentionYears: number | null }) => Promise<void>;
+  create: (input: { name: string; color: string; mode: "strict" | "normal"; retentionYears: number | null }) => Promise<string>;
   remove: (id: string) => Promise<void>;
 };
 
