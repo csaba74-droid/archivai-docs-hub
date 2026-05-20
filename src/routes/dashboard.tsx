@@ -338,7 +338,7 @@ function Dashboard() {
                             <CalendarClock className="h-3 w-3" />
                             {deadline ? formatDeadline(deadline) : cat.retentionLabel}
                           </span>
-                          {!strict && canUpload && (
+                          {(!strict || expired) && canUpload && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
                               className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
