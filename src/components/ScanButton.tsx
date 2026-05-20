@@ -169,7 +169,18 @@ export function ScanButton({
     setProcessing(true);
     try {
       const processed = await processImage(file);
+      // OCR the upright, processed image BEFORE wrapping it in a PDF.
+      // Image-based PDFs have no extractable text, so without this the AI
+      // would only see the filename. Failure is non-fatal.
+      let ocrText = "";
+      try {
+        ocrText = await ocrImage(processed);
+        console.log("scan OCR text length:", ocrText.length);
+      } catch (ocrErr) {
+        console.warn("scan OCR failed", ocrErr);
+      }
       const pdf = await imageToPdfFile(processed, file.name || "szken");
+      if (ocrText) setScanOcrText(pdf, ocrText);
       onFilesReady([pdf]);
     } catch (err) {
       console.error("scan failed", err);
