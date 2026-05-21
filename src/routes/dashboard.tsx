@@ -374,7 +374,7 @@ function Dashboard() {
                       <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-base md:text-sm font-medium truncate flex-1" title={doc.filename}>{doc.filename}</p>
-                          {strict && <Lock className="h-4 w-4 md:h-3.5 md:w-3.5 text-brand shrink-0 mt-0.5" />}
+                          {strict && <Lock className="h-4 w-4 md:h-3.5 md:w-3.5 text-lock shrink-0 mt-0.5" />}
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <Badge variant="secondary" className="text-xs md:text-[10px] py-0.5 md:py-0 h-5 md:h-4 flex items-center gap-1">
