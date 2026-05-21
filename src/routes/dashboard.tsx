@@ -172,7 +172,7 @@ function Dashboard() {
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         <button
           onClick={() => { setActiveCat(null); setMobileCatsOpen(false); }}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null ? "bg-brand-soft text-brand" : "hover:bg-muted"}`}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
         >
           <span className="flex items-center gap-2"><FileIcon className="h-4 w-4" /> Összes</span>
           <span className="text-xs text-muted-foreground">{docs.length}</span>
