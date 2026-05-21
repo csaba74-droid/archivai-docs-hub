@@ -172,7 +172,7 @@ function Dashboard() {
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         <button
           onClick={() => { setActiveCat(null); setMobileCatsOpen(false); }}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null ? "bg-brand-soft text-brand" : "hover:bg-muted"}`}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
         >
           <span className="flex items-center gap-2"><FileIcon className="h-4 w-4" /> Összes</span>
           <span className="text-xs text-muted-foreground">{docs.length}</span>
@@ -366,7 +366,7 @@ function Dashboard() {
                       role="button" tabIndex={0}
                       onClick={() => setPreviewDoc(doc)}
                       onKeyDown={(e) => { if (e.key === "Enter") setPreviewDoc(doc); }}
-                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${strict ? "border-brand/30" : ""}`}
+                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${strict ? "border-lock/40" : ""}`}
                     >
                       <div className="h-48 md:h-36 bg-muted overflow-hidden">
                         <DocumentThumbnail path={doc.storage_path} mimeType={doc.mime_type} filename={doc.filename} className="w-full h-full" />
@@ -374,7 +374,7 @@ function Dashboard() {
                       <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-base md:text-sm font-medium truncate flex-1" title={doc.filename}>{doc.filename}</p>
-                          {strict && <Lock className="h-4 w-4 md:h-3.5 md:w-3.5 text-brand shrink-0 mt-0.5" />}
+                          {strict && <Lock className="h-4 w-4 md:h-3.5 md:w-3.5 text-lock shrink-0 mt-0.5" />}
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <Badge variant="secondary" className="text-xs md:text-[10px] py-0.5 md:py-0 h-5 md:h-4 flex items-center gap-1">
@@ -522,7 +522,7 @@ function CategoryButton({ cat, active, count, onClick }: { cat: ReturnType<typeo
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${active ? "bg-brand-soft text-brand font-medium" : "hover:bg-muted"}`}
+      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${active ? "bg-brand text-brand-foreground font-medium" : "hover:bg-muted"}`}
     >
       <span className="flex items-center gap-2 min-w-0">
         {cat.custom && cat.color ? (

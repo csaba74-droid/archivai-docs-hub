@@ -62,32 +62,44 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-hover: var(--brand-hover);
+  --color-lock: var(--lock);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.985 0.005 145);
-  --foreground: oklch(0.22 0.03 160);
+  /* #FFFFFF */
+  --background: oklch(1 0 0);
+  /* #1A2B4A dark navy */
+  --foreground: oklch(0.247 0.054 261);
   --card: oklch(1 0 0);
-  --brand: oklch(0.42 0.09 152);
-  --brand-foreground: oklch(0.98 0.01 145);
-  --brand-soft: oklch(0.95 0.03 152);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  /* Brand = dark navy #1A2B4A, hover #0F1D33 */
+  --brand: oklch(0.247 0.054 261);
+  --brand-foreground: oklch(1 0 0);
+  --brand-soft: oklch(0.96 0.012 261);
+  --brand-hover: oklch(0.19 0.05 261);
+  /* Subtle green reserved for ITM lock icons only */
+  --lock: oklch(0.55 0.12 152);
+  --card-foreground: oklch(0.247 0.054 261);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.42 0.09 152);
-  --primary-foreground: oklch(0.98 0.01 145);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.247 0.054 261);
+  --primary: oklch(0.247 0.054 261);
+  --primary-foreground: oklch(1 0 0);
+  /* #F8F9FA */
+  --secondary: oklch(0.978 0.002 248);
+  --secondary-foreground: oklch(0.247 0.054 261);
+  --muted: oklch(0.978 0.002 248);
+  /* #6B7280 */
+  --muted-foreground: oklch(0.55 0.018 258);
+  --accent: oklch(0.978 0.002 248);
+  --accent-foreground: oklch(0.247 0.054 261);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  /* #E5E7EB */
+  --border: oklch(0.922 0.004 258);
+  --input: oklch(0.922 0.004 258);
+  --ring: oklch(0.247 0.054 261);
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);

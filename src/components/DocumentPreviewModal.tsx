@@ -215,7 +215,7 @@ export function DocumentPreviewModal({
                 Megőrzési határidő
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                {strict && <Lock className="h-3.5 w-3.5 text-brand" />}
+                {strict && <Lock className="h-3.5 w-3.5 text-lock" />}
                 <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
                 <span>{deadline ? formatDeadline(deadline) : cat.retentionLabel}</span>
               </div>
