@@ -123,7 +123,7 @@ function Dashboard() {
     const expired = deadline && deadline.getTime() < Date.now();
     if (isStrict(doc.category) && !expired) {
       void logAudit("delete_blocked", doc.id, { reason: "strict" });
-      toast.error("Törvényi megőrzés alatt", { description: "ITM-besorolású iratok nem törölhetők." });
+      toast.error("Törvényi megőrzés alatt", { description: "Törvényileg védett iratok nem törölhetők." });
       return;
     }
     const confirmMsg = expired
@@ -178,7 +178,7 @@ function Dashboard() {
           <span className="text-xs text-muted-foreground">{docs.length}</span>
         </button>
 
-        <SectionHeader icon={<Lock className="h-3 w-3" />} title="ITM kötelező" />
+        <SectionHeader icon={<Lock className="h-3 w-3" />} title="Kötelező megőrzés" />
         {builtInStrict.map((cat) => (
           <CategoryButton key={cat.id} cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => { setActiveCat(cat.id); setMobileCatsOpen(false); }} />
         ))}
@@ -239,7 +239,7 @@ function Dashboard() {
           </div>
           <div>
             <h1 className="font-semibold tracking-tight">Archivai</h1>
-            <p className="text-[11px] text-muted-foreground">ITM-megfelelő archív</p>
+            <p className="text-[11px] text-muted-foreground">Törvényi előírás szerint archiválva</p>
           </div>
         </div>
         {sidebarNav}
