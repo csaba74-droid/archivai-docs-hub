@@ -366,7 +366,7 @@ function Dashboard() {
                       role="button" tabIndex={0}
                       onClick={() => setPreviewDoc(doc)}
                       onKeyDown={(e) => { if (e.key === "Enter") setPreviewDoc(doc); }}
-                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${strict ? "border-brand/30" : ""}`}
+                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${strict ? "border-lock/40" : ""}`}
                     >
                       <div className="h-48 md:h-36 bg-muted overflow-hidden">
                         <DocumentThumbnail path={doc.storage_path} mimeType={doc.mime_type} filename={doc.filename} className="w-full h-full" />
