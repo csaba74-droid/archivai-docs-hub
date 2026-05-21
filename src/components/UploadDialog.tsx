@@ -435,7 +435,7 @@ export function UploadDialog({
               <Button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                className="bg-brand hover:bg-brand-hover text-brand-foreground shrink-0"
                 disabled={running}
               >
                 <FolderOpen className="h-4 w-4 mr-2" /> Fájlok kiválasztása
@@ -529,7 +529,7 @@ export function UploadDialog({
             <Button
               onClick={startUpload}
               disabled={running || files.length === 0}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-muted disabled:text-muted-foreground"
+              className="bg-brand hover:bg-brand-hover text-brand-foreground disabled:bg-muted disabled:text-muted-foreground"
             >
               {running ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Folyamatban...</> : "Feltöltés indítása"}
             </Button>
@@ -615,7 +615,7 @@ export function UploadDialog({
               📄 {datePrompt?.detectedDate} — dokumentum dátuma
             </Button>
             <Button
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="flex-1 bg-brand hover:bg-brand-hover text-brand-foreground"
               onClick={() => resolveDatePrompt(false)}
             >
               📅 {new Date().toISOString().slice(0, 10)} — mai dátum
