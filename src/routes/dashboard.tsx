@@ -239,7 +239,7 @@ function Dashboard() {
           </div>
           <div>
             <h1 className="font-semibold tracking-tight">Archivai</h1>
-            <p className="text-[11px] text-muted-foreground">ITM-megfelelő archív</p>
+            <p className="text-[11px] text-muted-foreground">Törvényi előírás szerint archiválva</p>
           </div>
         </div>
         {sidebarNav}
