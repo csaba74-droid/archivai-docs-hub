@@ -123,7 +123,7 @@ function Dashboard() {
     const expired = deadline && deadline.getTime() < Date.now();
     if (isStrict(doc.category) && !expired) {
       void logAudit("delete_blocked", doc.id, { reason: "strict" });
-      toast.error("Törvényi megőrzés alatt", { description: "ITM-besorolású iratok nem törölhetők." });
+      toast.error("Törvényi megőrzés alatt", { description: "Törvényileg védett iratok nem törölhetők." });
       return;
     }
     const confirmMsg = expired
