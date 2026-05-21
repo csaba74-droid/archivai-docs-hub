@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Archivai" },
       { name: "description", content: "Archivai — Biztonságos dokumentum archiválás és kezelés." },
       { name: "author", content: "Lovable" },
-      { name: "theme-color", content: "#2B5F3E" },
+      { name: "theme-color", content: "#1A2B4A" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Archivai" },
