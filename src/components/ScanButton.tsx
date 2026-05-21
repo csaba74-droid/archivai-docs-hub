@@ -1,21 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import { ocrImage } from "@/lib/ocr";
 import { setScanOcrText } from "@/lib/scan-cache";
-
-const PUBLIC_URL = "archivai-docs-hub.lovable.app";
-
-function isMobileDevice(): boolean {
-  if (typeof window === "undefined") return false;
-  const ua = navigator.userAgent || "";
-  const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  const small = window.innerWidth <= 820;
-  return touch && (small || /Android|iPhone|iPad|iPod|Mobile/i.test(ua));
-}
 
 /**
  * Load a camera image into an upright bitmap. Uses createImageBitmap with
@@ -186,17 +175,7 @@ export function ScanButton({
   className?: string;
   variant?: "outline" | "default" | "secondary" | "ghost";
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [desktopOpen, setDesktopOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
-
-  const handleClick = () => {
-    if (!isMobileDevice()) {
-      setDesktopOpen(true);
-      return;
-    }
-    inputRef.current?.click();
-  };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -226,47 +205,32 @@ export function ScanButton({
     }
   };
 
+  const inactive = disabled || processing;
+
   return (
-    <>
-      <Button
-        onClick={handleClick}
-        disabled={disabled || processing}
-        variant={variant}
-        className={className}
-        size={iconOnly ? "icon" : "default"}
-        aria-label="Szkennelés"
-      >
+    <Button
+      asChild
+      variant={variant}
+      className={`${className ?? ""} relative overflow-hidden ${
+        inactive ? "pointer-events-none opacity-50 cursor-not-allowed" : ""
+      }`}
+      size={iconOnly ? "icon" : "default"}
+    >
+      <label aria-label="Szkennelés" aria-disabled={inactive}>
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          disabled={inactive}
+          onChange={handleFile}
+        />
         {processing ? (
           <Loader2 className={`h-4 w-4 ${iconOnly ? "" : "mr-2"} animate-spin`} />
         ) : (
           <Camera className={`h-4 w-4 ${iconOnly ? "" : "mr-2"}`} />
         )}
         {!iconOnly && "Szkennelés"}
-      </Button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*,application/pdf"
-        className="hidden"
-        onChange={handleFile}
-      />
-
-      <Dialog open={desktopOpen} onOpenChange={setDesktopOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>📱 Mobil funkció</DialogTitle>
-            <DialogDescription>
-              Ez a funkció mobilon érhető el. Nyissa meg az alkalmazást telefonján:
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-md border bg-muted/40 p-3 text-center font-mono text-sm break-all">
-            {PUBLIC_URL}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setDesktopOpen(false)}>Rendben</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      </label>
+    </Button>
   );
 }
