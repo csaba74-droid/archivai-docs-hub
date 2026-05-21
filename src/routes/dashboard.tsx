@@ -178,7 +178,7 @@ function Dashboard() {
           <span className="text-xs text-muted-foreground">{docs.length}</span>
         </button>
 
-        <SectionHeader icon={<Lock className="h-3 w-3" />} title="ITM kötelező" />
+        <SectionHeader icon={<Lock className="h-3 w-3" />} title="Kötelező megőrzés" />
         {builtInStrict.map((cat) => (
           <CategoryButton key={cat.id} cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => { setActiveCat(cat.id); setMobileCatsOpen(false); }} />
         ))}
