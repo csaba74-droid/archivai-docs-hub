@@ -94,7 +94,7 @@ export function CustomCategoryDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="normal">Normál (felhasználó törölheti)</SelectItem>
-                <SelectItem value="strict">Szigorú ITM (nem törölhető)</SelectItem>
+                <SelectItem value="strict">Szigorú törvényi (nem törölhető)</SelectItem>
               </SelectContent>
             </Select>
           </div>
