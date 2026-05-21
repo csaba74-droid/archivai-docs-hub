@@ -156,7 +156,7 @@ export function DocumentPreviewModal({
             <Badge variant="secondary">{cat.label}</Badge>
             {strict ? (
               <Badge className="bg-brand text-brand-foreground gap-1">
-                <ShieldCheck className="h-3 w-3" /> ITM zárolt
+                <ShieldCheck className="h-3 w-3" /> Törvényileg védett
               </Badge>
             ) : (
               <Badge variant="outline">Ajánlott tárolás</Badge>
