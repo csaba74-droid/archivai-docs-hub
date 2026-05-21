@@ -522,7 +522,7 @@ function CategoryButton({ cat, active, count, onClick }: { cat: ReturnType<typeo
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${active ? "bg-brand-soft text-brand font-medium" : "hover:bg-muted"}`}
+      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${active ? "bg-brand text-brand-foreground font-medium" : "hover:bg-muted"}`}
     >
       <span className="flex items-center gap-2 min-w-0">
         {cat.custom && cat.color ? (
