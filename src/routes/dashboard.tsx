@@ -609,7 +609,7 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
       <div>
         <h3 className="text-sm font-semibold text-brand px-1 mb-2">Kategóriák</h3>
         <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-          {allCats.filter((c) => !c.custom).map((cat) => {
+          {allCats.map((cat) => {
             const strict = cat.mode === "strict";
             const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
             const count = counts[cat.id] ?? 0;
@@ -619,28 +619,44 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
               ? "Határozatlan megőrzés"
               : "Szabad tárolás";
             return (
-              <button
-                key={cat.id}
-                onClick={() => onOpenCategory(cat.id)}
-                className="w-full min-h-[60px] flex items-center gap-3 px-4 py-3 text-left active:bg-muted transition-colors"
-              >
-                <span
-                  className="h-3 w-3 rounded-full shrink-0"
-                  style={{ background: color }}
-                  aria-hidden
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-brand truncate">{cat.label}</span>
-                    {strict && <Lock className="h-3.5 w-3.5 text-lock shrink-0" />}
+              <div key={cat.id} className="relative flex items-center">
+                <button
+                  onClick={() => onOpenCategory(cat.id)}
+                  className="flex-1 min-h-[60px] flex items-center gap-3 px-4 py-3 text-left active:bg-muted transition-colors"
+                >
+                  <span
+                    className="h-3 w-3 rounded-full shrink-0"
+                    style={{ background: color }}
+                    aria-hidden
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-brand truncate">{cat.label}</span>
+                      {strict && <Lock className="h-3.5 w-3.5 text-lock shrink-0" />}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{retentionText}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">{retentionText}</div>
-                </div>
-                <span className="text-base font-bold text-brand tabular-nums">{count}</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
+                  <span className="text-base font-bold text-brand tabular-nums">{count}</span>
+                  {!cat.custom && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                </button>
+                {cat.custom && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteCustomCat(cat.id); }}
+                    className="px-3 py-3 text-muted-foreground hover:text-destructive"
+                    aria-label="Kategória törlése"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             );
           })}
+          <button
+            onClick={onNewCategory}
+            className="w-full min-h-[52px] flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-brand active:bg-muted transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Új kategória
+          </button>
         </div>
       </div>
 
