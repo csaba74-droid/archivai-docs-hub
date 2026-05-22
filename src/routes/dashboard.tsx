@@ -413,7 +413,7 @@ function Dashboard() {
                       canDelete={canDelete}
                       onOpen={() => setPreviewDoc(doc)}
                       onDelete={() => handleDelete(doc)}
-                      onRenamed={(updated) => {
+                      onRenamed={(updated: DocumentRow) => {
                         setDocs((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
                       }}
                     />
