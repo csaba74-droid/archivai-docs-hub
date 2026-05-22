@@ -159,7 +159,7 @@ function ProfilePage() {
             <h2 className="text-base font-semibold">Előfizetés</h2>
           </div>
 
-          <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold">
@@ -180,20 +180,28 @@ function ProfilePage() {
             </Button>
           </div>
 
-          <div className="pt-4 space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold mb-2">Adataim exportálása</h3>
-              <GdprExportButton />
-            </div>
+          {/* Cancel subscription — always visible below plan info */}
+          <div className="mt-4 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setCancelOpen(true)}
+              disabled={!canCancel}
+              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <XCircle className="h-4 w-4 mr-2" /> Előfizetés felmondása
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              {canCancel
+                ? "Az előfizetés felmondása után adatai megmaradnak az aktuális időszak végéig."
+                : subscription?.plan === "alap"
+                  ? "Az Alap csomag ingyenes, nincs mit felmondani."
+                  : "Az előfizetés jelenleg nem aktív."}
+            </p>
+          </div>
 
-            {canCancel && (
-              <div className="pt-4 border-t">
-                <h3 className="text-sm font-semibold mb-2 text-destructive">Veszélyzóna</h3>
-                <Button variant="destructive" onClick={() => setCancelOpen(true)}>
-                  <XCircle className="h-4 w-4 mr-2" /> Előfizetés felmondása
-                </Button>
-              </div>
-            )}
+          <div className="pt-6 mt-4 border-t">
+            <h3 className="text-sm font-semibold mb-2">Adataim exportálása</h3>
+            <GdprExportButton />
           </div>
         </Card>
 
