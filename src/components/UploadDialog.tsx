@@ -217,7 +217,7 @@ export function UploadDialog({
       return;
     }
     setRunning(true);
-    const customForAi = customRows.map((c: CustomCategoryRow) => ({ id: c.id, name: c.name, mode: c.mode }));
+    const customForAi = customRows.map((c: CustomCategoryRow) => ({ id: c.id, name: c.name, mode: c.is_strict_itm ? "strict" as const : "normal" as const }));
     let okCount = 0;
 
     for (let i = 0; i < files.length; i++) {
