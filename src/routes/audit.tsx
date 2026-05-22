@@ -46,6 +46,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   szamlak: "Számlák",
   szerzodesek: "Szerződések",
   szallitolevelek: "Szállítólevelek",
+  szallitolevek: "Szállítólevelek",
   munkaugyi_iratok: "Munkaügyi iratok",
   adobevallesok: "Adóbevallások",
   kozuzemi_szamlak: "Közüzemi számlák",
