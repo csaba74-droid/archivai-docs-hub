@@ -32,6 +32,70 @@ const ACTION_LABELS: Record<string, string> = {
   categorize: "🤖 Kategorizálás",
 };
 
+const ACTION_PLAIN: Record<string, string> = {
+  upload: "Feltöltés",
+  view: "Megtekintés",
+  download: "Letöltés",
+  delete: "Törlés",
+  delete_blocked: "Törlés megtagadva",
+  search: "Keresés",
+  categorize: "Kategorizálás",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  szamlak: "Számlák",
+  szerzodesek: "Szerződések",
+  szallitolevelek: "Szállítólevelek",
+  munkaugyi_iratok: "Munkaügyi iratok",
+  adobevallesok: "Adóbevallások",
+  kozuzemi_szamlak: "Közüzemi számlák",
+  banki_dokumentumok: "Banki dokumentumok",
+  muszaki_dokumentumok: "Műszaki dokumentumok",
+  belso_iratok: "Belső iratok",
+  egyeb: "Egyéb",
+};
+
+const META_KEY_LABELS: Record<string, string> = {
+  category: "Kategória",
+  filename: "Fájlnév",
+  original_filename: "Eredeti fájlnév",
+  confidence: "Bizonyosság",
+  ai_confidence: "Bizonyosság",
+  size_bytes: "Méret",
+  mime_type: "Típus",
+  query: "Keresés",
+  reason: "Indok",
+  document_date: "Dokumentum dátuma",
+};
+
+function formatMetaValue(key: string, value: unknown): string {
+  if (value == null) return "";
+  if (key === "category" && typeof value === "string") {
+    return CATEGORY_LABELS[value] ?? value;
+  }
+  if ((key === "confidence" || key === "ai_confidence") && typeof value === "number") {
+    return `${Math.round(value * 100)}%`;
+  }
+  if (key === "size_bytes" && typeof value === "number") {
+    if (value >= 1024 * 1024) return `${(value / 1024 / 1024).toFixed(1)} MB`;
+    if (value >= 1024) return `${Math.round(value / 1024)} KB`;
+    return `${value} B`;
+  }
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function formatMetaReadable(meta: Record<string, unknown> | null): string {
+  if (!meta) return "";
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(meta)) {
+    if (v == null || v === "") continue;
+    const label = META_KEY_LABELS[k] ?? k;
+    parts.push(`${label}: ${formatMetaValue(k, v)}`);
+  }
+  return parts.join(" | ");
+}
+
 const ACTION_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "Összes művelet" },
   ...Object.entries(ACTION_LABELS).map(([value, label]) => ({ value, label })),
@@ -144,8 +208,8 @@ function AuditPage() {
     const lines = [header.join(",")];
     for (const r of list) {
       const fn = r.document_id ? map[r.document_id]?.filename ?? "" : "";
-      const meta = r.metadata ? JSON.stringify(r.metadata) : "";
-      lines.push([formatHu(r.created_at), ACTION_LABELS[r.action] ?? r.action, fn, meta].map(esc).join(","));
+      const meta = formatMetaReadable(r.metadata);
+      lines.push([formatHu(r.created_at), ACTION_PLAIN[r.action] ?? r.action, fn, meta].map(esc).join(","));
     }
     const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -164,14 +228,9 @@ function AuditPage() {
   };
 
   const renderMeta = (m: Record<string, unknown> | null) => {
-    if (!m) return <span className="text-muted-foreground">—</span>;
-    const entries = Object.entries(m).slice(0, 3);
-    if (entries.length === 0) return <span className="text-muted-foreground">—</span>;
-    return (
-      <span className="text-xs text-muted-foreground">
-        {entries.map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`).join(" · ")}
-      </span>
-    );
+    const text = formatMetaReadable(m);
+    if (!text) return <span className="text-muted-foreground">—</span>;
+    return <span className="text-xs text-muted-foreground">{text}</span>;
   };
 
   return (
