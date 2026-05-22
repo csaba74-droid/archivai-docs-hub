@@ -42,10 +42,13 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       user_id: u.user.id,
       name,
       color,
-      mode,
+      is_strict_itm: mode === "strict",
       retention_years: retentionYears,
     }).select().single();
-    if (error) throw error;
+    if (error) {
+      console.log("custom_categories insert error", error);
+      throw error;
+    }
     await reload();
     return `custom:${(data as CustomCategoryRow).id}`;
   }, [reload]);
