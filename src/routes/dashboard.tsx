@@ -395,53 +395,27 @@ function Dashboard() {
                 </Button>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
                 const strict = cat.mode === "strict";
                 const baseDate = doc.document_date ?? doc.created_at;
                 const deadline = getRetentionDeadline(doc.category, baseDate);
-                const expired = deadline && deadline.getTime() < Date.now();
+                const expired = !!(deadline && deadline.getTime() < Date.now());
+                const canDelete = canUpload && (!strict || expired);
                 return (
                   <DocumentHoverPreview key={doc.id} doc={doc}>
-                    <Card
-                      role="button" tabIndex={0}
-                      onClick={() => setPreviewDoc(doc)}
-                      onKeyDown={(e) => { if (e.key === "Enter") setPreviewDoc(doc); }}
-                      className={`p-0 overflow-hidden hover:shadow-md transition-shadow group relative cursor-pointer ${strict ? "border-lock/40" : ""}`}
-                    >
-                      <div className="h-48 md:h-36 bg-muted overflow-hidden">
-                        <DocumentThumbnail path={doc.storage_path} mimeType={doc.mime_type} filename={doc.filename} className="w-full h-full" />
-                      </div>
-                      <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-base md:text-sm font-medium truncate flex-1" title={doc.filename}>{doc.filename}</p>
-                          {strict && <Lock className="h-4 w-4 md:h-3.5 md:w-3.5 text-lock shrink-0 mt-0.5" />}
-                        </div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <Badge variant="secondary" className="text-xs md:text-[10px] py-0.5 md:py-0 h-5 md:h-4 flex items-center gap-1">
-                            {cat.custom && cat.color && <span className="h-2 w-2 rounded-full" style={{ background: cat.color }} />}
-                            {cat.label}
-                          </Badge>
-                          {expired && <Badge variant="destructive" className="text-xs md:text-[10px] py-0.5 md:py-0 h-5 md:h-4">Lejárt</Badge>}
-                        </div>
-                        <div className="flex items-center justify-between text-xs md:text-[11px] text-muted-foreground pt-1">
-                          <span className="flex items-center gap-1">
-                            <CalendarClock className="h-3.5 w-3.5 md:h-3 md:w-3" />
-                            {deadline ? formatDeadline(deadline) : cat.retentionLabel}
-                          </span>
-                          {(!strict || expired) && canUpload && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
-                              className="opacity-60 md:opacity-0 md:group-hover:opacity-100 hover:text-destructive transition-opacity p-1 -m-1"
-                              aria-label="Delete"
-                            >
-                              <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
+                    <DocumentCard
+                      doc={doc}
+                      category={cat}
+                      strict={strict}
+                      canDelete={canDelete}
+                      onOpen={() => setPreviewDoc(doc)}
+                      onDelete={() => handleDelete(doc)}
+                      onRenamed={(updated) => {
+                        setDocs((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+                      }}
+                    />
                   </DocumentHoverPreview>
                 );
               })}
