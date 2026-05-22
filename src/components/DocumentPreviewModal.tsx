@@ -108,7 +108,7 @@ export function DocumentPreviewModal({
       toast.error("Átnevezés sikertelen", { description: error.message });
       return;
     }
-    toast.success("Fájlnév módosítva");
+    toast.success("Fájlnév módosítva ✓");
     setNameValue(finalName);
     setEditingName(false);
     if (data) onUpdated?.(data as DocumentRow);
@@ -121,22 +121,49 @@ export function DocumentPreviewModal({
         <DialogHeader>
           <DialogTitle className="truncate flex items-center gap-2">
             {editingName ? (
-              <div className="flex items-center gap-1 flex-1">
-                <Input value={nameValue} onChange={(e) => setNameValue(e.target.value)} className="h-8" autoFocus />
-                <Button size="icon" variant="ghost" onClick={saveName} disabled={saving}><Check className="h-4 w-4" /></Button>
-                <Button size="icon" variant="ghost" onClick={() => { setEditingName(false); setNameValue(doc.filename); }}><X className="h-4 w-4" /></Button>
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  className="h-9 flex-1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveName();
+                    if (e.key === "Escape") { setEditingName(false); setNameValue(doc.filename); }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  onClick={saveName}
+                  disabled={saving}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Check className="h-4 w-4 mr-1" /> Mentés
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { setEditingName(false); setNameValue(doc.filename); }}
+                  disabled={saving}
+                >
+                  <X className="h-4 w-4 mr-1" /> Mégse
+                </Button>
               </div>
             ) : (
               <>
                 <span className="truncate">{doc.filename}</span>
-                {canEdit && (
-                  <button onClick={() => setEditingName(true)} className="text-muted-foreground hover:text-foreground" aria-label="Rename">
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                )}
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="text-muted-foreground hover:text-foreground shrink-0"
+                  aria-label="Átnevezés"
+                  title="Átnevezés"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
               </>
             )}
           </DialogTitle>
+
           <DialogDescription className="flex flex-wrap items-center gap-2 text-xs">
             <Badge variant="secondary">{cat.label}</Badge>
             {strict ? (
