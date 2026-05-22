@@ -1,10 +1,13 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
+import { GdprExportButton } from "@/components/GdprExportButton";
+import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 
 export const Route = createFileRoute("/subscription")({
   beforeLoad: async () => {
@@ -23,6 +26,9 @@ const PLAN_FEATURES: Record<keyof typeof PLAN_INFO, string[]> = {
 
 function SubscriptionPage() {
   const { subscription, active } = useSubscription();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const canCancel = subscription?.status === "active" && subscription.plan !== "alap";
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,7 +97,33 @@ function SubscriptionPage() {
             );
           })}
         </div>
+
+        {/* GDPR data export */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-3">Adataim és adatvédelem</h2>
+          <GdprExportButton />
+        </Card>
+
+        {/* Cancel subscription */}
+        {canCancel && (
+          <Card className="p-6 border-destructive/30">
+            <h2 className="text-lg font-semibold mb-1">Előfizetés felmondása</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              A felmondás után dokumentumai elérhetők maradnak az aktuális elszámolási időszak végéig.
+            </p>
+            <Button variant="destructive" onClick={() => setCancelOpen(true)}>
+              <XCircle className="h-4 w-4 mr-2" /> Előfizetés felmondása
+            </Button>
+          </Card>
+        )}
       </main>
+
+      <CancelSubscriptionDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        currentPlan={subscription?.plan ?? null}
+      />
     </div>
   );
 }
+
