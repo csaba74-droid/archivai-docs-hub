@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
-  Bell, ChevronRight, ShieldCheck, ClipboardList,
+  Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog,
 } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
@@ -220,12 +220,24 @@ function Dashboard() {
         >
           <ClipboardList className="h-4 w-4" /> Audit napló
         </Link>
+        <Link
+          to="/profile"
+          onClick={() => setMobileCatsOpen(false)}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+        >
+          <UserCog className="h-4 w-4" /> Profil & Beállítások
+        </Link>
       </nav>
     </>
   );
 
   const profilePanel = (
     <div className="p-3 space-y-2">
+      <Link to="/profile" onClick={() => setMobileProfileOpen(false)} className="block">
+        <Button variant="outline" size="sm" className="w-full">
+          <UserCog className="h-3.5 w-3.5 mr-2" /> Profil & Beállítások
+        </Button>
+      </Link>
       <Link to="/subscription" onClick={() => setMobileProfileOpen(false)} className="block">
         <Button variant="outline" size="sm" className="w-full">
           <CreditCard className="h-3.5 w-3.5 mr-2" />
