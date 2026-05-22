@@ -208,8 +208,8 @@ function AuditPage() {
     const lines = [header.join(",")];
     for (const r of list) {
       const fn = r.document_id ? map[r.document_id]?.filename ?? "" : "";
-      const meta = r.metadata ? JSON.stringify(r.metadata) : "";
-      lines.push([formatHu(r.created_at), ACTION_LABELS[r.action] ?? r.action, fn, meta].map(esc).join(","));
+      const meta = formatMetaReadable(r.metadata);
+      lines.push([formatHu(r.created_at), ACTION_PLAIN[r.action] ?? r.action, fn, meta].map(esc).join(","));
     }
     const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
