@@ -578,12 +578,14 @@ const MOBILE_CAT_COLORS: Record<string, string> = {
 type MobileHomeProps = {
   docs: DocumentRow[];
   counts: Record<string, number>;
-  allCats: ReturnType<typeof useCategoryHelpers>["all"];
+  allCats: Category[];
   onOpenCategory: (id: string) => void;
   onOpenDoc: (d: DocumentRow) => void;
+  onNewCategory: () => void;
+  onDeleteCustomCat: (catId: string) => void | Promise<void>;
 };
 
-function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc }: MobileHomeProps) {
+function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCategory, onDeleteCustomCat }: MobileHomeProps) {
   const recent = docs.slice(0, 3);
   const total = docs.length;
 
