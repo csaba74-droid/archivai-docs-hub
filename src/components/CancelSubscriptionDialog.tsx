@@ -97,9 +97,15 @@ export function CancelSubscriptionDialog({
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>Mégsem</Button>
-              <Button variant="destructive" onClick={() => setStep("downgrade")}>
-                Folytatás felmondással
-              </Button>
+              {currentPlan === "alap" ? (
+                <Button variant="destructive" onClick={proceedCancel}>
+                  Felmondás megerősítése
+                </Button>
+              ) : (
+                <Button variant="destructive" onClick={() => setStep("downgrade")}>
+                  Folytatás felmondással
+                </Button>
+              )}
             </DialogFooter>
           </>
         )}
