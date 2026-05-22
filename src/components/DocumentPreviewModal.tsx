@@ -85,14 +85,21 @@ export function DocumentPreviewModal({
   };
 
   const saveName = async () => {
-    if (!nameValue.trim() || nameValue === doc.filename) {
+    const trimmed = nameValue.trim();
+    if (!trimmed || trimmed === doc.filename) {
       setEditingName(false);
       return;
     }
+    // Preserve original extension
+    const origExtMatch = doc.filename.match(/\.[^.]+$/);
+    const origExt = origExtMatch ? origExtMatch[0] : "";
+    const hasExt = origExt && trimmed.toLowerCase().endsWith(origExt.toLowerCase());
+    const finalName = hasExt ? trimmed : trimmed.replace(/\.[^.]+$/, "") + origExt;
+
     setSaving(true);
     const { data, error } = await supabase
       .from("documents")
-      .update({ filename: nameValue.trim() })
+      .update({ filename: finalName })
       .eq("id", doc.id)
       .select()
       .single();
@@ -101,32 +108,12 @@ export function DocumentPreviewModal({
       toast.error("Átnevezés sikertelen", { description: error.message });
       return;
     }
-    toast.success("Átnevezve");
+    toast.success("Fájlnév módosítva");
+    setNameValue(finalName);
     setEditingName(false);
     if (data) onUpdated?.(data as DocumentRow);
   };
 
-  const saveDate = async () => {
-    if (!dateValue) {
-      setEditingDate(false);
-      return;
-    }
-    setSaving(true);
-    const { data, error } = await supabase
-      .from("documents")
-      .update({ document_date: dateValue })
-      .eq("id", doc.id)
-      .select()
-      .single();
-    setSaving(false);
-    if (error) {
-      toast.error("Mentés sikertelen", { description: error.message });
-      return;
-    }
-    toast.success("Dokumentum dátum frissítve");
-    setEditingDate(false);
-    if (data) onUpdated?.(data as DocumentRow);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
