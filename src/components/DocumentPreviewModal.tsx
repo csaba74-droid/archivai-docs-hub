@@ -108,7 +108,7 @@ export function DocumentPreviewModal({
       toast.error("Átnevezés sikertelen", { description: error.message });
       return;
     }
-    toast.success("Fájlnév módosítva");
+    toast.success("Fájlnév módosítva ✓");
     setNameValue(finalName);
     setEditingName(false);
     if (data) onUpdated?.(data as DocumentRow);
