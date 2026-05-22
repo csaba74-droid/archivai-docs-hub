@@ -228,14 +228,9 @@ function AuditPage() {
   };
 
   const renderMeta = (m: Record<string, unknown> | null) => {
-    if (!m) return <span className="text-muted-foreground">—</span>;
-    const entries = Object.entries(m).slice(0, 3);
-    if (entries.length === 0) return <span className="text-muted-foreground">—</span>;
-    return (
-      <span className="text-xs text-muted-foreground">
-        {entries.map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`).join(" · ")}
-      </span>
-    );
+    const text = formatMetaReadable(m);
+    if (!text) return <span className="text-muted-foreground">—</span>;
+    return <span className="text-xs text-muted-foreground">{text}</span>;
   };
 
   return (
