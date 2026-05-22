@@ -211,6 +211,15 @@ function Dashboard() {
         >
           <Plus className="h-4 w-4" /> Új kategória
         </button>
+
+        <div className="my-2 border-t" />
+        <Link
+          to="/audit"
+          onClick={() => setMobileCatsOpen(false)}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+        >
+          <ClipboardList className="h-4 w-4" /> Audit napló
+        </Link>
       </nav>
     </>
   );
