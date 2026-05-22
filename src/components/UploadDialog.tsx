@@ -563,7 +563,7 @@ export function UploadDialog({
                 {pendingConfirm.reasoning && (
                   <p className="text-xs text-muted-foreground mt-1">AI: {pendingConfirm.reasoning}</p>
                 )}
-                {(confirmCategory === "egyeb" || pendingConfirm.suggested === "egyeb") && (
+                {(confirmCategory === "egyeb" || pendingConfirm.suggested === "egyeb" || pendingConfirm.confidence < 0.75) && (
                   <Button
                     type="button"
                     variant="outline"
