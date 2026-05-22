@@ -558,3 +558,125 @@ function CategoryButton({ cat, active, count, onClick }: { cat: ReturnType<typeo
     </button>
   );
 }
+
+// Color dots for built-in categories on the mobile home
+const MOBILE_CAT_COLORS: Record<string, string> = {
+  szamlak: "#F59E0B",        // orange
+  szerzodesek: "#1A2B4A",    // navy
+  szallitolevek: "#10B981",  // green
+  munkaugyi: "#8B5CF6",      // purple
+  adobevallasok: "#EF4444",  // red
+  kozuzemi: "#3B82F6",       // blue
+  banki: "#14B8A6",          // teal
+  muszaki: "#6B7280",        // grey
+  belso: "#7DD3FC",          // light blue
+  egyeb: "#9CA3AF",          // grey
+};
+
+type MobileHomeProps = {
+  docs: DocumentRow[];
+  counts: Record<string, number>;
+  allCats: ReturnType<typeof useCategoryHelpers>["all"];
+  onOpenCategory: (id: string) => void;
+  onOpenDoc: (d: DocumentRow) => void;
+};
+
+function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc }: MobileHomeProps) {
+  const recent = docs.slice(0, 3);
+  const total = docs.length;
+
+  return (
+    <div className="md:hidden space-y-5">
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="text-3xl font-bold text-brand leading-none">{total}</div>
+          <div className="text-xs text-muted-foreground mt-2">Összes dokumentum</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-lock">
+            <ShieldCheck className="h-4 w-4" /> Törvényi védelem
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">Integritás: 100%</div>
+        </div>
+      </div>
+
+      {/* Categories list */}
+      <div>
+        <h3 className="text-sm font-semibold text-brand px-1 mb-2">Kategóriák</h3>
+        <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
+          {allCats.filter((c) => !c.custom).map((cat) => {
+            const strict = cat.mode === "strict";
+            const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
+            const count = counts[cat.id] ?? 0;
+            const retentionText = cat.retentionYears
+              ? `Megőrzés: ${cat.retentionYears} év`
+              : strict
+              ? "Határozatlan megőrzés"
+              : "Szabad tárolás";
+            return (
+              <button
+                key={cat.id}
+                onClick={() => onOpenCategory(cat.id)}
+                className="w-full min-h-[60px] flex items-center gap-3 px-4 py-3 text-left active:bg-muted transition-colors"
+              >
+                <span
+                  className="h-3 w-3 rounded-full shrink-0"
+                  style={{ background: color }}
+                  aria-hidden
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-brand truncate">{cat.label}</span>
+                    {strict && <Lock className="h-3.5 w-3.5 text-lock shrink-0" />}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">{retentionText}</div>
+                </div>
+                <span className="text-base font-bold text-brand tabular-nums">{count}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent uploads */}
+      {recent.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-brand px-1 mb-2">Legutóbbi feltöltések</h3>
+          <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
+            {recent.map((doc) => {
+              const cat = allCats.find((c) => c.id === doc.category);
+              const date = new Date(doc.created_at).toLocaleDateString("hu-HU", {
+                year: "numeric", month: "short", day: "numeric",
+              });
+              return (
+                <button
+                  key={doc.id}
+                  onClick={() => onOpenDoc(doc)}
+                  className="w-full min-h-[60px] flex items-center gap-3 px-4 py-3 text-left active:bg-muted transition-colors"
+                >
+                  <div className="h-9 w-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+                    <FileIcon className="h-4 w-4 text-brand" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-brand truncate">{doc.filename}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {cat && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-soft text-brand font-medium truncate max-w-[140px]">
+                          {cat.label}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground">{date}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
