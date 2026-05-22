@@ -45,9 +45,8 @@ export function DocumentPreviewModal({
   const [url, setUrl] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
-  const [editingDate, setEditingDate] = useState(false);
-  const [dateValue, setDateValue] = useState("");
   const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     let cancelled = false;
