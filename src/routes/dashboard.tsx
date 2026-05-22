@@ -233,6 +233,11 @@ function Dashboard() {
 
   const profilePanel = (
     <div className="p-3 space-y-2">
+      <Link to="/profile" onClick={() => setMobileProfileOpen(false)} className="block">
+        <Button variant="outline" size="sm" className="w-full">
+          <UserCog className="h-3.5 w-3.5 mr-2" /> Profil & Beállítások
+        </Button>
+      </Link>
       <Link to="/subscription" onClick={() => setMobileProfileOpen(false)} className="block">
         <Button variant="outline" size="sm" className="w-full">
           <CreditCard className="h-3.5 w-3.5 mr-2" />
