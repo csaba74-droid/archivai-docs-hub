@@ -193,9 +193,7 @@ function ProfilePage() {
             <p className="text-xs text-muted-foreground mt-2">
               {canCancel
                 ? "Az előfizetés felmondása után adatai megmaradnak az aktuális időszak végéig."
-                : subscription?.plan === "alap"
-                  ? "Az Alap csomag ingyenes, nincs mit felmondani."
-                  : "Az előfizetés jelenleg nem aktív."}
+                : "Az előfizetés már fel van mondva."}
             </p>
           </div>
 
