@@ -49,8 +49,10 @@ export function CustomCategoryDialog({
       onOpenChange(false);
       onCreated?.(newId);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error("Sikertelen", { description: msg });
+      console.log(e);
+      const err = e as { message?: string; details?: string; hint?: string; code?: string } | null;
+      const msg = err?.message ?? "Hiba történt a mentés során";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
