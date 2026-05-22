@@ -46,6 +46,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   szamlak: "Számlák",
   szerzodesek: "Szerződések",
   szallitolevelek: "Szállítólevelek",
+  szallitolevek: "Szállítólevelek",
   munkaugyi_iratok: "Munkaügyi iratok",
   adobevallesok: "Adóbevallások",
   kozuzemi_szamlak: "Közüzemi számlák",
@@ -71,6 +72,7 @@ const META_KEY_LABELS: Record<string, string> = {
 function formatMetaValue(key: string, value: unknown): string {
   if (value == null) return "";
   if (key === "category" && typeof value === "string") {
+    if (value.startsWith("custom:")) return "Egyéni kategória";
     return CATEGORY_LABELS[value] ?? value;
   }
   if ((key === "confidence" || key === "ai_confidence") && typeof value === "number") {
