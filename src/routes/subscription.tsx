@@ -97,7 +97,33 @@ function SubscriptionPage() {
             );
           })}
         </div>
+
+        {/* GDPR data export */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-3">Adataim és adatvédelem</h2>
+          <GdprExportButton />
+        </Card>
+
+        {/* Cancel subscription */}
+        {canCancel && (
+          <Card className="p-6 border-destructive/30">
+            <h2 className="text-lg font-semibold mb-1">Előfizetés felmondása</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              A felmondás után dokumentumai elérhetők maradnak az aktuális elszámolási időszak végéig.
+            </p>
+            <Button variant="destructive" onClick={() => setCancelOpen(true)}>
+              <XCircle className="h-4 w-4 mr-2" /> Előfizetés felmondása
+            </Button>
+          </Card>
+        )}
       </main>
+
+      <CancelSubscriptionDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        currentPlan={subscription?.plan ?? null}
+      />
     </div>
   );
 }
+
