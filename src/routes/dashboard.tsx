@@ -425,8 +425,10 @@ function Dashboard() {
             </div>
             </>
           )}
+          </div>
 
         </div>
+
       </main>
 
       {/* Mobile bottom nav */}
