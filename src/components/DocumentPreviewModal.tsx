@@ -55,9 +55,8 @@ export function DocumentPreviewModal({
       return;
     }
     setNameValue(doc.filename);
-    setDateValue(doc.document_date ?? doc.created_at.slice(0, 10));
     setEditingName(false);
-    setEditingDate(false);
+
     void logAudit("view", doc.id);
     getSignedUrl(doc.storage_path, 600).then((u) => {
       if (!cancelled) setUrl(u);
