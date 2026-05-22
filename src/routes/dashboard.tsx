@@ -19,6 +19,7 @@ import { logAudit } from "@/lib/audit";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { DocumentHoverPreview } from "@/components/DocumentHoverPreview";
 import { DocumentThumbnail } from "@/components/DocumentThumbnail";
+import { DocumentCard } from "@/components/DocumentCard";
 import { UploadDialog } from "@/components/UploadDialog";
 import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 import { ScanButton } from "@/components/ScanButton";
