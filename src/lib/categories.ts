@@ -48,14 +48,14 @@ export function customToCategory(c: CustomCategoryRow): Category {
     id: `custom:${c.id}`,
     label: c.name,
     icon: Tag,
-    mode: c.mode,
+    mode: c.is_strict_itm ? "strict" : "normal",
     retentionYears: c.retention_years,
     retentionLabel:
       c.retention_years == null
-        ? c.mode === "strict"
+        ? c.is_strict_itm
           ? "Határozatlan megőrzés"
           : "Nincs megőrzési korlát"
-        : `${c.retention_years} év ${c.mode === "strict" ? "kötelező megőrzés" : "ajánlott"}`,
+        : `${c.retention_years} év ${c.is_strict_itm ? "kötelező megőrzés" : "ajánlott"}`,
     color: c.color,
     custom: true,
   };
