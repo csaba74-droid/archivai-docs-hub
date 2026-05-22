@@ -318,9 +318,23 @@ function Dashboard() {
             </p>
           </div>
 
+          {/* Mobile home overview — only when no filter/search */}
+          {!activeCat && !search.trim() && (
+            <MobileHome
+              docs={docs}
+              counts={counts}
+              allCats={allCats}
+              onOpenCategory={(id) => setActiveCat(id)}
+              onOpenDoc={(d) => setPreviewDoc(d)}
+            />
+          )}
+
+          {/* Document list: always on desktop; on mobile only when filter/search active */}
+          <div className={!activeCat && !search.trim() ? "hidden md:block space-y-6" : "space-y-6"}>
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : filtered.length === 0 ? (
+
             <div className="rounded-xl border bg-card p-4 space-y-3">
               <DropZone
                 variant="large"
