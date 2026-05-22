@@ -45,9 +45,8 @@ export function DocumentPreviewModal({
   const [url, setUrl] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
-  const [editingDate, setEditingDate] = useState(false);
-  const [dateValue, setDateValue] = useState("");
   const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -56,9 +55,8 @@ export function DocumentPreviewModal({
       return;
     }
     setNameValue(doc.filename);
-    setDateValue(doc.document_date ?? doc.created_at.slice(0, 10));
     setEditingName(false);
-    setEditingDate(false);
+
     void logAudit("view", doc.id);
     getSignedUrl(doc.storage_path, 600).then((u) => {
       if (!cancelled) setUrl(u);
@@ -87,14 +85,21 @@ export function DocumentPreviewModal({
   };
 
   const saveName = async () => {
-    if (!nameValue.trim() || nameValue === doc.filename) {
+    const trimmed = nameValue.trim();
+    if (!trimmed || trimmed === doc.filename) {
       setEditingName(false);
       return;
     }
+    // Preserve original extension
+    const origExtMatch = doc.filename.match(/\.[^.]+$/);
+    const origExt = origExtMatch ? origExtMatch[0] : "";
+    const hasExt = origExt && trimmed.toLowerCase().endsWith(origExt.toLowerCase());
+    const finalName = hasExt ? trimmed : trimmed.replace(/\.[^.]+$/, "") + origExt;
+
     setSaving(true);
     const { data, error } = await supabase
       .from("documents")
-      .update({ filename: nameValue.trim() })
+      .update({ filename: finalName })
       .eq("id", doc.id)
       .select()
       .single();
@@ -103,32 +108,12 @@ export function DocumentPreviewModal({
       toast.error("Átnevezés sikertelen", { description: error.message });
       return;
     }
-    toast.success("Átnevezve");
+    toast.success("Fájlnév módosítva");
+    setNameValue(finalName);
     setEditingName(false);
     if (data) onUpdated?.(data as DocumentRow);
   };
 
-  const saveDate = async () => {
-    if (!dateValue) {
-      setEditingDate(false);
-      return;
-    }
-    setSaving(true);
-    const { data, error } = await supabase
-      .from("documents")
-      .update({ document_date: dateValue })
-      .eq("id", doc.id)
-      .select()
-      .single();
-    setSaving(false);
-    if (error) {
-      toast.error("Mentés sikertelen", { description: error.message });
-      return;
-    }
-    toast.success("Dokumentum dátum frissítve");
-    setEditingDate(false);
-    if (data) onUpdated?.(data as DocumentRow);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,23 +173,11 @@ export function DocumentPreviewModal({
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
                 Dokumentum dátuma
               </div>
-              {editingDate ? (
-                <div className="flex items-center gap-1 mt-1">
-                  <Input type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)} className="h-8" />
-                  <Button size="icon" variant="ghost" onClick={saveDate} disabled={saving}><Check className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => { setEditingDate(false); setDateValue(doc.document_date ?? doc.created_at.slice(0,10)); }}><X className="h-4 w-4" /></Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span>{doc.document_date ? new Date(doc.document_date).toLocaleDateString("hu-HU") : "—"}</span>
-                  {canEdit && (
-                    <button onClick={() => setEditingDate(true)} className="text-muted-foreground hover:text-foreground" aria-label="Edit date">
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="mt-0.5">
+                <span>{doc.document_date ? new Date(doc.document_date).toLocaleDateString("hu-HU") : "—"}</span>
+              </div>
             </div>
+
 
             <Field label="Kategória" value={cat.label} />
             <Field label="Méret" value={doc.size_bytes ? `${(doc.size_bytes / 1024).toFixed(1)} KB` : "—"} />
