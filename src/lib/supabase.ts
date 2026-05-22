@@ -48,7 +48,7 @@ export type CustomCategoryRow = {
   user_id: string;
   name: string;
   color: string;
-  mode: "strict" | "normal";
+  is_strict_itm: boolean;
   retention_years: number | null;
   created_at: string;
 };
