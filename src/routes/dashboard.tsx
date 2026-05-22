@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-ro
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
-import { formatDeadline } from "@/lib/categories";
+import { formatDeadline, type Category } from "@/lib/categories";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
