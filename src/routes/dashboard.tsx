@@ -326,6 +326,8 @@ function Dashboard() {
               allCats={allCats}
               onOpenCategory={(id) => setActiveCat(id)}
               onOpenDoc={(d) => setPreviewDoc(d)}
+              onNewCategory={() => setNewCatOpen(true)}
+              onDeleteCustomCat={handleDeleteCustomCat}
             />
           )}
 
