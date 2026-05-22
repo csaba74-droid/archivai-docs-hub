@@ -41,7 +41,7 @@ function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const [cancelOpen, setCancelOpen] = useState(false);
-  const canCancel = subscription?.status === "active" && subscription.plan !== "alap";
+  const canCancel = subscription?.status !== "canceled";
 
   useEffect(() => {
     (async () => {
