@@ -1,10 +1,13 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
+import { GdprExportButton } from "@/components/GdprExportButton";
+import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 
 export const Route = createFileRoute("/subscription")({
   beforeLoad: async () => {
