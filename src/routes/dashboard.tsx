@@ -250,16 +250,19 @@ function Dashboard() {
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="md:hidden border-b bg-card px-4 py-3 flex items-center justify-between gap-2 sticky top-0 z-30">
+        <header className="md:hidden border-b-2 border-brand/10 bg-card px-4 py-3 flex items-center justify-between gap-2 sticky top-0 z-30">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="h-8 w-8 rounded-lg bg-brand flex items-center justify-center shrink-0">
+            <div className="h-9 w-9 rounded-lg bg-brand flex items-center justify-center shrink-0">
               <Archive className="h-4 w-4 text-brand-foreground" />
             </div>
-            <h1 className="font-semibold tracking-tight truncate">Archivai</h1>
+            <h1 className="font-semibold tracking-tight text-brand truncate">Archivai</h1>
           </div>
-          <Button size="sm" onClick={() => openUploadWith(null)} disabled={!canUpload}>
-            <Upload className="h-4 w-4 mr-1" /> Feltöltés
-          </Button>
+          <button
+            aria-label="Értesítések"
+            className="h-10 w-10 rounded-full flex items-center justify-center text-brand hover:bg-muted transition-colors"
+          >
+            <Bell className="h-5 w-5" />
+          </button>
         </header>
 
         {/* Desktop header */}
@@ -279,19 +282,20 @@ function Dashboard() {
           </Button>
         </header>
 
-        {/* Mobile search bar (below header, always visible) */}
-        <div className="md:hidden border-b bg-card px-4 py-2">
+        {/* Mobile search bar (prominent) */}
+        <div className="md:hidden bg-card px-4 pt-4 pb-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               ref={searchRef}
-              placeholder="Keresés..."
+              placeholder="Keresés a dokumentumokban..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-background"
+              className="pl-12 h-12 bg-background border-border rounded-xl text-base"
             />
           </div>
         </div>
+
 
         {!canUpload && (
           <div className="bg-destructive/10 border-b border-destructive/30 px-4 md:px-8 py-3 flex items-center justify-between gap-4">
