@@ -27,7 +27,7 @@ const PLAN_FEATURES: Record<keyof typeof PLAN_INFO, string[]> = {
 function SubscriptionPage() {
   const { subscription, active } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const canCancel = subscription?.status === "active" && subscription.plan !== "alap";
+  const canCancel = subscription?.status !== "canceled";
 
 
   return (
