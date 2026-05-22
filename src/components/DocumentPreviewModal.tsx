@@ -151,7 +151,7 @@ export function DocumentPreviewModal({
               </div>
             ) : (
               <>
-                <span className="truncate">{doc.filename}</span>
+                <span className="truncate">{doc.filename} (v3)</span>
                 <button
                   onClick={() => setEditingName(true)}
                   className="text-muted-foreground hover:text-foreground shrink-0"
