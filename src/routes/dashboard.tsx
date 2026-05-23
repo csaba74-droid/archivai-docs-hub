@@ -282,7 +282,7 @@ function Dashboard() {
         to="/scan-guide"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
-        <Camera className="h-4 w-4" /> Hogyan szkennelj?
+        <Camera className="h-4 w-4" /> Hogyan szkennelj
       </Link>
       <Link
         to="/sharing"
