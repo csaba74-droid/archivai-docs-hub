@@ -10,6 +10,18 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   MoreVertical,
   Lock,
   FileText,
@@ -20,11 +32,13 @@ import {
   Download,
   Pencil,
   Trash2,
+  ArrowRightLeft,
 } from "lucide-react";
 import type { DocumentRow } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
 import { getSignedUrl } from "@/lib/signed-url";
 import { logAudit } from "@/lib/audit";
+import { useCategories } from "@/hooks/use-categories";
 import type { Category } from "@/lib/categories";
 
 // Category badge colors (background + text)
