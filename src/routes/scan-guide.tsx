@@ -124,6 +124,18 @@ function StepPlayer({ steps }: { steps: Step[] }) {
           Következő <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Pause / Play */}
+      <div className="flex justify-center px-6 py-5 border-t bg-background">
+        <Button
+          size="lg"
+          onClick={() => setPaused((p) => !p)}
+          className="min-w-[200px] text-base font-semibold shadow-md"
+          style={{ backgroundColor: paused ? "#F97316" : BRAND, color: "white" }}
+        >
+          {paused ? <><Play className="h-5 w-5" /> Folytatás</> : <><Pause className="h-5 w-5" /> Megállítás</>}
+        </Button>
+      </div>
     </div>
   );
 }
