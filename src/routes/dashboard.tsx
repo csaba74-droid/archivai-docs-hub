@@ -96,9 +96,28 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ""));
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? "");
+      setUserId(data.user?.id ?? "");
+    });
     loadDocs();
   }, [loadDocs]);
+
+  const referralLink = useMemo(
+    () => (userId && typeof window !== "undefined" ? `${window.location.origin}/?ref=${userId}` : ""),
+    [userId],
+  );
+  const copyReferral = useCallback(async () => {
+    if (!referralLink) return;
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setReferralCopied(true);
+      toast.success("Link kimásolva");
+      setTimeout(() => setReferralCopied(false), 2000);
+    } catch {
+      toast.error("Másolás sikertelen");
+    }
+  }, [referralLink]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
