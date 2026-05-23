@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SharingRouteImport } from './routes/sharing'
+import { Route as ScanGuideRouteImport } from './routes/scan-guide'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -25,6 +26,11 @@ const SubscriptionRoute = SubscriptionRouteImport.update({
 const SharingRoute = SharingRouteImport.update({
   id: '/sharing',
   path: '/sharing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScanGuideRoute = ScanGuideRouteImport.update({
+  id: '/scan-guide',
+  path: '/scan-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/profile'
+    | '/scan-guide'
     | '/sharing'
     | '/subscription'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/profile'
+    | '/scan-guide'
     | '/sharing'
     | '/subscription'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/profile'
+    | '/scan-guide'
     | '/sharing'
     | '/subscription'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  ScanGuideRoute: typeof ScanGuideRoute
   SharingRoute: typeof SharingRoute
   SubscriptionRoute: typeof SubscriptionRoute
 }
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/sharing'
       fullPath: '/sharing'
       preLoaderRoute: typeof SharingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scan-guide': {
+      id: '/scan-guide'
+      path: '/scan-guide'
+      fullPath: '/scan-guide'
+      preLoaderRoute: typeof ScanGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -181,9 +201,20 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  ScanGuideRoute: ScanGuideRoute,
   SharingRoute: SharingRoute,
   SubscriptionRoute: SubscriptionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
