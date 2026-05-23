@@ -225,6 +225,26 @@ export function DocumentCard({
             <DropdownMenuItem onSelect={() => void handleRename()}>
               <Pencil className="h-4 w-4" /> Átnevezés
             </DropdownMenuItem>
+            {strict ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownMenuItem disabled onSelect={(e) => e.preventDefault()}>
+                        <Lock className="h-4 w-4" /> Áthelyezés
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    Törvényileg védett dokumentum nem helyezhető át
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <DropdownMenuItem onSelect={() => setMoveOpen(true)}>
+                <ArrowRightLeft className="h-4 w-4" /> Áthelyezés
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={!canDelete}
@@ -236,6 +256,39 @@ export function DocumentCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
+        <DialogContent className="max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Melyik kategóriába helyezi át?</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto -mx-2">
+            {allCategories
+              .filter((c) => c.id !== doc.category)
+              .map((c) => {
+                const dotColor = c.custom && c.color
+                  ? c.color
+                  : (CATEGORY_COLORS[c.id]?.bg ?? "#9CA3AF");
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    disabled={moving}
+                    onClick={() => void handleMove(c.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-left text-sm disabled:opacity-50"
+                  >
+                    <span
+                      className="h-3 w-3 rounded-full shrink-0"
+                      style={{ backgroundColor: dotColor }}
+                    />
+                    <span className="flex-1 truncate">{c.label}</span>
+                    {c.mode === "strict" && <Lock className="h-3 w-3 text-lock" />}
+                  </button>
+                );
+              })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
