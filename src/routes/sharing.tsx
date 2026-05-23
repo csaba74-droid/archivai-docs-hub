@@ -62,6 +62,7 @@ function SharingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
+  const sendInvite = useServerFn(sendInvitationEmail);
 
   const plan = subscription?.plan ?? "alap";
   const limit = PLAN_LIMITS[plan] ?? 1;
