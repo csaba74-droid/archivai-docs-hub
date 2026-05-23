@@ -434,6 +434,21 @@ function Dashboard() {
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8 space-y-6">
+          {searchActive ? (
+            <SearchPanel
+              query={searchState.query}
+              isSearching={searchState.isSearching}
+              results={searchState.results}
+              grouped={searchState.grouped}
+              filters={searchState.filters}
+              setFilters={searchState.setFilters}
+              clearFilters={searchState.clearFilters}
+              hasActiveFilters={searchState.hasActiveFilters}
+              allCats={allCats}
+              onOpenDoc={(d) => setPreviewDoc(d)}
+              onSuggestQuery={(q) => setRawQuery(q)}
+            />
+          ) : (<>
           {/* Header / Breadcrumb — desktop only */}
           <div className="hidden md:block">
             {activeCat ? (
