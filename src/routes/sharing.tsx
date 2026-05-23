@@ -1,9 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/lib/supabase";
-import { sendInvitationEmail } from "@/lib/invitations.functions";
 import { useCategories } from "@/hooks/use-categories";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
@@ -62,7 +60,7 @@ function SharingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
-  const sendInvite = useServerFn(sendInvitationEmail);
+  
 
   const plan = subscription?.plan ?? "alap";
   const limit = PLAN_LIMITS[plan] ?? 1;
@@ -129,12 +127,21 @@ function SharingPage() {
     }
 
     try {
-      await sendInvite({
-        data: {
-          invitedEmail: trimmed,
-          inviterName: u.user.email ?? undefined,
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(
+        "send-invitation",
+        {
+          body: {
+            to_email: trimmed,
+            owner_name: u.user.email ?? undefined,
+            categories: selectedCats,
+            invitation_link: `${window.location.origin}/login`,
+          },
         },
-      });
+      );
+      if (fnError) throw fnError;
+      if (fnData && typeof fnData === "object" && "error" in fnData && fnData.error) {
+        throw new Error(String((fnData as { error: unknown }).error));
+      }
       toast.success("Meghívó elküldve", {
         description: `${trimmed} email értesítést kapott a hozzáférésről.`,
       });
