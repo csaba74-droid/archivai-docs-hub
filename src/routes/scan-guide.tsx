@@ -152,14 +152,14 @@ function ScanGuidePage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Vissza</Button>
           </Link>
           <h1 className="text-lg md:text-xl font-bold" style={{ color: BRAND }}>
-            Hogyan szkennelj?
+            Hogyan szkennelj
           </h1>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 md:py-10">
         <p className="text-sm text-muted-foreground mb-6 text-center">
-          Kövesd a lépéseket telefonod típusa szerint. A lépések 6 másodpercenként automatikusan váltanak.
+          A lépések 6 másodpercenként automatikusan váltanak.
         </p>
 
         <Tabs defaultValue="iphone" className="w-full">
