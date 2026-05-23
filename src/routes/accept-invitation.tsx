@@ -151,7 +151,7 @@ function AcceptInvitationPage() {
           <div className="space-y-5">
             <div>
               <h2 className="text-xl font-bold leading-snug">
-                <span style={{ color: "#1A2B4A" }}>{ownerEmail}</span> meghívta Önt az
+                <span style={{ color: "#1A2B4A" }}>{ownerName}</span> meghívta Önt az
                 Archivai rendszerbe
               </h2>
               <p className="text-sm text-muted-foreground mt-2">
