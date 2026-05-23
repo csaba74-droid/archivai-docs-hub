@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, Search, X, FileIcon, Clock, Filter } from "lucide-react";
 import type { DocumentRow } from "@/lib/supabase";
 import type { Category } from "@/lib/categories";
