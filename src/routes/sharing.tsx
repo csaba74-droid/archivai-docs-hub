@@ -131,19 +131,20 @@ function SharingPage() {
     }
 
     try {
+      console.log("Sending invitation to:", trimmed);
+      console.log("Calling edge function...");
       const { data: fnData, error: fnError } = await supabase.functions.invoke(
         "send-invitation",
         {
           body: {
             to_email: trimmed,
             owner_name: u.user.email ?? "",
-            categories: selectedCats
-              .map((c) => c)
-              .join(", "),
+            categories: selectedCats.map((c) => c).join(", "),
             invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
           },
         },
       );
+      console.log("Edge function result:", fnData, fnError);
       if (fnError) throw fnError;
       if (fnData && typeof fnData === "object" && "error" in fnData && fnData.error) {
         throw new Error(String((fnData as { error: unknown }).error));
