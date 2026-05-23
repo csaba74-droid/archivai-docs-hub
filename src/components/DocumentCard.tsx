@@ -87,6 +87,7 @@ export function DocumentCard({
   onOpen,
   onDelete,
   onRenamed,
+  onMoved,
 }: {
   doc: DocumentRow;
   category: Category;
@@ -95,8 +96,12 @@ export function DocumentCard({
   onOpen: () => void;
   onDelete: () => void;
   onRenamed: (doc: DocumentRow) => void;
+  onMoved?: (doc: DocumentRow) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const { all: allCategories } = useCategories();
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
   const FileTypeIcon = fileStyle.Icon;
