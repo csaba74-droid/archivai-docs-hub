@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Archive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { BUILT_IN_CATEGORIES } from "@/lib/categories";
-import {
-  lookupInvitation,
-  acceptInvitation,
-} from "@/lib/invitations.functions";
+import { acceptInvitation } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/accept-invitation")({
   validateSearch: (search: Record<string, unknown>) => ({
