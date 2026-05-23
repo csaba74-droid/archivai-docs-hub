@@ -19,18 +19,24 @@ export const lookupInvitation = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!inv) return { invitation: null, ownerName: "" };
 
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("full_name, company")
-      .eq("id", inv.owner_user_id)
-      .maybeSingle();
+    let ownerName = "Egy felhasználó";
+    try {
+      const { data: ownerUser } = await supabaseAdmin.auth.admin.getUserById(
+        inv.owner_user_id,
+      );
+      const meta = (ownerUser.user?.user_metadata ?? {}) as {
+        full_name?: string;
+        company?: string;
+      };
+      ownerName =
+        meta.full_name ||
+        meta.company ||
+        ownerUser.user?.email ||
+        "Egy felhasználó";
+    } catch {
+      // fall back to default
+    }
 
-    const ownerName =
-      (profile as { full_name?: string | null; company?: string | null } | null)
-        ?.full_name ||
-      (profile as { full_name?: string | null; company?: string | null } | null)
-        ?.company ||
-      "Egy felhasználó";
 
     return { invitation: inv, ownerName };
   });
