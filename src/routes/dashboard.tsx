@@ -672,19 +672,34 @@ function CategoryButton({ cat, active, count, onClick }: { cat: ReturnType<typeo
   );
 }
 
-// Color dots for built-in categories on the mobile home
+// Category stripe colors (left border + icon tint)
 const MOBILE_CAT_COLORS: Record<string, string> = {
-  szamlak: "#F59E0B",        // orange
-  szerzodesek: "#1A2B4A",    // navy
-  szallitolevek: "#10B981",  // green
-  munkaugyi: "#8B5CF6",      // purple
-  adobevallasok: "#EF4444",  // red
-  kozuzemi: "#3B82F6",       // blue
-  banki: "#14B8A6",          // teal
-  muszaki: "#6B7280",        // grey
-  belso: "#7DD3FC",          // light blue
-  egyeb: "#9CA3AF",          // grey
+  szamlak: "#C17B2F",
+  szerzodesek: "#1A2B4A",
+  szallitolevek: "#0F6E56",
+  munkaugyi: "#5B3A8C",
+  adobevallasok: "#8B1A1A",
+  kozuzemi: "#2B4B7A",
+  banki: "#0D5F6B",
+  muszaki: "#5F5E5A",
+  belso: "#4A7A9B",
+  egyeb: "#A8A49E",
 };
+
+const BUILTIN_ORDER = [
+  "szamlak", "szerzodesek", "szallitolevek", "munkaugyi", "adobevallasok",
+  "kozuzemi", "banki", "muszaki", "belso", "egyeb",
+];
+
+function sortCategories(cats: Category[]): Category[] {
+  const builtIns = cats.filter((c) => !c.custom);
+  const customs = cats.filter((c) => c.custom);
+  const ordered = [...BUILTIN_ORDER]
+    .map((id) => builtIns.find((c) => c.id === id))
+    .filter((c): c is Category => !!c);
+  const rest = builtIns.filter((c) => !BUILTIN_ORDER.includes(c.id));
+  return [...ordered, ...rest, ...customs];
+}
 
 type MobileHomeProps = {
   docs: DocumentRow[];
