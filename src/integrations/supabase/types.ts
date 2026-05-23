@@ -14,7 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      shared_access: {
+        Row: {
+          categories: string[]
+          created_at: string
+          id: string
+          invited_email: string
+          invited_user_id: string | null
+          owner_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          categories?: string[]
+          created_at?: string
+          id?: string
+          invited_email: string
+          invited_user_id?: string | null
+          owner_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          categories?: string[]
+          created_at?: string
+          id?: string
+          invited_email?: string
+          invited_user_id?: string | null
+          owner_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
