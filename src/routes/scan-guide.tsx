@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Smartphone } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/scan-guide")({
   head: () => ({
     meta: [
-      { title: "Hogyan szkennelj? — Archivai" },
+      { title: "Hogyan szkennelj — Archivai" },
       { name: "description", content: "Lépésről lépésre útmutató: hogyan szkennelj dokumentumokat iPhone-on és Androidon." },
     ],
   }),
@@ -38,12 +38,17 @@ const androidSteps: Step[] = [
 function StepPlayer({ steps }: { steps: Step[] }) {
   const [index, setIndex] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     setElapsed(0);
-    const start = Date.now();
+  }, [index]);
+
+  useEffect(() => {
+    if (paused) return;
+    const startedAt = Date.now() - elapsed;
     const tick = setInterval(() => {
-      const e = Date.now() - start;
+      const e = Date.now() - startedAt;
       if (e >= STEP_MS) {
         setIndex((i) => (i + 1) % steps.length);
       } else {
@@ -51,7 +56,8 @@ function StepPlayer({ steps }: { steps: Step[] }) {
       }
     }, 60);
     return () => clearInterval(tick);
-  }, [index, steps.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, steps.length, paused]);
 
   const step = steps[index];
   const progress = ((index + 1) / steps.length) * 100;
@@ -118,6 +124,18 @@ function StepPlayer({ steps }: { steps: Step[] }) {
           Következő <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Pause / Play */}
+      <div className="flex justify-center px-6 py-5 border-t bg-background">
+        <Button
+          size="lg"
+          onClick={() => setPaused((p) => !p)}
+          className="min-w-[200px] text-base font-semibold shadow-md"
+          style={{ backgroundColor: paused ? "#F97316" : BRAND, color: "white" }}
+        >
+          {paused ? <><Play className="h-5 w-5" /> Folytatás</> : <><Pause className="h-5 w-5" /> Megállítás</>}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -134,14 +152,14 @@ function ScanGuidePage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Vissza</Button>
           </Link>
           <h1 className="text-lg md:text-xl font-bold" style={{ color: BRAND }}>
-            Hogyan szkennelj?
+            Hogyan szkennelj
           </h1>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 md:py-10">
         <p className="text-sm text-muted-foreground mb-6 text-center">
-          Kövesd a lépéseket telefonod típusa szerint. A lépések 6 másodpercenként automatikusan váltanak.
+          A lépések 6 másodpercenként automatikusan váltanak.
         </p>
 
         <Tabs defaultValue="iphone" className="w-full">
