@@ -52,14 +52,20 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
+      console.log("Token from URL:", token);
       try {
-        const res = await lookupInvitation({ data: { token } });
+        const { data: inv, error } = await supabase
+          .from("shared_access")
+          .select("*")
+          .eq("id", token)
+          .maybeSingle();
+        console.log("Query result:", inv, error);
         if (cancelled) return;
-        if (!res.invitation) {
+        if (error) throw new Error(error.message);
+        if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
         } else {
-          setInvitation(res.invitation as Invitation);
-          setOwnerName(res.ownerName || "Egy felhasználó");
+          setInvitation(inv as Invitation);
         }
       } catch (e) {
         if (!cancelled)
