@@ -158,9 +158,6 @@ function ScanGuidePage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 md:py-10">
-        <p className="text-sm text-muted-foreground mb-6 text-center">
-          A lépések 6 másodpercenként automatikusan váltanak.
-        </p>
 
         <Tabs defaultValue="iphone" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
