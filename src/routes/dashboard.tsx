@@ -274,6 +274,12 @@ function Dashboard() {
       >
         <UserCog className="h-4 w-4" /> Profil & Beállítások
       </Link>
+      <button
+        onClick={signOut}
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors text-left"
+      >
+        <LogOut className="h-4 w-4" /> Kijelentkezés
+      </button>
     </nav>
   );
 
@@ -578,7 +584,7 @@ function Dashboard() {
               <Gift className="h-5 w-5 text-brand" /> Ajánld az Archivai-t
             </DialogTitle>
             <DialogDescription>
-              Ha valaki a linkeden keresztül előfizet, mindketten kaptok 1 hónap ingyenest.
+              Ha a linked segítségével valaki előfizet, 1 hónap előfizetési díjat jóváírunk mindkét fél számláján.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -852,13 +858,9 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
           <div key={cat.id} className="relative group">
             <button
               onClick={() => onOpen(cat.id)}
-              className="w-full text-left bg-white rounded-md border border-border/40 pl-5 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border/70 relative overflow-hidden"
+              style={{ borderLeft: `5px solid ${color}` }}
+              className="w-full text-left bg-white rounded-md border border-border/40 pl-4 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border/70"
             >
-              <span
-                className="absolute left-0 top-0 bottom-0 w-[5px]"
-                style={{ background: color }}
-                aria-hidden
-              />
               <div
                 className="h-10 w-10 rounded-md flex items-center justify-center shrink-0"
                 style={{ background: `${color}14`, color }}
