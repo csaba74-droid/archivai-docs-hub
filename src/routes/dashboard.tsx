@@ -312,7 +312,7 @@ function Dashboard() {
             <p className="text-[11px] text-muted-foreground">Törvényi előírás szerint archiválva</p>
           </div>
         </div>
-        {sidebarNav}
+        {desktopSidebarNav}
         <div className="border-t">{profilePanel}</div>
       </aside>
 
