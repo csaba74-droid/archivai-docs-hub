@@ -114,21 +114,43 @@ function SharingPage() {
       setSubmitting(false);
       return;
     }
+    const insertPayload = {
+      owner_user_id: u.user.id,
+      invited_email: trimmed,
+      categories: selectedCats,
+      status: "pending" as const,
+    };
+    console.log("[sharing] Inserting shared_access row:", insertPayload);
     const { data: inserted, error } = await supabase
       .from("shared_access")
-      .insert({
-        owner_user_id: u.user.id,
-        invited_email: trimmed,
-        categories: selectedCats,
-        status: "pending",
-      })
-      .select("id")
+      .insert(insertPayload)
+      .select("*")
       .single();
+    console.log("[sharing] Insert result:", { inserted, error });
     if (error || !inserted) {
       setSubmitting(false);
-      toast.error("Meghívó sikertelen", { description: error?.message });
+      toast.error("Meghívó sikertelen", {
+        description: error?.message ?? "Nem sikerült létrehozni a meghívót",
+      });
+      console.error("[sharing] Insert failed:", error);
       return;
     }
+
+    // Verify the row actually persisted before sending the email
+    const { data: verifyRow, error: verifyErr } = await supabase
+      .from("shared_access")
+      .select("id, status, invited_email")
+      .eq("id", inserted.id)
+      .maybeSingle();
+    console.log("[sharing] Verify row:", { verifyRow, verifyErr });
+    if (verifyErr || !verifyRow) {
+      setSubmitting(false);
+      toast.error("Meghívó nem található az adatbázisban", {
+        description: verifyErr?.message ?? "A beszúrt sor nem érhető el (RLS?)",
+      });
+      return;
+    }
+
 
     try {
       console.log("Sending invitation to:", trimmed);
