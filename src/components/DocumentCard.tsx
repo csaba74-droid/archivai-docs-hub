@@ -144,6 +144,30 @@ export function DocumentCard({
     onRenamed(data as DocumentRow);
   };
 
+  const handleMove = async (targetCatId: string) => {
+    if (targetCatId === doc.category) {
+      setMoveOpen(false);
+      return;
+    }
+    setMoving(true);
+    const targetCat = allCategories.find((c) => c.id === targetCatId);
+    const { data, error } = await supabase
+      .from("documents")
+      .update({ category: targetCatId, itm_compliant: targetCat?.mode === "strict" })
+      .eq("id", doc.id)
+      .select()
+      .single();
+    setMoving(false);
+    if (error) {
+      toast.error("Áthelyezés sikertelen", { description: error.message });
+      return;
+    }
+    void logAudit("move", doc.id, { from: doc.category, to: targetCatId });
+    toast.success(`Dokumentum áthelyezve: ${targetCat?.label ?? targetCatId}`);
+    setMoveOpen(false);
+    onMoved?.(data as DocumentRow);
+  };
+
   return (
     <Card
       role="button"
