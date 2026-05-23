@@ -10,6 +10,18 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   MoreVertical,
   Lock,
   FileText,
@@ -20,11 +32,13 @@ import {
   Download,
   Pencil,
   Trash2,
+  ArrowRightLeft,
 } from "lucide-react";
 import type { DocumentRow } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
 import { getSignedUrl } from "@/lib/signed-url";
 import { logAudit } from "@/lib/audit";
+import { useCategories } from "@/hooks/use-categories";
 import type { Category } from "@/lib/categories";
 
 // Category badge colors (background + text)
@@ -73,6 +87,7 @@ export function DocumentCard({
   onOpen,
   onDelete,
   onRenamed,
+  onMoved,
 }: {
   doc: DocumentRow;
   category: Category;
@@ -81,8 +96,12 @@ export function DocumentCard({
   onOpen: () => void;
   onDelete: () => void;
   onRenamed: (doc: DocumentRow) => void;
+  onMoved?: (doc: DocumentRow) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const { all: allCategories } = useCategories();
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
   const FileTypeIcon = fileStyle.Icon;
@@ -123,6 +142,30 @@ export function DocumentCard({
     void logAudit("rename", doc.id, { from: doc.filename, to: newName.trim() });
     toast.success("Átnevezve");
     onRenamed(data as DocumentRow);
+  };
+
+  const handleMove = async (targetCatId: string) => {
+    if (targetCatId === doc.category) {
+      setMoveOpen(false);
+      return;
+    }
+    setMoving(true);
+    const targetCat = allCategories.find((c) => c.id === targetCatId);
+    const { data, error } = await supabase
+      .from("documents")
+      .update({ category: targetCatId, itm_compliant: targetCat?.mode === "strict" })
+      .eq("id", doc.id)
+      .select()
+      .single();
+    setMoving(false);
+    if (error) {
+      toast.error("Áthelyezés sikertelen", { description: error.message });
+      return;
+    }
+    void logAudit("move", doc.id, { from: doc.category, to: targetCatId });
+    toast.success(`Dokumentum áthelyezve: ${targetCat?.label ?? targetCatId}`);
+    setMoveOpen(false);
+    onMoved?.(data as DocumentRow);
   };
 
   return (
@@ -182,6 +225,26 @@ export function DocumentCard({
             <DropdownMenuItem onSelect={() => void handleRename()}>
               <Pencil className="h-4 w-4" /> Átnevezés
             </DropdownMenuItem>
+            {strict ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownMenuItem disabled onSelect={(e) => e.preventDefault()}>
+                        <Lock className="h-4 w-4" /> Áthelyezés
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    Törvényileg védett dokumentum nem helyezhető át
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <DropdownMenuItem onSelect={() => setMoveOpen(true)}>
+                <ArrowRightLeft className="h-4 w-4" /> Áthelyezés
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={!canDelete}
@@ -193,6 +256,39 @@ export function DocumentCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
+        <DialogContent className="max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Melyik kategóriába helyezi át?</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto -mx-2">
+            {allCategories
+              .filter((c) => c.id !== doc.category)
+              .map((c) => {
+                const dotColor = c.custom && c.color
+                  ? c.color
+                  : (CATEGORY_COLORS[c.id]?.bg ?? "#9CA3AF");
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    disabled={moving}
+                    onClick={() => void handleMove(c.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-left text-sm disabled:opacity-50"
+                  >
+                    <span
+                      className="h-3 w-3 rounded-full shrink-0"
+                      style={{ backgroundColor: dotColor }}
+                    />
+                    <span className="flex-1 truncate">{c.label}</span>
+                    {c.mode === "strict" && <Lock className="h-3 w-3 text-lock" />}
+                  </button>
+                );
+              })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

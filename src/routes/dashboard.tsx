@@ -519,6 +519,9 @@ function Dashboard() {
                       onRenamed={(updated: DocumentRow) => {
                         setDocs((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
                       }}
+                      onMoved={(updated: DocumentRow) => {
+                        setDocs((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+                      }}
                     />
                   </DocumentHoverPreview>
                 );
