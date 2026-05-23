@@ -121,21 +121,35 @@ function Dashboard() {
     }
   }, [referralLink]);
 
+  const searchState = useDocumentSearch(docs, allCats);
+  const { rawQuery, setRawQuery, query: searchQuery, isActive: searchActive } = searchState;
+  // Back-compat alias used in many JSX spots below
+  const search = rawQuery;
+  const setSearch = setRawQuery;
+
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
-      if (!q) return true;
-      const hay = `${d.filename ?? ""} ${d.original_filename ?? ""} ${d.content_text ?? ""}`.toLowerCase();
-      return hay.includes(q);
+      return true;
     });
-  }, [docs, search, activeCat]);
+  }, [docs, activeCat]);
 
+  // Global Ctrl/Cmd+K to focus search; Escape to clear
   useEffect(() => {
-    if (!search.trim()) return;
-    const t = setTimeout(() => { void logAudit("search", null, { query: search, hits: filtered.length }); }, 800);
-    return () => clearTimeout(t);
-  }, [search, filtered.length]);
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "Escape" && searchActive) {
+        setRawQuery("");
+        searchState.clearFilters();
+        searchRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [searchActive, setRawQuery, searchState]);
+  void searchQuery;
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
