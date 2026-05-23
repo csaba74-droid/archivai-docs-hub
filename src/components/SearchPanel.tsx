@@ -71,7 +71,7 @@ export function SearchPanel({
   onSuggestQuery,
 }: SearchPanelProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  const [activeIdx, setActiveIdx] = (require("react") as typeof import("react")).useState<number>(0);
+  const [activeIdx, setActiveIdx] = useState<number>(0);
 
   // Keyboard navigation
   useEffect(() => {
