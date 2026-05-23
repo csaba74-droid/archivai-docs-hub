@@ -852,7 +852,7 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
           <div key={cat.id} className="relative group">
             <button
               onClick={() => onOpen(cat.id)}
-              className="w-full text-left bg-card rounded-md border border-border/60 pl-5 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border relative overflow-hidden"
+              className="w-full text-left bg-white rounded-md border border-border/40 pl-5 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border/70 relative overflow-hidden"
             >
               <span
                 className="absolute left-0 top-0 bottom-0 w-[5px]"
