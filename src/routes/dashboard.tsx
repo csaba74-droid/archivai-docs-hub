@@ -570,6 +570,29 @@ function Dashboard() {
         initialFiles={pendingFiles}
       />
       <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
+
+      <Dialog open={referralOpen} onOpenChange={setReferralOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-brand" /> Ajánld az Archivai-t
+            </DialogTitle>
+            <DialogDescription>
+              Ha valaki a linkeden keresztül előfizet, mindketten kaptok 1 hónap ingyenest.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Egyedi ajánló linked</label>
+            <div className="flex gap-2">
+              <Input value={referralLink} readOnly onFocus={(e) => e.currentTarget.select()} className="font-mono text-xs" />
+              <Button type="button" onClick={copyReferral} variant="secondary">
+                {referralCopied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {referralCopied ? "Másolva" : "Másol"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
