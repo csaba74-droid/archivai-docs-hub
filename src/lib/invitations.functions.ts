@@ -8,16 +8,18 @@ const tokenSchema = z.object({ token: z.string().uuid() });
 export const lookupInvitation = createServerFn({ method: "POST" })
   .inputValidator((input) => tokenSchema.parse(input))
   .handler(async ({ data }) => {
+    console.log("[lookupInvitation] token:", data.token);
     const { data: inv, error } = await supabaseAdmin
       .from("shared_access")
-      .select(
-        "id, owner_user_id, invited_email, invited_user_id, categories, status",
-      )
+      .select("*")
       .eq("id", data.token)
       .maybeSingle();
 
+    console.log("[lookupInvitation] result:", inv, "error:", error);
+
     if (error) throw new Error(error.message);
     if (!inv) return { invitation: null, ownerName: "" };
+
 
     let ownerName = "Egy felhasználó";
     try {
