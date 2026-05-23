@@ -330,14 +330,45 @@ function Dashboard() {
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8 space-y-6">
-          {/* Stats — desktop only */}
+          {/* Header / Breadcrumb — desktop only */}
           <div className="hidden md:block">
-            <h2 className="text-2xl font-bold tracking-tight">
-              {activeCat ? getCategory(activeCat).label : "Összes dokumentum"}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {filtered.length} dokumentum{search.trim() && ` — találat: "${search}"`}
-            </p>
+            {activeCat ? (
+              <div className="space-y-3">
+                <button
+                  onClick={() => setActiveCat(null)}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" /> Vissza a kategóriákhoz
+                </button>
+                <nav className="text-sm text-muted-foreground">
+                  <button onClick={() => setActiveCat(null)} className="hover:text-foreground transition-colors">
+                    Összes
+                  </button>
+                  <span className="mx-2">→</span>
+                  <span className="text-foreground font-medium">{getCategory(activeCat).label}</span>
+                </nav>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">{getCategory(activeCat).label}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {filtered.length} dokumentum{search.trim() && ` — találat: "${search}"`}
+                  </p>
+                </div>
+              </div>
+            ) : search.trim() ? (
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Keresési eredmények</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {filtered.length} találat — "{search}"
+                </p>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Kategóriák</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Válassz egy kategóriát a dokumentumok megtekintéséhez
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Mobile home overview — only when no filter/search */}
@@ -353,8 +384,21 @@ function Dashboard() {
             />
           )}
 
-          {/* Document list: always on desktop; on mobile only when filter/search active */}
-          <div className={!activeCat && !search.trim() ? "hidden md:block space-y-6" : "space-y-6"}>
+          {/* Desktop category grid — only when no activeCat & no search */}
+          {!activeCat && !search.trim() && (
+            <div className="hidden md:block">
+              <CategoryGrid
+                allCats={allCats}
+                counts={counts}
+                onOpen={(id) => setActiveCat(id)}
+                onNewCategory={() => setNewCatOpen(true)}
+                onDeleteCustomCat={handleDeleteCustomCat}
+              />
+            </div>
+          )}
+
+          {/* Document list: desktop when activeCat or search; mobile when filter/search active */}
+          <div className={(!activeCat && !search.trim()) ? "hidden" : "space-y-6"}>
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : filtered.length === 0 ? (
@@ -426,6 +470,7 @@ function Dashboard() {
           </div>
 
         </div>
+
 
       </main>
 
