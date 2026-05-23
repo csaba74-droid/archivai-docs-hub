@@ -1,7 +1,9 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/lib/supabase";
+import { sendInvitationEmail } from "@/lib/invitations.functions";
 import { useCategories } from "@/hooks/use-categories";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,7 @@ function SharingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
+  const sendInvite = useServerFn(sendInvitationEmail);
 
   const plan = subscription?.plan ?? "alap";
   const limit = PLAN_LIMITS[plan] ?? 1;
@@ -119,14 +122,29 @@ function SharingPage() {
       categories: selectedCats,
       status: "pending",
     });
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       toast.error("Meghívó sikertelen", { description: error.message });
       return;
     }
-    toast.success("Meghívó elküldve", {
-      description: `${trimmed} hozzáférést kap a kiválasztott kategóriákhoz.`,
-    });
+
+    try {
+      await sendInvite({
+        data: {
+          invitedEmail: trimmed,
+          inviterName: u.user.email ?? undefined,
+        },
+      });
+      toast.success("Meghívó elküldve", {
+        description: `${trimmed} email értesítést kapott a hozzáférésről.`,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Ismeretlen hiba";
+      toast.warning("Meghívó létrejött, de az email nem ment ki", {
+        description: msg,
+      });
+    }
+    setSubmitting(false);
     setEmail("");
     setSelectedCats([]);
     void reload();
