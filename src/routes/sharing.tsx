@@ -122,14 +122,29 @@ function SharingPage() {
       categories: selectedCats,
       status: "pending",
     });
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       toast.error("Meghívó sikertelen", { description: error.message });
       return;
     }
-    toast.success("Meghívó elküldve", {
-      description: `${trimmed} hozzáférést kap a kiválasztott kategóriákhoz.`,
-    });
+
+    try {
+      await sendInvite({
+        data: {
+          invitedEmail: trimmed,
+          inviterName: u.user.email ?? undefined,
+        },
+      });
+      toast.success("Meghívó elküldve", {
+        description: `${trimmed} email értesítést kapott a hozzáférésről.`,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Ismeretlen hiba";
+      toast.warning("Meghívó létrejött, de az email nem ment ki", {
+        description: msg,
+      });
+    }
+    setSubmitting(false);
     setEmail("");
     setSelectedCats([]);
     void reload();
