@@ -28,6 +28,8 @@ import { UploadDialog } from "@/components/UploadDialog";
 import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 import { ScanButton } from "@/components/ScanButton";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { useDocumentSearch } from "@/hooks/use-document-search";
+import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -47,7 +49,7 @@ function Dashboard() {
 
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
@@ -119,21 +121,35 @@ function Dashboard() {
     }
   }, [referralLink]);
 
+  const searchState = useDocumentSearch(docs, allCats);
+  const { rawQuery, setRawQuery, query: searchQuery, isActive: searchActive } = searchState;
+  // Back-compat alias used in many JSX spots below
+  const search = rawQuery;
+  const setSearch = setRawQuery;
+
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
-      if (!q) return true;
-      const hay = `${d.filename ?? ""} ${d.original_filename ?? ""} ${d.content_text ?? ""}`.toLowerCase();
-      return hay.includes(q);
+      return true;
     });
-  }, [docs, search, activeCat]);
+  }, [docs, activeCat]);
 
+  // Global Ctrl/Cmd+K to focus search; Escape to clear
   useEffect(() => {
-    if (!search.trim()) return;
-    const t = setTimeout(() => { void logAudit("search", null, { query: search, hits: filtered.length }); }, 800);
-    return () => clearTimeout(t);
-  }, [search, filtered.length]);
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "Escape" && searchActive) {
+        setRawQuery("");
+        searchState.clearFilters();
+        searchRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [searchActive, setRawQuery, searchState]);
+  void searchQuery;
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -352,15 +368,31 @@ function Dashboard() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchRef}
-              placeholder="Keresés név vagy tartalom alapján..."
+              placeholder="Keresés... (Ctrl+K)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-background"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+              className="pl-9 pr-16 h-10 bg-background"
             />
+            {searchState.isSearching ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">⌘K</kbd>
+            )}
+            {searchFocused && !search.trim() && (
+              <SearchHistoryDropdown
+                history={searchState.history}
+                onPick={(q) => { setSearch(q); searchRef.current?.focus(); }}
+                onClear={searchState.clearHistory}
+              />
+            )}
           </div>
-          <Button variant="secondary" onClick={() => { void logAudit("search", null, { query: search, manual: true }); }}>
-            <Search className="h-4 w-4 mr-2" /> Keresés
-          </Button>
+          {search.trim() && (
+            <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+              <X className="h-4 w-4 mr-1" /> Bezár
+            </Button>
+          )}
         </header>
 
         {/* Mobile search bar (prominent) */}
@@ -372,10 +404,23 @@ function Dashboard() {
               placeholder="Keresés a dokumentumokban..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 h-12 bg-background border-border rounded-xl text-base"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+              className="pl-12 pr-10 h-12 bg-background border-border rounded-xl text-base"
             />
+            {searchState.isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+            )}
+            {searchFocused && !search.trim() && (
+              <SearchHistoryDropdown
+                history={searchState.history}
+                onPick={(q) => { setSearch(q); searchRef.current?.focus(); }}
+                onClear={searchState.clearHistory}
+              />
+            )}
           </div>
         </div>
+
 
 
         {!canUpload && (
@@ -389,6 +434,21 @@ function Dashboard() {
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8 space-y-6">
+          {searchActive ? (
+            <SearchPanel
+              query={searchState.query}
+              isSearching={searchState.isSearching}
+              results={searchState.results}
+              grouped={searchState.grouped}
+              filters={searchState.filters}
+              setFilters={searchState.setFilters}
+              clearFilters={searchState.clearFilters}
+              hasActiveFilters={searchState.hasActiveFilters}
+              allCats={allCats}
+              onOpenDoc={(d) => setPreviewDoc(d)}
+              onSuggestQuery={(q) => setRawQuery(q)}
+            />
+          ) : (<>
           {/* Header / Breadcrumb — desktop only */}
           <div className="hidden md:block">
             {activeCat ? (
@@ -530,8 +590,9 @@ function Dashboard() {
             </>
           )}
           </div>
-
+          </>)}
         </div>
+
 
 
       </main>
