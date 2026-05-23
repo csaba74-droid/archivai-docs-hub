@@ -42,10 +42,13 @@ function StepPlayer({ steps }: { steps: Step[] }) {
 
   useEffect(() => {
     setElapsed(0);
+  }, [index]);
+
+  useEffect(() => {
     if (paused) return;
-    const start = Date.now();
+    const startedAt = Date.now() - elapsed;
     const tick = setInterval(() => {
-      const e = Date.now() - start;
+      const e = Date.now() - startedAt;
       if (e >= STEP_MS) {
         setIndex((i) => (i + 1) % steps.length);
       } else {
@@ -53,6 +56,7 @@ function StepPlayer({ steps }: { steps: Step[] }) {
       }
     }, 60);
     return () => clearInterval(tick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, steps.length, paused]);
 
   const step = steps[index];
