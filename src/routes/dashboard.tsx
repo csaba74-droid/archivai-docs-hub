@@ -14,7 +14,11 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
+  Home, Gift, Copy, Check,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { logAudit } from "@/lib/audit";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { DocumentHoverPreview } from "@/components/DocumentHoverPreview";
@@ -46,6 +50,9 @@ function Dashboard() {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
+  const [referralOpen, setReferralOpen] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
@@ -89,9 +96,28 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ""));
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? "");
+      setUserId(data.user?.id ?? "");
+    });
     loadDocs();
   }, [loadDocs]);
+
+  const referralLink = useMemo(
+    () => (userId && typeof window !== "undefined" ? `${window.location.origin}/?ref=${userId}` : ""),
+    [userId],
+  );
+  const copyReferral = useCallback(async () => {
+    if (!referralLink) return;
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setReferralCopied(true);
+      toast.success("Link kimásolva");
+      setTimeout(() => setReferralCopied(false), 2000);
+    } catch {
+      toast.error("Másolás sikertelen");
+    }
+  }, [referralLink]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -169,7 +195,7 @@ function Dashboard() {
   const builtInStrict = allCats.filter((c) => !c.custom && c.mode === "strict");
   const builtInNormal = allCats.filter((c) => !c.custom && c.mode === "normal");
 
-  const sidebarNav = (
+  const mobileCatsNav = (
     <>
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         <button
@@ -212,25 +238,46 @@ function Dashboard() {
         >
           <Plus className="h-4 w-4" /> Új kategória
         </button>
-
-        <div className="my-2 border-t" />
-        <Link
-          to="/audit"
-          onClick={() => setMobileCatsOpen(false)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-        >
-          <ClipboardList className="h-4 w-4" /> Audit napló
-        </Link>
-        <Link
-          to="/profile"
-          onClick={() => setMobileCatsOpen(false)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-        >
-          <UserCog className="h-4 w-4" /> Profil & Beállítások
-        </Link>
       </nav>
     </>
   );
+
+  const desktopSidebarNav = (
+    <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <button
+        onClick={() => { setActiveCat(null); setSearch(""); }}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null && !search.trim() ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
+      >
+        <Home className="h-4 w-4" /> Kezdőlap
+      </button>
+      <button
+        onClick={() => { searchRef.current?.focus(); }}
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <Search className="h-4 w-4" /> Keresés
+      </button>
+      <Link
+        to="/audit"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <ClipboardList className="h-4 w-4" /> Audit napló
+      </Link>
+      <button
+        onClick={() => setReferralOpen(true)}
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <Gift className="h-4 w-4 text-brand" /> Ajánld az Archivai-t
+      </button>
+      <Link
+        to="/profile"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <UserCog className="h-4 w-4" /> Profil & Beállítások
+      </Link>
+    </nav>
+  );
+
+
 
   const profilePanel = (
     <div className="p-3 space-y-2">
@@ -265,7 +312,7 @@ function Dashboard() {
             <p className="text-[11px] text-muted-foreground">Törvényi előírás szerint archiválva</p>
           </div>
         </div>
-        {sidebarNav}
+        {desktopSidebarNav}
         <div className="border-t">{profilePanel}</div>
       </aside>
 
@@ -491,7 +538,7 @@ function Dashboard() {
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Kategóriák</SheetTitle>
           </SheetHeader>
-          {sidebarNav}
+          {mobileCatsNav}
         </SheetContent>
       </Sheet>
 
@@ -523,6 +570,29 @@ function Dashboard() {
         initialFiles={pendingFiles}
       />
       <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
+
+      <Dialog open={referralOpen} onOpenChange={setReferralOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-brand" /> Ajánld az Archivai-t
+            </DialogTitle>
+            <DialogDescription>
+              Ha valaki a linkeden keresztül előfizet, mindketten kaptok 1 hónap ingyenest.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Egyedi ajánló linked</label>
+            <div className="flex gap-2">
+              <Input value={referralLink} readOnly onFocus={(e) => e.currentTarget.select()} className="font-mono text-xs" />
+              <Button type="button" onClick={copyReferral} variant="secondary">
+                {referralCopied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {referralCopied ? "Másolva" : "Másol"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -602,19 +672,34 @@ function CategoryButton({ cat, active, count, onClick }: { cat: ReturnType<typeo
   );
 }
 
-// Color dots for built-in categories on the mobile home
+// Category stripe colors (left border + icon tint)
 const MOBILE_CAT_COLORS: Record<string, string> = {
-  szamlak: "#F59E0B",        // orange
-  szerzodesek: "#1A2B4A",    // navy
-  szallitolevek: "#10B981",  // green
-  munkaugyi: "#8B5CF6",      // purple
-  adobevallasok: "#EF4444",  // red
-  kozuzemi: "#3B82F6",       // blue
-  banki: "#14B8A6",          // teal
-  muszaki: "#6B7280",        // grey
-  belso: "#7DD3FC",          // light blue
-  egyeb: "#9CA3AF",          // grey
+  szamlak: "#C17B2F",
+  szerzodesek: "#1A2B4A",
+  szallitolevek: "#0F6E56",
+  munkaugyi: "#5B3A8C",
+  adobevallasok: "#8B1A1A",
+  kozuzemi: "#2B4B7A",
+  banki: "#0D5F6B",
+  muszaki: "#5F5E5A",
+  belso: "#4A7A9B",
+  egyeb: "#A8A49E",
 };
+
+const BUILTIN_ORDER = [
+  "szamlak", "szerzodesek", "szallitolevek", "munkaugyi", "adobevallasok",
+  "kozuzemi", "banki", "muszaki", "belso", "egyeb",
+];
+
+function sortCategories(cats: Category[]): Category[] {
+  const builtIns = cats.filter((c) => !c.custom);
+  const customs = cats.filter((c) => c.custom);
+  const ordered = [...BUILTIN_ORDER]
+    .map((id) => builtIns.find((c) => c.id === id))
+    .filter((c): c is Category => !!c);
+  const rest = builtIns.filter((c) => !BUILTIN_ORDER.includes(c.id));
+  return [...ordered, ...rest, ...customs];
+}
 
 type MobileHomeProps = {
   docs: DocumentRow[];
@@ -750,9 +835,10 @@ type CategoryGridProps = {
 };
 
 function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCat }: CategoryGridProps) {
+  const ordered = sortCategories(allCats);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {allCats.map((cat) => {
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      {ordered.map((cat) => {
         const strict = cat.mode === "strict";
         const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
         const count = counts[cat.id] ?? 0;
@@ -766,34 +852,40 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
           <div key={cat.id} className="relative group">
             <button
               onClick={() => onOpen(cat.id)}
-              className={`w-full text-left rounded-xl border bg-card p-5 transition-all hover:shadow-md hover:border-primary/40 ${strict ? "border-lock/30" : ""}`}
+              className="w-full text-left bg-card rounded-md border border-border/60 pl-5 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border relative overflow-hidden"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div
-                  className="h-11 w-11 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: `${color}1A`, color }}
-                >
-                  <Icon className="h-5 w-5" />
+              <span
+                className="absolute left-0 top-0 bottom-0 w-[5px]"
+                style={{ background: color }}
+                aria-hidden
+              />
+              <div
+                className="h-10 w-10 rounded-md flex items-center justify-center shrink-0"
+                style={{ background: `${color}14`, color }}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-[15px] text-brand truncate">{cat.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {count} dokumentum
                 </div>
-                {strict && <Lock className="h-4 w-4 text-lock shrink-0 mt-1" />}
+                <div className="text-[11px] text-muted-foreground/80 mt-0.5 truncate">
+                  {retentionText}
+                </div>
               </div>
-              <div className="mt-4 flex items-center gap-2">
-                <h3 className="text-lg font-bold tracking-tight truncate">{cat.label}</h3>
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                {count} dokumentum
-              </div>
-              <div className="mt-3 text-xs text-muted-foreground border-t pt-3">
-                {retentionText}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {strict && <Lock className="h-4 w-4 text-[#0F6E56]" />}
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </button>
             {cat.custom && (
               <button
                 onClick={(e) => { e.stopPropagation(); onDeleteCustomCat(cat.id); }}
-                className="absolute top-3 right-3 h-7 w-7 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-destructive transition-opacity"
+                className="absolute top-2 right-2 h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-destructive transition-opacity"
                 aria-label="Kategória törlése"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
@@ -801,12 +893,13 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
       })}
       <button
         onClick={onNewCategory}
-        className="rounded-xl border-2 border-dashed border-border bg-muted/20 p-5 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-primary/40 transition-colors min-h-[180px]"
+        className="rounded-md border border-dashed border-border bg-muted/20 min-h-[90px] flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-border transition-colors"
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-5 w-5" />
         <span className="text-sm font-medium">Új kategória</span>
       </button>
     </div>
   );
 }
+
 
