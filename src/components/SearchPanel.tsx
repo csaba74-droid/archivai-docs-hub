@@ -272,5 +272,3 @@ export function SearchHistoryDropdown({
   );
 }
 
-// Re-import useState properly (the hack above is a workaround for SSR-safe lazy import)
-import { useState as _useState } from "react";
