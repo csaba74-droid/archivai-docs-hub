@@ -195,7 +195,7 @@ function Dashboard() {
   const builtInStrict = allCats.filter((c) => !c.custom && c.mode === "strict");
   const builtInNormal = allCats.filter((c) => !c.custom && c.mode === "normal");
 
-  const sidebarNav = (
+  const mobileCatsNav = (
     <>
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         <button
@@ -238,25 +238,46 @@ function Dashboard() {
         >
           <Plus className="h-4 w-4" /> Új kategória
         </button>
-
-        <div className="my-2 border-t" />
-        <Link
-          to="/audit"
-          onClick={() => setMobileCatsOpen(false)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-        >
-          <ClipboardList className="h-4 w-4" /> Audit napló
-        </Link>
-        <Link
-          to="/profile"
-          onClick={() => setMobileCatsOpen(false)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-        >
-          <UserCog className="h-4 w-4" /> Profil & Beállítások
-        </Link>
       </nav>
     </>
   );
+
+  const desktopSidebarNav = (
+    <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <button
+        onClick={() => { setActiveCat(null); setSearch(""); }}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null && !search.trim() ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
+      >
+        <Home className="h-4 w-4" /> Kezdőlap
+      </button>
+      <button
+        onClick={() => { searchRef.current?.focus(); }}
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <Search className="h-4 w-4" /> Keresés
+      </button>
+      <Link
+        to="/audit"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <ClipboardList className="h-4 w-4" /> Audit napló
+      </Link>
+      <button
+        onClick={() => setReferralOpen(true)}
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <Gift className="h-4 w-4 text-brand" /> Ajánld az Archivai-t
+      </button>
+      <Link
+        to="/profile"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <UserCog className="h-4 w-4" /> Profil & Beállítások
+      </Link>
+    </nav>
+  );
+
+
 
   const profilePanel = (
     <div className="p-3 space-y-2">
