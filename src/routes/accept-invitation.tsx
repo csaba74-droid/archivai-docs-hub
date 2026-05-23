@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Archive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { BUILT_IN_CATEGORIES } from "@/lib/categories";
+import {
+  lookupInvitation,
+  acceptInvitation,
+} from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/accept-invitation")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -33,7 +37,7 @@ function AcceptInvitationPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<Invitation | null>(null);
-  const [ownerEmail, setOwnerEmail] = useState<string>("");
+  const [ownerName, setOwnerName] = useState<string>("Egy felhasználó");
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
@@ -51,34 +55,23 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
-      const { data, error: e } = await supabase
-        .from("shared_access")
-        .select("id, owner_user_id, invited_email, invited_user_id, categories, status")
-        .eq("id", token)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (e || !data) {
-        setError("Érvénytelen vagy lejárt meghívó");
-        setLoading(false);
-        return;
+      try {
+        const res = await lookupInvitation({ data: { token } });
+        if (cancelled) return;
+        if (!res.invitation) {
+          setError("Érvénytelen vagy lejárt meghívó");
+        } else {
+          setInvitation(res.invitation as Invitation);
+          setOwnerName(res.ownerName || "Egy felhasználó");
+        }
+      } catch (e) {
+        if (!cancelled)
+          setError(
+            e instanceof Error ? e.message : "Érvénytelen vagy lejárt meghívó",
+          );
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setInvitation(data as Invitation);
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, company")
-        .eq("id", (data as Invitation).owner_user_id)
-        .maybeSingle();
-      if (!cancelled) {
-        const name =
-          (profile as { full_name?: string; company?: string } | null)?.full_name ||
-          (profile as { full_name?: string; company?: string } | null)?.company ||
-          "Egy felhasználó";
-        setOwnerEmail(name);
-      }
-      setLoading(false);
     }
     void load();
     return () => {
@@ -89,30 +82,22 @@ function AcceptInvitationPage() {
   const handleAccept = async () => {
     if (!invitation) return;
     setAccepting(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
+    try {
+      await acceptInvitation({ data: { token: invitation.id } });
+      toast.success("Meghívó elfogadva");
+      navigate({ to: "/dashboard" });
+    } catch (e) {
+      toast.error("Sikertelen elfogadás", {
+        description: e instanceof Error ? e.message : "Ismeretlen hiba",
+      });
+    } finally {
       setAccepting(false);
-      toast.error("Be kell jelentkezned");
-      return;
     }
-    const { error: e } = await supabase
-      .from("shared_access")
-      .update({
-        status: "active",
-        invited_user_id: u.user.id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", invitation.id);
-    setAccepting(false);
-    if (e) {
-      toast.error("Sikertelen elfogadás", { description: e.message });
-      return;
-    }
-    toast.success("Meghívó elfogadva");
-    navigate({ to: "/dashboard" });
   };
 
-  const loginWithRedirect = `/login?redirect=/accept-invitation?token=${token}`;
+  const loginWithRedirect = `/login?redirect=${encodeURIComponent(
+    `/accept-invitation?token=${token}`,
+  )}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
