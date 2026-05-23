@@ -55,7 +55,7 @@ export const sendInvitationEmail = createServerFn({ method: "POST" })
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Archivai <onboarding@resend.dev>",
+        from: "Archivai <no-reply@archivai.hu>",
         to: [data.invitedEmail],
         subject,
         html,
