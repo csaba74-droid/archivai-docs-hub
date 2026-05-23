@@ -538,7 +538,7 @@ function Dashboard() {
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Kategóriák</SheetTitle>
           </SheetHeader>
-          {sidebarNav}
+          {mobileCatsNav}
         </SheetContent>
       </Sheet>
 
