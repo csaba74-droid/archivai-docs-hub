@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
-  Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog,
+  Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
 } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
