@@ -28,6 +28,8 @@ import { UploadDialog } from "@/components/UploadDialog";
 import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
 import { ScanButton } from "@/components/ScanButton";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { useDocumentSearch } from "@/hooks/use-document-search";
+import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 
 
 export const Route = createFileRoute("/dashboard")({
