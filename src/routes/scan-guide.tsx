@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Smartphone } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/scan-guide")({
   head: () => ({
     meta: [
-      { title: "Hogyan szkennelj? — Archivai" },
+      { title: "Hogyan szkennelj — Archivai" },
       { name: "description", content: "Lépésről lépésre útmutató: hogyan szkennelj dokumentumokat iPhone-on és Androidon." },
     ],
   }),
