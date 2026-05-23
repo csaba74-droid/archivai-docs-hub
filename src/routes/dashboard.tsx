@@ -741,3 +741,72 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
   );
 }
 
+type CategoryGridProps = {
+  allCats: Category[];
+  counts: Record<string, number>;
+  onOpen: (id: string) => void;
+  onNewCategory: () => void;
+  onDeleteCustomCat: (catId: string) => void | Promise<void>;
+};
+
+function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCat }: CategoryGridProps) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {allCats.map((cat) => {
+        const strict = cat.mode === "strict";
+        const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
+        const count = counts[cat.id] ?? 0;
+        const retentionText = cat.retentionYears
+          ? `Megőrzés: ${cat.retentionYears} év`
+          : strict
+          ? "Határozatlan megőrzés"
+          : "Szabad tárolás";
+        const Icon = cat.icon;
+        return (
+          <div key={cat.id} className="relative group">
+            <button
+              onClick={() => onOpen(cat.id)}
+              className={`w-full text-left rounded-xl border bg-card p-5 transition-all hover:shadow-md hover:border-primary/40 ${strict ? "border-lock/30" : ""}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div
+                  className="h-11 w-11 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `${color}1A`, color }}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                {strict && <Lock className="h-4 w-4 text-lock shrink-0 mt-1" />}
+              </div>
+              <div className="mt-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold tracking-tight truncate">{cat.label}</h3>
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {count} dokumentum
+              </div>
+              <div className="mt-3 text-xs text-muted-foreground border-t pt-3">
+                {retentionText}
+              </div>
+            </button>
+            {cat.custom && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDeleteCustomCat(cat.id); }}
+                className="absolute top-3 right-3 h-7 w-7 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-destructive transition-opacity"
+                aria-label="Kategória törlése"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        );
+      })}
+      <button
+        onClick={onNewCategory}
+        className="rounded-xl border-2 border-dashed border-border bg-muted/20 p-5 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-primary/40 transition-colors min-h-[180px]"
+      >
+        <Plus className="h-6 w-6" />
+        <span className="text-sm font-medium">Új kategória</span>
+      </button>
+    </div>
+  );
+}
+
