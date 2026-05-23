@@ -50,6 +50,9 @@ function Dashboard() {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
+  const [referralOpen, setReferralOpen] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
