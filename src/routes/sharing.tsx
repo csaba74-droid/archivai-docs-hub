@@ -114,15 +114,19 @@ function SharingPage() {
       setSubmitting(false);
       return;
     }
-    const { error } = await supabase.from("shared_access").insert({
-      owner_user_id: u.user.id,
-      invited_email: trimmed,
-      categories: selectedCats,
-      status: "pending",
-    });
-    if (error) {
+    const { data: inserted, error } = await supabase
+      .from("shared_access")
+      .insert({
+        owner_user_id: u.user.id,
+        invited_email: trimmed,
+        categories: selectedCats,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+    if (error || !inserted) {
       setSubmitting(false);
-      toast.error("Meghívó sikertelen", { description: error.message });
+      toast.error("Meghívó sikertelen", { description: error?.message });
       return;
     }
 
@@ -132,9 +136,11 @@ function SharingPage() {
         {
           body: {
             to_email: trimmed,
-            owner_name: u.user.email ?? undefined,
-            categories: selectedCats,
-            invitation_link: `${window.location.origin}/login`,
+            owner_name: u.user.email ?? "",
+            categories: selectedCats
+              .map((c) => c)
+              .join(", "),
+            invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
           },
         },
       );
