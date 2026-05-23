@@ -8,7 +8,8 @@ export type AuditAction =
   | "delete_blocked"
   | "search"
   | "categorize"
-  | "rename";
+  | "rename"
+  | "move";
 
 export async function logAudit(
   action: AuditAction,
