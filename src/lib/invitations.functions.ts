@@ -12,6 +12,11 @@ export const sendInvitationEmail = createServerFn({ method: "POST" })
   .inputValidator((input) => SubjectSchema.parse(input))
   .handler(async ({ data, context }) => {
     const apiKey = process.env.RESEND_API_KEY;
+    console.log("[sendInvitationEmail] start", {
+      to: data.invitedEmail,
+      hasApiKey: Boolean(apiKey),
+      apiKeyPrefix: apiKey ? apiKey.slice(0, 6) : null,
+    });
     if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
 
     const inviter =
@@ -48,26 +53,47 @@ export const sendInvitationEmail = createServerFn({ method: "POST" })
     `;
     const text = `Meghívták Önt az Archivai rendszerbe. Kattintson a linkre a hozzáféréshez: ${invitationLink}`;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Archivai <no-reply@archivai.hu>",
-        to: [data.invitedEmail],
-        subject,
-        html,
-        text,
-      }),
+    const fromAddress = "Archivai <no-reply@archivai.hu>";
+    console.log("[sendInvitationEmail] calling Resend", {
+      from: fromAddress,
+      to: data.invitedEmail,
+      subject,
+    });
+
+    let res: Response;
+    try {
+      res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [data.invitedEmail],
+          subject,
+          html,
+          text,
+        }),
+      });
+    } catch (err) {
+      console.error("[sendInvitationEmail] fetch threw", err);
+      throw new Error(
+        `Resend fetch failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    const bodyText = await res.text();
+    console.log("[sendInvitationEmail] Resend response", {
+      status: res.status,
+      ok: res.ok,
+      body: bodyText,
     });
 
     if (!res.ok) {
-      const body = await res.text();
-      console.error("Resend send failed", res.status, body);
-      throw new Error(`Email küldés sikertelen (${res.status})`);
+      throw new Error(`Email küldés sikertelen (${res.status}): ${bodyText}`);
     }
 
-    return { ok: true };
+    return { ok: true, providerResponse: bodyText };
   });
+
