@@ -38,9 +38,11 @@ const androidSteps: Step[] = [
 function StepPlayer({ steps }: { steps: Step[] }) {
   const [index, setIndex] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     setElapsed(0);
+    if (paused) return;
     const start = Date.now();
     const tick = setInterval(() => {
       const e = Date.now() - start;
@@ -51,7 +53,7 @@ function StepPlayer({ steps }: { steps: Step[] }) {
       }
     }, 60);
     return () => clearInterval(tick);
-  }, [index, steps.length]);
+  }, [index, steps.length, paused]);
 
   const step = steps[index];
   const progress = ((index + 1) / steps.length) * 100;
