@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Archive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { BUILT_IN_CATEGORIES } from "@/lib/categories";
-import {
-  lookupInvitation,
-  acceptInvitation,
-} from "@/lib/invitations.functions";
+import { acceptInvitation } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/accept-invitation")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -55,14 +52,20 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
+      console.log("Token from URL:", token);
       try {
-        const res = await lookupInvitation({ data: { token } });
+        const { data: inv, error } = await supabase
+          .from("shared_access")
+          .select("*")
+          .eq("id", token)
+          .maybeSingle();
+        console.log("Query result:", inv, error);
         if (cancelled) return;
-        if (!res.invitation) {
+        if (error) throw new Error(error.message);
+        if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
         } else {
-          setInvitation(res.invitation as Invitation);
-          setOwnerName(res.ownerName || "Egy felhasználó");
+          setInvitation(inv as Invitation);
         }
       } catch (e) {
         if (!cancelled)
