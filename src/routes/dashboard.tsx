@@ -49,7 +49,7 @@ function Dashboard() {
 
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
