@@ -368,15 +368,31 @@ function Dashboard() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchRef}
-              placeholder="Keresés név vagy tartalom alapján..."
+              placeholder="Keresés... (Ctrl+K)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-background"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+              className="pl-9 pr-16 h-10 bg-background"
             />
+            {searchState.isSearching ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">⌘K</kbd>
+            )}
+            {searchFocused && !search.trim() && (
+              <SearchHistoryDropdown
+                history={searchState.history}
+                onPick={(q) => { setSearch(q); searchRef.current?.focus(); }}
+                onClear={searchState.clearHistory}
+              />
+            )}
           </div>
-          <Button variant="secondary" onClick={() => { void logAudit("search", null, { query: search, manual: true }); }}>
-            <Search className="h-4 w-4 mr-2" /> Keresés
-          </Button>
+          {search.trim() && (
+            <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+              <X className="h-4 w-4 mr-1" /> Bezár
+            </Button>
+          )}
         </header>
 
         {/* Mobile search bar (prominent) */}
@@ -388,10 +404,23 @@ function Dashboard() {
               placeholder="Keresés a dokumentumokban..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 h-12 bg-background border-border rounded-xl text-base"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+              className="pl-12 pr-10 h-12 bg-background border-border rounded-xl text-base"
             />
+            {searchState.isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+            )}
+            {searchFocused && !search.trim() && (
+              <SearchHistoryDropdown
+                history={searchState.history}
+                onPick={(q) => { setSearch(q); searchRef.current?.focus(); }}
+                onClear={searchState.clearHistory}
+              />
+            )}
           </div>
         </div>
+
 
 
         {!canUpload && (
