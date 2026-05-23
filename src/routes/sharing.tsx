@@ -139,7 +139,9 @@ function SharingPage() {
           body: {
             to_email: trimmed,
             owner_name: u.user.email ?? "",
-            categories: selectedCats.map((c) => c).join(", "),
+            categories: selectedCats
+              .map((c) => allCats.find((cat) => cat.id === c)?.label ?? c)
+              .join(", "),
             invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
           },
         },
