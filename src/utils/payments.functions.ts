@@ -76,7 +76,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       return_url: data.returnUrl,
       customer: customerId,
       subscription_data: {
-        trial_period_days: 14,
         metadata: { userId: data.userId!, priceId: data.priceId },
       },
       metadata: { userId: data.userId!, priceId: data.priceId },
