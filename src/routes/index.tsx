@@ -173,7 +173,7 @@ function LandingPage() {
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button
                 size="lg"
-                onClick={() => navigate({ to: "/login" })}
+                onClick={() => navigate({ to: "/register" })}
                 className="bg-brand text-brand-foreground hover:bg-brand-hover"
               >
                 Kipróbálom ingyen <ArrowRight className="h-4 w-4" />
