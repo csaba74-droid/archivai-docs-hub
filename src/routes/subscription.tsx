@@ -39,7 +39,7 @@ const PRICES: Record<PlanKey, { monthly: number; yearly: number }> = {
 const formatHuf = (n: number) => `${n.toLocaleString("hu-HU")} Ft`;
 
 function SubscriptionPage() {
-  const { subscription, active } = useSubscription();
+  const { subscription, active, isTrialing, trialDaysLeft, trialExpired } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [interval, setInterval] = useState<Interval>("monthly");
   const [checkout, setCheckout] = useState<{ priceId: string } | null>(null);
@@ -73,22 +73,39 @@ function SubscriptionPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Jelenlegi csomag</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                {isTrialing ? "Ingyenes próbaidőszak" : "Jelenlegi csomag"}
+              </p>
               <div className="flex items-center gap-3 mt-1">
-                <h2 className="text-2xl font-bold">{subscription ? PLAN_INFO[subscription.plan].label : "—"}</h2>
+                <h2 className="text-2xl font-bold">
+                  {isTrialing
+                    ? (trialExpired ? "Próba lejárt" : `${trialDaysLeft} nap van hátra`)
+                    : (subscription ? PLAN_INFO[subscription.plan].label : "—")}
+                </h2>
                 <Badge variant={active ? "secondary" : "destructive"}>
-                  {subscription?.status === "active" ? "Aktív" : subscription?.status === "past_due" ? "Fizetés esedékes" : subscription?.status === "canceled" ? "Lemondva" : "Inaktív"}
+                  {isTrialing
+                    ? (trialExpired ? "Lejárt" : "Próba")
+                    : subscription?.status === "active" ? "Aktív"
+                    : subscription?.status === "past_due" ? "Fizetés esedékes"
+                    : subscription?.status === "canceled" ? "Lemondva" : "Inaktív"}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
-                {subscription?.current_period_end && (
-                  <> • Következő számlázás: {new Date(subscription.current_period_end).toLocaleDateString("hu-HU")}</>
-                )}
+                {isTrialing
+                  ? "Kártyaadat nélkül — válassz csomagot a próba végén a folytatáshoz."
+                  : (
+                    <>
+                      {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
+                      {subscription?.current_period_end && (
+                        <> • Következő számlázás: {new Date(subscription.current_period_end).toLocaleDateString("hu-HU")}</>
+                      )}
+                    </>
+                  )}
               </p>
             </div>
           </div>
         </Card>
+
 
         {/* Interval toggle */}
         <div className="flex justify-center">
@@ -112,7 +129,7 @@ function SubscriptionPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {(["alap", "pro", "vallalati"] as const).map((plan) => {
             const info = PLAN_INFO[plan];
-            const isCurrent = subscription?.plan === plan && active;
+            const isCurrent = subscription?.plan === plan && active && !isTrialing;
             const amount = PRICES[plan][interval];
             const priceLabel = interval === "monthly" ? `${formatHuf(amount)} / hó` : `${formatHuf(amount)} / év`;
             return (
@@ -137,7 +154,7 @@ function SubscriptionPage() {
                   disabled={isCurrent || !userId}
                   onClick={() => openCheckout(plan)}
                 >
-                  {isCurrent ? "Jelenlegi csomag" : "14 napos próba indítása"}
+                  {isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
                 </Button>
               </Card>
             );
@@ -145,7 +162,7 @@ function SubscriptionPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Minden új előfizetés 14 napos ingyenes próbaidővel indul. Bármikor lemondható.
+          A 14 napos ingyenes próba kártyaadat nélkül indul a regisztrációkor. A fizetés csak akkor történik, ha a próba végén csomagot választasz.
         </p>
 
         {/* GDPR data export */}
