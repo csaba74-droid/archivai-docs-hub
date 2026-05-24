@@ -45,7 +45,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const { customRows, all: allCats, remove: removeCustomCat } = useCategories();
   const { getCategory, isStrict, getRetentionDeadline } = useCategoryHelpers();
-  const { subscription, active } = useSubscription();
+  const { subscription, active, trialExpired } = useSubscription();
 
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,7 @@ function Dashboard() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
 
-  const canUpload = true;
+  const canUpload = !trialExpired;
 
   const openUploadWith = useCallback((files?: File[] | null) => {
     setPendingFiles(files && files.length > 0 ? files : null);
@@ -334,9 +334,12 @@ function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
+      <TrialBanner />
+      <div className="flex flex-1 min-h-0">
       {/* Sidebar — desktop only */}
       <aside className="w-64 border-r bg-card hidden md:flex flex-col">
+
         <div className="p-5 border-b flex items-center gap-2">
           <div className="h-9 w-9 rounded-lg bg-brand flex items-center justify-center">
             <Archive className="h-4 w-4 text-brand-foreground" />
