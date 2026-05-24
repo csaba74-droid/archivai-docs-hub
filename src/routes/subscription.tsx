@@ -232,22 +232,8 @@ function SubscriptionPage() {
         currentPlan={subscription?.plan ?? null}
       />
 
-      <Dialog open={!!checkout} onOpenChange={(o) => !o && setCheckout(null)}>
-        <DialogContent className="max-w-3xl p-0 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle>Fizetés</DialogTitle>
-          </DialogHeader>
-          {checkout && userId && (
-            <div className="p-2">
-              <StripeEmbeddedCheckout
-                priceId={checkout.priceId}
-                userId={userId}
-                customerEmail={email}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+    </div>
+  );
     </div>
   );
 }
