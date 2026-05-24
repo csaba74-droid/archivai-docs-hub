@@ -1,28 +1,33 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ArrowDown } from "lucide-react";
+import { AlertTriangle, ExternalLink, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { GdprExportButton } from "./GdprExportButton";
+import { useBillingPortal } from "@/hooks/use-billing-portal";
 
-type Step = "warning" | "downgrade" | "done";
-
+/**
+ * Cancel/downgrade is routed through the Stripe Customer Portal. We no
+ * longer update the local subscriptions row directly — that produced
+ * drift (Stripe kept billing while the DB said "canceled", and the next
+ * webhook reset it). Instead we show a retention warning + GDPR export,
+ * then hand off to the portal where the user can cancel, switch plans,
+ * or update payment method. Webhooks reflect the change back into the DB.
+ */
 export function CancelSubscriptionDialog({
-  open, onOpenChange, currentPlan,
+  open, onOpenChange,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  currentPlan: "alap" | "pro" | "vallalati" | null;
+  currentPlan?: "alap" | "pro" | "vallalati" | null;
 }) {
-  const [step, setStep] = useState<Step>("warning");
   const [strictCount, setStrictCount] = useState<number | null>(null);
+  const { openPortal, loading } = useBillingPortal();
 
   useEffect(() => {
     if (!open) return;
-    setStep("warning");
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
@@ -35,113 +40,42 @@ export function CancelSubscriptionDialog({
     })();
   }, [open]);
 
-  const proceedCancel = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({ status: "canceled" })
-      .eq("user_id", u.user.id);
-    if (error) {
-      toast.error("Hiba a felmondásnál", { description: error.message });
-      return;
-    }
-    toast.success("Előfizetés felmondva");
-    onOpenChange(false);
-    setTimeout(() => window.location.reload(), 800);
-  };
-
-  const downgradeToAlap = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({ plan: "alap", status: "active" })
-      .eq("user_id", u.user.id);
-    if (error) {
-      toast.error("Hiba a váltásnál", { description: error.message });
-      return;
-    }
-    toast.success("Sikeresen átváltottál az Alap csomagra");
-    onOpenChange(false);
-    setTimeout(() => window.location.reload(), 800);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        {step === "warning" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                Figyelem - megőrzési kötelezettség
-              </DialogTitle>
-              <DialogDescription asChild>
-                <div className="space-y-3 pt-2 text-sm">
-                  <p>
-                    ⚠️ Önnek <strong>{strictCount ?? "…"}</strong> dokumentuma van aktív törvényi
-                    megőrzési kötelezettséggel.
-                  </p>
-                  <p>
-                    Ha felmondja az előfizetést, Ön lesz felelős ezek biztonságos megőrzéséért.
-                  </p>
-                  <p className="font-medium">
-                    Javasoljuk, hogy exportálja adatait mielőtt folytatja.
-                  </p>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-2">
-              <GdprExportButton />
-            </div>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Mégsem</Button>
-              {currentPlan === "alap" ? (
-                <Button variant="destructive" onClick={proceedCancel}>
-                  Felmondás megerősítése
-                </Button>
-              ) : (
-                <Button variant="destructive" onClick={() => setStep("downgrade")}>
-                  Folytatás felmondással
-                </Button>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            Számlázás kezelése
+          </DialogTitle>
+          <DialogDescription asChild>
+            <div className="space-y-3 pt-2 text-sm">
+              <p>
+                A felmondás, csomagváltás és kártyacsere a biztonságos Stripe ügyfélportálon történik.
+              </p>
+              {strictCount !== null && strictCount > 0 && (
+                <p>
+                  ⚠️ Önnek <strong>{strictCount}</strong> dokumentuma van aktív törvényi
+                  megőrzési kötelezettséggel. Felmondás esetén Ön lesz felelős ezek
+                  biztonságos megőrzéséért — javasoljuk az exportot.
+                </p>
               )}
-            </DialogFooter>
-          </>
-        )}
-
-        {step === "downgrade" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <ArrowDown className="h-5 w-5 text-brand" />
-                Esetleg inkább váltsunk olcsóbb csomagra?
-              </DialogTitle>
-              <DialogDescription asChild>
-                <div className="space-y-3 pt-2 text-sm">
-                  <p>Az Alap csomag továbbra is biztosítja a dokumentumai biztonságos tárolását.</p>
-                  <div className="rounded-lg border bg-muted/40 p-4">
-                    <div className="font-semibold text-base">Alap csomag</div>
-                    <div className="text-2xl font-bold mt-1">2 990 Ft / hó</div>
-                    <ul className="mt-2 text-xs text-muted-foreground space-y-1">
-                      <li>• Max 100 dokumentum tárolása</li>
-                      <li>• Alap kategorizálás</li>
-                      <li>• Törvényi megőrzés folyamatos</li>
-                    </ul>
-                  </div>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2 flex-col sm:flex-row">
-              <Button variant="destructive" onClick={proceedCancel}>
-                Nem, felmondás
-              </Button>
-              <Button onClick={downgradeToAlap} disabled={currentPlan === "alap"}>
-                {currentPlan === "alap" ? "Már Alap csomagon van" : "Váltás Alap csomagra"}
-              </Button>
-            </DialogFooter>
-          </>
-        )}
+              <p className="text-xs text-muted-foreground">
+                A változás néhány másodpercen belül érvényesül itt is, miután a Stripe értesít minket.
+              </p>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-2">
+          <GdprExportButton />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Bezár</Button>
+          <Button onClick={() => openPortal()} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-2" />}
+            Stripe portál megnyitása
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
