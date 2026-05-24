@@ -408,7 +408,7 @@ function LandingPage() {
                   ))}
                 </ul>
                 <Button
-                  onClick={() => navigate({ to: "/login" })}
+                  onClick={() => navigate({ to: "/register" })}
                   className={`mt-7 w-full ${
                     p.highlight
                       ? "bg-brand text-brand-foreground hover:bg-brand-hover"
