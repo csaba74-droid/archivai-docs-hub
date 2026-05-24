@@ -13,6 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useCategories } from "@/hooks/use-categories";
+import { useSubscription } from "@/hooks/use-subscription";
+import { can } from "@/lib/entitlements";
+
 
 const COLOR_OPTIONS = ["#64748b", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#ec4899", "#0ea5e9"];
 
@@ -26,14 +29,21 @@ export function CustomCategoryDialog({
   onCreated?: (categoryId: string) => void;
 }) {
   const { create } = useCategories();
+  const { subscription, isTrialing } = useSubscription();
+  const allowed = can(subscription?.plan ?? null, "custom_categories", { isTrialing });
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLOR_OPTIONS[0]);
   const [mode, setMode] = useState<"strict" | "normal">("normal");
-  const [retention, setRetention] = useState<string>("none"); // 'none' or year number
+  const [retention, setRetention] = useState<string>("none");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
+    if (!allowed) {
+      toast.error("Egyéni kategóriák a Pro csomag funkciója");
+      return;
+    }
     if (!name.trim()) {
+
       toast.error("Adj meg egy nevet");
       return;
     }
