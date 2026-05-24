@@ -234,6 +234,4 @@ function SubscriptionPage() {
 
     </div>
   );
-    </div>
-  );
 }
