@@ -372,8 +372,8 @@ export function UploadDialog({
         }
         updateAt(i, { status: "done", progress: 100 });
 
-        // Post-upload: if AI detected a date different from the user's chosen date, ask.
-        if (inserted && detectedDate && detectedDate !== finalDocDate) {
+        // Post-upload: always confirm document date (pre-filled with detected date or today).
+        if (inserted) {
           await askDateConfirm({
             documentId: (inserted as DocumentRow).id,
             fileName: file.name,
