@@ -73,22 +73,39 @@ function SubscriptionPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Jelenlegi csomag</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                {isTrialing ? "Ingyenes próbaidőszak" : "Jelenlegi csomag"}
+              </p>
               <div className="flex items-center gap-3 mt-1">
-                <h2 className="text-2xl font-bold">{subscription ? PLAN_INFO[subscription.plan].label : "—"}</h2>
+                <h2 className="text-2xl font-bold">
+                  {isTrialing
+                    ? (trialExpired ? "Próba lejárt" : `${trialDaysLeft} nap van hátra`)
+                    : (subscription ? PLAN_INFO[subscription.plan].label : "—")}
+                </h2>
                 <Badge variant={active ? "secondary" : "destructive"}>
-                  {subscription?.status === "active" ? "Aktív" : subscription?.status === "past_due" ? "Fizetés esedékes" : subscription?.status === "canceled" ? "Lemondva" : "Inaktív"}
+                  {isTrialing
+                    ? (trialExpired ? "Lejárt" : "Próba")
+                    : subscription?.status === "active" ? "Aktív"
+                    : subscription?.status === "past_due" ? "Fizetés esedékes"
+                    : subscription?.status === "canceled" ? "Lemondva" : "Inaktív"}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
-                {subscription?.current_period_end && (
-                  <> • Következő számlázás: {new Date(subscription.current_period_end).toLocaleDateString("hu-HU")}</>
-                )}
+                {isTrialing
+                  ? "Kártyaadat nélkül — válassz csomagot a próba végén a folytatáshoz."
+                  : (
+                    <>
+                      {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
+                      {subscription?.current_period_end && (
+                        <> • Következő számlázás: {new Date(subscription.current_period_end).toLocaleDateString("hu-HU")}</>
+                      )}
+                    </>
+                  )}
               </p>
             </div>
           </div>
         </Card>
+
 
         {/* Interval toggle */}
         <div className="flex justify-center">
