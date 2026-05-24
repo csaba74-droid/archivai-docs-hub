@@ -39,7 +39,7 @@ const PRICES: Record<PlanKey, { monthly: number; yearly: number }> = {
 const formatHuf = (n: number) => `${n.toLocaleString("hu-HU")} Ft`;
 
 function SubscriptionPage() {
-  const { subscription, active } = useSubscription();
+  const { subscription, active, isTrialing, trialDaysLeft, trialExpired } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [interval, setInterval] = useState<Interval>("monthly");
   const [checkout, setCheckout] = useState<{ priceId: string } | null>(null);
