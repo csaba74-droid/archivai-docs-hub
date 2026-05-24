@@ -157,7 +157,7 @@ function LandingPage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:pb-24 lg:pt-10">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-0 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:pb-24 lg:pt-0">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
               <ShieldCheck className="h-3.5 w-3.5" />
@@ -221,7 +221,7 @@ function LandingPage() {
       <section id="funkciok" className="bg-secondary/60 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-3xl font-bold tracking-tight text-brand sm:text-4xl">
-            Minden amit a biztonságos iratkezeléshez kell
+            Iratkezelés és törvényi iratmegőrzés — egy helyen
           </h2>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
@@ -294,7 +294,7 @@ function LandingPage() {
               {
                 n: "01",
                 title: "Feltöltés",
-                text: "Húzza fel dokumentumait böngészőből, vagy szkennelje be telefonnal egyetlen gombnyomással.",
+                text: "Töltse fel dokumentumait számítógépéről, vagy szkennelје be telefonnal egyetlen gombnyomással.",
               },
               {
                 n: "02",
@@ -327,8 +327,8 @@ function LandingPage() {
               Átlátható árazás
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              14 napos ingyenes próba — a próba alatt feltöltött dokumentumok
-              megmaradnak ha előfizet.
+              14 napos ingyenes próba — előfizetés esetén minden addig
+              feltöltött dokumentuma automatikusan megmarad.
             </p>
           </div>
 
