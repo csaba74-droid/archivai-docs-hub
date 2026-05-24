@@ -733,14 +733,15 @@ function DropZone({
     >
       <Upload className={`${large ? "h-12 w-12" : "h-5 w-5"} text-brand mb-2`} />
       <p className={`${large ? "text-base font-medium" : "text-sm font-medium"}`}>
-        Húzd ide a fájlokat vagy kattints a Feltöltés gombra
+        Húzza ide a fájlokat vagy kattintson a feltöltéshez
       </p>
       {large && (
         <p className="text-xs text-muted-foreground mt-2">
-          PDF, Word, Excel, képek — egy vagy több fájl egyszerre
+          PDF, DOCX, XLSX, JPG, PNG — max 50 MB
         </p>
       )}
     </button>
+
   );
 }
 
