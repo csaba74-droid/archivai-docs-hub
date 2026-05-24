@@ -403,7 +403,11 @@ function Dashboard() {
               <X className="h-4 w-4 mr-1" /> Bezár
             </Button>
           )}
+          <Button onClick={() => openUploadWith(null)} disabled={!canUpload} className="ml-auto">
+            <Upload className="h-4 w-4 mr-2" /> Feltöltés
+          </Button>
         </header>
+
 
         {/* Mobile search bar (prominent) */}
         <div className="md:hidden bg-card px-4 pt-4 pb-2">
