@@ -11,8 +11,6 @@ import { useBillingPortal } from "@/hooks/use-billing-portal";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { createCheckoutSession } from "@/utils/payments.functions";
-import { getStripeEnvironment, hasStripePublishableKey } from "@/lib/stripe";
 
 
 export const Route = createFileRoute("/subscription")({
