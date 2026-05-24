@@ -63,7 +63,7 @@ function SubscriptionPage() {
   const openCheckout = async (plan: PlanKey) => {
     if (!userId) return;
     if (!hasStripePublishableKey()) {
-      toast.error("Stripe nincs konfigurálva", { description: "Hiányzik a VITE_PAYMENTS_CLIENT_TOKEN." });
+      toast.error("Stripe nincs konfigurálva", { description: "Hiányzik a VITE_STRIPE_PUBLISHABLE_KEY." });
       return;
     }
     const priceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
