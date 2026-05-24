@@ -435,7 +435,7 @@ function LandingPage() {
           </p>
           <Button
             size="lg"
-            onClick={() => navigate({ to: "/login" })}
+            onClick={() => navigate({ to: "/register" })}
             className="mt-8 bg-brand-foreground text-brand hover:bg-brand-foreground/90"
           >
             Kipróbálom ingyen <ArrowRight className="h-4 w-4" />
