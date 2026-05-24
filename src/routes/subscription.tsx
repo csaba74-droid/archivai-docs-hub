@@ -190,10 +190,12 @@ function SubscriptionPage() {
                 <Button
                   className="mt-5 w-full"
                   variant={isCurrent ? "secondary" : plan === "pro" ? "default" : "outline"}
-                  disabled={isCurrent || !userId}
-                  onClick={() => openCheckout(plan)}
+                  disabled={isCurrent || !userId || redirecting !== null}
+                  onClick={() => void openCheckout(plan)}
                 >
-                  {isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
+                  {redirecting === `${plan}_${interval === "monthly" ? "monthly" : "yearly"}` ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Átirányítás…</>
+                  ) : isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
                 </Button>
               </Card>
             );
