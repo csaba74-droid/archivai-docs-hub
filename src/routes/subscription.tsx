@@ -1,17 +1,18 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, Check, Sparkles, XCircle, ExternalLink, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { useBillingPortal } from "@/hooks/use-billing-portal";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
-import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { createCheckoutSession } from "@/utils/payments.functions";
+import { getStripeEnvironment, hasStripePublishableKey } from "@/lib/stripe";
 
 
 export const Route = createFileRoute("/subscription")({
