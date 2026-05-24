@@ -30,6 +30,7 @@ import { ScanButton } from "@/components/ScanButton";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useDocumentSearch } from "@/hooks/use-document-search";
 import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
+import { TrialBanner } from "@/components/TrialBanner";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -678,7 +679,9 @@ function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
+
   );
 }
 
