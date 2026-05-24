@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getAppSupabase() {
+let _supabase: any = null;
+function getAppSupabase(): any {
   if (!_supabase) {
     const url = process.env.APP_SUPABASE_URL;
     const key = process.env.APP_SUPABASE_SERVICE_ROLE_KEY;
