@@ -112,9 +112,10 @@ export function UploadDialog({
   const [datePrompt, setDatePrompt] = useState<{
     documentId: string;
     fileName: string;
-    detectedDate: string;
+    detectedDate: string | null;
     currentDate: string;
   } | null>(null);
+  const [datePromptValue, setDatePromptValue] = useState<string>("");
 
   const reset = () => {
     setFiles([]);
@@ -165,33 +166,35 @@ export function UploadDialog({
   const askDateConfirm = (params: {
     documentId: string;
     fileName: string;
-    detectedDate: string;
+    detectedDate: string | null;
     currentDate: string;
   }) =>
     new Promise<boolean>((resolve) => {
       setDatePrompt(params);
+      setDatePromptValue(params.detectedDate ?? new Date().toISOString().slice(0, 10));
       datePromptResolveRef.current = resolve;
     });
 
   const datePromptResolveRef = useRef<((v: boolean) => void) | null>(null);
 
-  const resolveDatePrompt = async (accept: boolean) => {
+  const resolveDatePrompt = async (save: boolean) => {
     const prompt = datePrompt;
+    const chosenDate = datePromptValue;
     const resolver = datePromptResolveRef.current;
     setDatePrompt(null);
     datePromptResolveRef.current = null;
-    if (accept && prompt) {
+    if (save && prompt && chosenDate && chosenDate !== prompt.currentDate) {
       const { error } = await supabase
         .from("documents")
-        .update({ document_date: prompt.detectedDate })
+        .update({ document_date: chosenDate })
         .eq("id", prompt.documentId);
       if (error) {
         toast.error(`Dátum frissítés sikertelen: ${error.message}`);
       } else {
-        toast.success(`📅 Dátum frissítve: ${prompt.detectedDate}`);
+        toast.success(`📅 Dátum mentve: ${chosenDate}`);
       }
     }
-    resolver?.(accept);
+    resolver?.(save);
   };
 
 
@@ -369,8 +372,8 @@ export function UploadDialog({
         }
         updateAt(i, { status: "done", progress: 100 });
 
-        // Post-upload: if AI detected a date different from the user's chosen date, ask.
-        if (inserted && detectedDate && detectedDate !== finalDocDate) {
+        // Post-upload: always confirm document date (pre-filled with detected date or today).
+        if (inserted) {
           await askDateConfirm({
             documentId: (inserted as DocumentRow).id,
             fileName: file.name,
@@ -595,30 +598,46 @@ export function UploadDialog({
       <Dialog open={!!datePrompt} onOpenChange={(v) => { if (!v) resolveDatePrompt(false); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>📅 Melyik dátumtól számítsuk a megőrzési időt?</DialogTitle>
+            <DialogTitle>📅 Dokumentum dátuma</DialogTitle>
             <DialogDescription>{datePrompt?.fileName}</DialogDescription>
           </DialogHeader>
           {datePrompt && (
-            <div className="py-2 text-sm">
-              <p>
-                Az AI ezt a dátumot azonosította a dokumentumon:{" "}
-                <span className="font-semibold">{datePrompt.detectedDate}</span>
+            <div className="py-2 space-y-3 text-sm">
+              {datePrompt.detectedDate ? (
+                <p>
+                  Az AI ezt a dátumot azonosította:{" "}
+                  <span className="font-semibold">{datePrompt.detectedDate}</span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Nem sikerült dátumot azonosítani. Kérem adja meg a dokumentum dátumát:
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 whitespace-nowrap m-0">
+                  <CalendarClock className="h-4 w-4" /> Dátum
+                </Label>
+                <Input
+                  type="date"
+                  value={datePromptValue}
+                  onChange={(e) => setDatePromptValue(e.target.value)}
+                  className="h-9 w-auto"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                A megőrzési határidő ettől a dátumtól számítódik.
               </p>
             </div>
           )}
-          <DialogFooter className="flex flex-row gap-2 sm:justify-stretch">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => resolveDatePrompt(true)}
-            >
-              📄 {datePrompt?.detectedDate} — dokumentum dátuma
+          <DialogFooter className="flex flex-row gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => resolveDatePrompt(false)}>
+              Mégse
             </Button>
             <Button
-              className="flex-1 bg-brand hover:bg-brand-hover text-brand-foreground"
-              onClick={() => resolveDatePrompt(false)}
+              className="bg-brand hover:bg-brand-hover text-brand-foreground"
+              onClick={() => resolveDatePrompt(true)}
             >
-              📅 {new Date().toISOString().slice(0, 10)} — mai dátum
+              Mentés
             </Button>
           </DialogFooter>
         </DialogContent>
