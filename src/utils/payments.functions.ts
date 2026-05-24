@@ -58,28 +58,44 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
-    const stripe = createStripeClient(data.environment);
+    console.log("[checkout] start", { priceId: data.priceId, env: data.environment, hasUserId: !!data.userId, hasEmail: !!data.customerEmail });
+    try {
+      const stripe = createStripeClient(data.environment);
 
-    const prices = await stripe.prices.list({ lookup_keys: [data.priceId], limit: 1 });
-    if (!prices.data.length) throw new Error(`Price not found for lookup_key: ${data.priceId}`);
-    const stripePrice = prices.data[0];
+      const prices = await stripe.prices.list({ lookup_keys: [data.priceId], limit: 1 });
+      console.log("[checkout] prices.list result", { count: prices.data.length, lookup_key: data.priceId });
+      if (!prices.data.length) {
+        throw new Error(`Stripe price not found for lookup_key: ${data.priceId}. Verify the price exists in the Stripe dashboard with this lookup_key.`);
+      }
+      const stripePrice = prices.data[0];
 
-    const customerId = await resolveOrCreateCustomer(stripe, {
-      email: data.customerEmail,
-      userId: data.userId,
-    });
+      const customerId = await resolveOrCreateCustomer(stripe, {
+        email: data.customerEmail,
+        userId: data.userId,
+      });
+      console.log("[checkout] customer resolved", { customerId });
 
-    const session = await stripe.checkout.sessions.create({
-      line_items: [{ price: stripePrice.id, quantity: 1 }],
-      mode: "subscription",
-      ui_mode: "embedded_page" as any,
-      return_url: data.returnUrl,
-      customer: customerId,
-      subscription_data: {
+      const session = await stripe.checkout.sessions.create({
+        line_items: [{ price: stripePrice.id, quantity: 1 }],
+        mode: "subscription",
+        ui_mode: "embedded_page" as any,
+        return_url: data.returnUrl,
+        customer: customerId,
+        subscription_data: {
+          trial_period_days: 14,
+          metadata: { userId: data.userId!, priceId: data.priceId },
+        },
         metadata: { userId: data.userId!, priceId: data.priceId },
-      },
-      metadata: { userId: data.userId!, priceId: data.priceId },
-    });
+      });
+      console.log("[checkout] session created", { id: session.id, hasClientSecret: !!session.client_secret });
 
-    return session.client_secret;
+      if (!session.client_secret) {
+        throw new Error("Stripe session created but client_secret is missing");
+      }
+      return session.client_secret;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[checkout] failed", { message, error: err });
+      throw new Error(`Checkout session creation failed: ${message}`);
+    }
   });
