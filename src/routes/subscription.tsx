@@ -162,7 +162,7 @@ function SubscriptionPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Minden új előfizetés 14 napos ingyenes próbaidővel indul. Bármikor lemondható.
+          A 14 napos ingyenes próba kártyaadat nélkül indul a regisztrációkor. A fizetés csak akkor történik, ha a próba végén csomagot választasz.
         </p>
 
         {/* GDPR data export */}
