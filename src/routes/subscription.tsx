@@ -129,7 +129,7 @@ function SubscriptionPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {(["alap", "pro", "vallalati"] as const).map((plan) => {
             const info = PLAN_INFO[plan];
-            const isCurrent = subscription?.plan === plan && active;
+            const isCurrent = subscription?.plan === plan && active && !isTrialing;
             const amount = PRICES[plan][interval];
             const priceLabel = interval === "monthly" ? `${formatHuf(amount)} / hó` : `${formatHuf(amount)} / év`;
             return (
@@ -154,7 +154,7 @@ function SubscriptionPage() {
                   disabled={isCurrent || !userId}
                   onClick={() => openCheckout(plan)}
                 >
-                  {isCurrent ? "Jelenlegi csomag" : "14 napos próba indítása"}
+                  {isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
                 </Button>
               </Card>
             );
