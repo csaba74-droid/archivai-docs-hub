@@ -11,8 +11,6 @@ import { useBillingPortal } from "@/hooks/use-billing-portal";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { createCheckoutSession } from "@/utils/payments.functions";
-import { getStripeEnvironment, hasStripePublishableKey } from "@/lib/stripe";
 
 
 export const Route = createFileRoute("/subscription")({
@@ -62,26 +60,24 @@ function SubscriptionPage() {
 
   const openCheckout = async (plan: PlanKey) => {
     if (!userId) return;
-    if (!hasStripePublishableKey()) {
-      toast.error("Stripe nincs konfigurálva", { description: "Hiányzik a VITE_STRIPE_PUBLISHABLE_KEY." });
-      return;
-    }
     const priceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
     setRedirecting(priceId);
     try {
       const origin = window.location.origin;
-      const url = await createCheckoutSession({
-        data: {
-          priceId,
-          customerEmail: email,
-          userId,
-          successUrl: `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${origin}/subscription?checkout=canceled`,
-          environment: getStripeEnvironment(),
+      const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(
+        "create-checkout-session",
+        {
+          body: {
+            plan,
+            interval,
+            successUrl: `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+            cancelUrl: `${origin}/subscription?checkout=canceled`,
+          },
         },
-      });
-      if (!url) throw new Error("Üres válasz a szervertől");
-      window.location.href = url;
+      );
+      if (error) throw new Error(error.message);
+      if (!data?.url) throw new Error(data?.error || "Üres válasz a szervertől");
+      window.location.href = data.url;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[checkout] redirect failed", err);
@@ -89,6 +85,7 @@ function SubscriptionPage() {
       setRedirecting(null);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
