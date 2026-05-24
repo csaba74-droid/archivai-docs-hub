@@ -158,7 +158,7 @@ function LandingPage() {
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-7xl items-start gap-12 px-4 pb-16 pt-0 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:pb-24 lg:pt-0">
-          <div>
+          <div className="self-start pt-0 mt-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
               <ShieldCheck className="h-3.5 w-3.5" />
               Törvényi előírás szerint archiválva
@@ -205,7 +205,7 @@ function LandingPage() {
             </ul>
           </div>
 
-          <div className="relative">
+          <div className="relative self-start">
             <div className="absolute -inset-4 -z-10 rounded-3xl bg-brand-soft/60 blur-2xl" />
             <img
               src={heroImage}
@@ -444,7 +444,7 @@ function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer id="kapcsolat" className="border-t border-border bg-background py-12">
+      <footer id="kapcsolat" className="scroll-mt-20 border-t border-border bg-background py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
@@ -458,15 +458,15 @@ function LandingPage() {
                 </div>
               </div>
             </div>
-            <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <span className="cursor-not-allowed">
                 ÁSZF <span className="text-xs">(Hamarosan)</span>
               </span>
               <span className="cursor-not-allowed">
                 Adatkezelés <span className="text-xs">(Hamarosan)</span>
               </span>
-              <a href="#kapcsolat" className="hover:text-brand">
-                Kapcsolat
+              <a href="mailto:kapcsolat@archivai.hu" className="hover:text-brand">
+                kapcsolat@archivai.hu
               </a>
             </nav>
           </div>
