@@ -323,7 +323,22 @@ export function UploadDialog({
           if (hardCategory) {
             updateAt(i, { suggestedCategory: category, detectedDate: null });
             void logAudit("categorize", null, { filename: file.name, category, confidence: 1, hardRule: true });
+          } else if (!canAi) {
+            // Alap plan: no AI. Ask user to pick a category manually.
+            const chosen = await askConfirm({
+              fileName: file.name,
+              suggested: "egyeb",
+              confidence: 0,
+              reasoning: "AI kategorizálás Pro csomag funkciója — válassz kézzel.",
+            });
+            if (chosen === null) {
+              updateAt(i, { status: "error", progress: 0, error: "Kihagyva" });
+              continue;
+            }
+            category = chosen;
+            updateAt(i, { suggestedCategory: category });
           } else {
+
             console.log("CALLING AI FOR:", file.name, "sampleLen:", contentText.length);
             const { data: { session } } = await supabase.auth.getSession();
             const accessToken = session?.access_token;
