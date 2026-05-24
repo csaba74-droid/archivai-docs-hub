@@ -519,7 +519,7 @@ function Dashboard() {
 
           {/* Desktop category grid — only when no activeCat & no search */}
           {!activeCat && !search.trim() && (
-            <div className="hidden md:block">
+            <div className="hidden md:block space-y-6">
               <CategoryGrid
                 allCats={allCats}
                 counts={counts}
@@ -527,8 +527,18 @@ function Dashboard() {
                 onNewCategory={() => setNewCatOpen(true)}
                 onDeleteCustomCat={handleDeleteCustomCat}
               />
+              <DropZone
+                variant="large"
+                dragOver={dragOver}
+                disabled={!canUpload}
+                onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => canUpload && openUploadWith(null)}
+              />
             </div>
           )}
+
 
           {/* Document list: desktop when activeCat or search; mobile when filter/search active */}
           <div className={(!activeCat && !search.trim()) ? "hidden" : "space-y-6"}>
