@@ -403,7 +403,11 @@ function Dashboard() {
               <X className="h-4 w-4 mr-1" /> Bezár
             </Button>
           )}
+          <Button onClick={() => openUploadWith(null)} disabled={!canUpload} className="ml-auto">
+            <Upload className="h-4 w-4 mr-2" /> Feltöltés
+          </Button>
         </header>
+
 
         {/* Mobile search bar (prominent) */}
         <div className="md:hidden bg-card px-4 pt-4 pb-2">
@@ -515,7 +519,7 @@ function Dashboard() {
 
           {/* Desktop category grid — only when no activeCat & no search */}
           {!activeCat && !search.trim() && (
-            <div className="hidden md:block">
+            <div className="hidden md:block space-y-6">
               <CategoryGrid
                 allCats={allCats}
                 counts={counts}
@@ -523,8 +527,18 @@ function Dashboard() {
                 onNewCategory={() => setNewCatOpen(true)}
                 onDeleteCustomCat={handleDeleteCustomCat}
               />
+              <DropZone
+                variant="large"
+                dragOver={dragOver}
+                disabled={!canUpload}
+                onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => canUpload && openUploadWith(null)}
+              />
             </div>
           )}
+
 
           {/* Document list: desktop when activeCat or search; mobile when filter/search active */}
           <div className={(!activeCat && !search.trim()) ? "hidden" : "space-y-6"}>
@@ -719,14 +733,15 @@ function DropZone({
     >
       <Upload className={`${large ? "h-12 w-12" : "h-5 w-5"} text-brand mb-2`} />
       <p className={`${large ? "text-base font-medium" : "text-sm font-medium"}`}>
-        Húzd ide a fájlokat vagy kattints a Feltöltés gombra
+        Húzza ide a fájlokat vagy kattintson a feltöltéshez
       </p>
       {large && (
         <p className="text-xs text-muted-foreground mt-2">
-          PDF, Word, Excel, képek — egy vagy több fájl egyszerre
+          PDF, DOCX, XLSX, JPG, PNG — max 50 MB
         </p>
       )}
     </button>
+
   );
 }
 
