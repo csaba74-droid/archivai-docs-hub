@@ -370,12 +370,12 @@ function LandingPage() {
                 features: [
                   "100 GB tárhely",
                   "Korlátlan dokumentum",
-                  "Korlátlan meghívott",
+                  "Korlátlan meghívott felhasználó",
                   "Korlátlan egyéni kategória",
                   "Minden Pro funkció",
                   "Prioritás support",
                 ],
-                cta: "Kapcsolatfelvétel",
+                cta: "Kipróbálom ingyen",
                 highlight: false,
               },
             ].map((p) => (
