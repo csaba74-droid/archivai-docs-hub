@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
 import { type StripeEnv, createStripeClient } from "@/lib/stripe.server";
 
 const VALID_PRICE_IDS = new Set([
@@ -9,6 +10,23 @@ const VALID_PRICE_IDS = new Set([
   "vallalati_monthly",
   "vallalati_yearly",
 ]);
+
+async function verifyAccessToken(accessToken: string): Promise<{ id: string; email: string | undefined }> {
+  const url = process.env.APP_SUPABASE_URL;
+  const key = process.env.APP_SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("APP_SUPABASE_URL / APP_SUPABASE_SERVICE_ROLE_KEY not set");
+  const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await admin.auth.getUser(accessToken);
+  if (error || !data.user) throw new Error("Invalid session");
+  return { id: data.user.id, email: data.user.email };
+}
+
+function getAppSupabase() {
+  const url = process.env.APP_SUPABASE_URL;
+  const key = process.env.APP_SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("APP_SUPABASE_URL / APP_SUPABASE_SERVICE_ROLE_KEY not set");
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
 
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
@@ -58,14 +76,13 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
-    console.log("[checkout] start", { priceId: data.priceId, env: data.environment, hasUserId: !!data.userId, hasEmail: !!data.customerEmail });
+    console.log("[checkout] start", { priceId: data.priceId, env: data.environment });
     try {
       const stripe = createStripeClient(data.environment);
 
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId], limit: 1 });
-      console.log("[checkout] prices.list result", { count: prices.data.length, lookup_key: data.priceId });
       if (!prices.data.length) {
-        throw new Error(`Stripe price not found for lookup_key: ${data.priceId}. Verify the price exists in the Stripe dashboard with this lookup_key.`);
+        throw new Error(`Stripe price not found for lookup_key: ${data.priceId}`);
       }
       const stripePrice = prices.data[0];
 
@@ -73,7 +90,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         email: data.customerEmail,
         userId: data.userId,
       });
-      console.log("[checkout] customer resolved", { customerId });
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: 1 }],
@@ -81,13 +97,14 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page" as any,
         return_url: data.returnUrl,
         customer: customerId,
+        // No trial_period_days: the app already gives a 14-day no-card local
+        // trial via use-subscription. Adding Stripe's trial would stack 28
+        // free days. Users who reach checkout pay immediately.
         subscription_data: {
-          trial_period_days: 14,
           metadata: { userId: data.userId!, priceId: data.priceId },
         },
         metadata: { userId: data.userId!, priceId: data.priceId },
       });
-      console.log("[checkout] session created", { id: session.id, hasClientSecret: !!session.client_secret });
 
       if (!session.client_secret) {
         throw new Error("Stripe session created but client_secret is missing");
@@ -95,7 +112,49 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       return session.client_secret;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("[checkout] failed", { message, error: err });
+      console.error("[checkout] failed", { message });
       throw new Error(`Checkout session creation failed: ${message}`);
+    }
+  });
+
+/**
+ * Stripe Customer Portal. Client opens the returned URL in a NEW TAB
+ * (the portal cannot be iframed). Webhooks reflect any changes back into
+ * the subscriptions table.
+ */
+export const createPortalSession = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { accessToken: string; returnUrl: string; environment: StripeEnv }) => {
+      if (!data.accessToken) throw new Error("accessToken is required");
+      if (!data.returnUrl) throw new Error("returnUrl is required");
+      return data;
+    },
+  )
+  .handler(async ({ data }) => {
+    try {
+      const user = await verifyAccessToken(data.accessToken);
+      const admin = getAppSupabase();
+      const { data: sub, error } = await admin
+        .from("subscriptions")
+        .select("stripe_customer_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!sub?.stripe_customer_id) {
+        throw new Error(
+          "Nincs aktív Stripe előfizetés. Válassz csomagot a fizetési beállítások eléréséhez.",
+        );
+      }
+
+      const stripe = createStripeClient(data.environment);
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: sub.stripe_customer_id as string,
+        return_url: data.returnUrl,
+      });
+      return portal.url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[portal] failed", { message });
+      throw new Error(message);
     }
   });
