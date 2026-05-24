@@ -598,30 +598,46 @@ export function UploadDialog({
       <Dialog open={!!datePrompt} onOpenChange={(v) => { if (!v) resolveDatePrompt(false); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>📅 Melyik dátumtól számítsuk a megőrzési időt?</DialogTitle>
+            <DialogTitle>📅 Dokumentum dátuma</DialogTitle>
             <DialogDescription>{datePrompt?.fileName}</DialogDescription>
           </DialogHeader>
           {datePrompt && (
-            <div className="py-2 text-sm">
-              <p>
-                Az AI ezt a dátumot azonosította a dokumentumon:{" "}
-                <span className="font-semibold">{datePrompt.detectedDate}</span>
+            <div className="py-2 space-y-3 text-sm">
+              {datePrompt.detectedDate ? (
+                <p>
+                  Az AI ezt a dátumot azonosította:{" "}
+                  <span className="font-semibold">{datePrompt.detectedDate}</span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Nem sikerült dátumot azonosítani. Kérem adja meg a dokumentum dátumát:
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 whitespace-nowrap m-0">
+                  <CalendarClock className="h-4 w-4" /> Dátum
+                </Label>
+                <Input
+                  type="date"
+                  value={datePromptValue}
+                  onChange={(e) => setDatePromptValue(e.target.value)}
+                  className="h-9 w-auto"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                A megőrzési határidő ettől a dátumtól számítódik.
               </p>
             </div>
           )}
-          <DialogFooter className="flex flex-row gap-2 sm:justify-stretch">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => resolveDatePrompt(true)}
-            >
-              📄 {datePrompt?.detectedDate} — dokumentum dátuma
+          <DialogFooter className="flex flex-row gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => resolveDatePrompt(false)}>
+              Mégse
             </Button>
             <Button
-              className="flex-1 bg-brand hover:bg-brand-hover text-brand-foreground"
-              onClick={() => resolveDatePrompt(false)}
+              className="bg-brand hover:bg-brand-hover text-brand-foreground"
+              onClick={() => resolveDatePrompt(true)}
             >
-              📅 {new Date().toISOString().slice(0, 10)} — mai dátum
+              Mentés
             </Button>
           </DialogFooter>
         </DialogContent>
