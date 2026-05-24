@@ -98,7 +98,13 @@ export function UploadDialog({
 }) {
   const { customRows, all: allCats } = useCategories();
   const { isStrict } = useCategoryHelpers();
+  const { subscription, isTrialing } = useSubscription();
+  const plan = subscription?.plan ?? null;
+  const canAi = can(plan, "ai_categorization", { isTrialing });
+  const canBulk = can(plan, "bulk_upload", { isTrialing });
+  const docCap = documentCap(plan, isTrialing);
   const [files, setFiles] = useState<FileProgress[]>([]);
+
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [running, setRunning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
