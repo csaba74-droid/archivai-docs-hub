@@ -1,17 +1,18 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, Check, Sparkles, XCircle, ExternalLink, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { useBillingPortal } from "@/hooks/use-billing-portal";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
-import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { createCheckoutSession } from "@/utils/payments.functions";
+import { getStripeEnvironment, hasStripePublishableKey } from "@/lib/stripe";
 
 
 export const Route = createFileRoute("/subscription")({
@@ -44,7 +45,7 @@ function SubscriptionPage() {
   const { subscription, active, isTrialing, trialDaysLeft, trialExpired } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [interval, setInterval] = useState<Interval>("monthly");
-  const [checkout, setCheckout] = useState<{ priceId: string } | null>(null);
+  const [redirecting, setRedirecting] = useState<string | null>(null);
   const [email, setEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
   const { openPortal, loading: portalLoading } = useBillingPortal();
@@ -59,8 +60,34 @@ function SubscriptionPage() {
     });
   }, []);
 
-  const openCheckout = (plan: PlanKey) => {
-    setCheckout({ priceId: `${plan}_${interval === "monthly" ? "monthly" : "yearly"}` });
+  const openCheckout = async (plan: PlanKey) => {
+    if (!userId) return;
+    if (!hasStripePublishableKey()) {
+      toast.error("Stripe nincs konfigurálva", { description: "Hiányzik a VITE_PAYMENTS_CLIENT_TOKEN." });
+      return;
+    }
+    const priceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
+    setRedirecting(priceId);
+    try {
+      const origin = window.location.origin;
+      const url = await createCheckoutSession({
+        data: {
+          priceId,
+          customerEmail: email,
+          userId,
+          successUrl: `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/subscription?checkout=canceled`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if (!url) throw new Error("Üres válasz a szervertől");
+      window.location.href = url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[checkout] redirect failed", err);
+      toast.error("Fizetés nem indítható", { description: message });
+      setRedirecting(null);
+    }
   };
 
   return (
@@ -163,10 +190,12 @@ function SubscriptionPage() {
                 <Button
                   className="mt-5 w-full"
                   variant={isCurrent ? "secondary" : plan === "pro" ? "default" : "outline"}
-                  disabled={isCurrent || !userId}
-                  onClick={() => openCheckout(plan)}
+                  disabled={isCurrent || !userId || redirecting !== null}
+                  onClick={() => void openCheckout(plan)}
                 >
-                  {isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
+                  {redirecting === `${plan}_${interval === "monthly" ? "monthly" : "yearly"}` ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Átirányítás…</>
+                  ) : isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
                 </Button>
               </Card>
             );
@@ -203,22 +232,6 @@ function SubscriptionPage() {
         currentPlan={subscription?.plan ?? null}
       />
 
-      <Dialog open={!!checkout} onOpenChange={(o) => !o && setCheckout(null)}>
-        <DialogContent className="max-w-3xl p-0 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle>Fizetés</DialogTitle>
-          </DialogHeader>
-          {checkout && userId && (
-            <div className="p-2">
-              <StripeEmbeddedCheckout
-                priceId={checkout.priceId}
-                userId={userId}
-                customerEmail={email}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
