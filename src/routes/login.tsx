@@ -8,12 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Archive } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
-  component: LoginPage,
+  component: () => <AuthPage initialMode="login" />,
 });
 
-function LoginPage() {
+export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "register" }) {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");

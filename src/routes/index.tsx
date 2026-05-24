@@ -106,7 +106,7 @@ function LandingPage() {
               Belépés
             </Button>
             <Button
-              onClick={() => navigate({ to: "/login" })}
+              onClick={() => navigate({ to: "/register" })}
               className="bg-brand text-brand-foreground hover:bg-brand-hover"
             >
               Kipróbálom ingyen
@@ -144,7 +144,7 @@ function LandingPage() {
                   Belépés
                 </Button>
                 <Button
-                  onClick={() => navigate({ to: "/login" })}
+                  onClick={() => navigate({ to: "/register" })}
                   className="bg-brand text-brand-foreground"
                 >
                   Kipróbálom ingyen
@@ -173,7 +173,7 @@ function LandingPage() {
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button
                 size="lg"
-                onClick={() => navigate({ to: "/login" })}
+                onClick={() => navigate({ to: "/register" })}
                 className="bg-brand text-brand-foreground hover:bg-brand-hover"
               >
                 Kipróbálom ingyen <ArrowRight className="h-4 w-4" />
@@ -408,7 +408,7 @@ function LandingPage() {
                   ))}
                 </ul>
                 <Button
-                  onClick={() => navigate({ to: "/login" })}
+                  onClick={() => navigate({ to: "/register" })}
                   className={`mt-7 w-full ${
                     p.highlight
                       ? "bg-brand text-brand-foreground hover:bg-brand-hover"
@@ -435,7 +435,7 @@ function LandingPage() {
           </p>
           <Button
             size="lg"
-            onClick={() => navigate({ to: "/login" })}
+            onClick={() => navigate({ to: "/register" })}
             className="mt-8 bg-brand-foreground text-brand hover:bg-brand-foreground/90"
           >
             Kipróbálom ingyen <ArrowRight className="h-4 w-4" />
