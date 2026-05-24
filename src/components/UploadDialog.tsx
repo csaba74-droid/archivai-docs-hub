@@ -212,6 +212,13 @@ export function UploadDialog({
       toast.info("Nincs kiválasztott fájl");
       return;
     }
+    // Plan: bulk upload (>1 file) requires Pro+.
+    if (files.length > 1 && !canBulk) {
+      toast.error("Tömeges feltöltés a Pro csomag része", {
+        description: "Válts Pro-ra, vagy tölts fel egyesével.",
+      });
+      return;
+    }
     const filenameMatches = files.map(({ file }) => {
       const match = matchFilenameCategory(file.name);
       const category = match ? (CATEGORY_ID_ALIAS[match.category] ?? match.category) : null;
@@ -228,9 +235,30 @@ export function UploadDialog({
       toast.error("Nincs bejelentkezett felhasználó");
       return;
     }
+    // Plan: document cap (Alap = 100).
+    if (docCap !== null) {
+      const { count: existing } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      const remaining = docCap - (existing ?? 0);
+      if (remaining <= 0) {
+        toast.error("Elérted a dokumentum limitet", {
+          description: `Alap csomag: max ${docCap} dokumentum. Válts Pro-ra a korlátlan tároláshoz.`,
+        });
+        return;
+      }
+      if (files.length > remaining) {
+        toast.error("Túl sok fájl", {
+          description: `Csak ${remaining} fájl fér el. Pro csomag → korlátlan.`,
+        });
+        return;
+      }
+    }
     setRunning(true);
     const customForAi = customRows.map((c: CustomCategoryRow) => ({ id: c.id, name: c.name, mode: c.is_strict_itm ? "strict" as const : "normal" as const }));
     let okCount = 0;
+
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i].file;
