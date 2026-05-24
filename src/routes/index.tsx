@@ -158,7 +158,7 @@ function LandingPage() {
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-7xl items-start gap-12 px-4 pb-16 pt-0 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:pb-24 lg:pt-0">
-          <div>
+          <div className="self-start pt-0 mt-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
               <ShieldCheck className="h-3.5 w-3.5" />
               Törvényi előírás szerint archiválva
@@ -205,7 +205,7 @@ function LandingPage() {
             </ul>
           </div>
 
-          <div className="relative">
+          <div className="relative self-start">
             <div className="absolute -inset-4 -z-10 rounded-3xl bg-brand-soft/60 blur-2xl" />
             <img
               src={heroImage}
