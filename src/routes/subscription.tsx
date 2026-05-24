@@ -108,8 +108,15 @@ function SubscriptionPage() {
                   )}
               </p>
             </div>
+            {hasStripeSubscription && (
+              <Button variant="outline" onClick={() => openPortal()} disabled={portalLoading}>
+                {portalLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-2" />}
+                Számlázás kezelése
+              </Button>
+            )}
           </div>
         </Card>
+
 
 
         {/* Interval toggle */}
