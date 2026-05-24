@@ -1,35 +1,19 @@
-import { loadStripe, type Stripe } from "@stripe/stripe-js";
+// Lightweight client-side helpers for the Lovable managed Stripe integration.
+// We use redirect-based Stripe Checkout, so stripe.js is NOT loaded in the
+// browser — only the publishable token prefix is read to detect sandbox/live.
 
-type StripeEnv = "sandbox" | "live";
+export type StripeEnv = "sandbox" | "live";
 
-const stripeKey = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const environment: StripeEnv = stripeKey?.startsWith("pk_test_") ? "sandbox" : "live";
-
-console.log("[Stripe] publishable key injected", {
-  hasPaymentsClientToken: Boolean(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN),
-  hasStripePublishableKeyFallback: Boolean(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY),
-  hasStripeKey: Boolean(stripeKey),
-  environment,
-});
-
-let stripePromise: Promise<Stripe | null> | null = null;
-
-export function getStripe(): Promise<Stripe | null> {
-  if (!stripePromise) {
-    if (!stripeKey) throw new Error("VITE_PAYMENTS_CLIENT_TOKEN or VITE_STRIPE_PUBLISHABLE_KEY is not set");
-    stripePromise = loadStripe(stripeKey);
-  }
-  return stripePromise;
-}
+const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
 
 export function getStripeEnvironment(): StripeEnv {
-  return environment;
+  return clientToken?.startsWith("pk_live_") ? "live" : "sandbox";
 }
 
 export function hasStripePublishableKey(): boolean {
-  return Boolean(stripeKey);
+  return Boolean(clientToken);
 }
 
 export function isStripeTestMode(): boolean {
-  return stripeKey?.startsWith("pk_test_") ?? false;
+  return clientToken?.startsWith("pk_test_") ?? false;
 }
