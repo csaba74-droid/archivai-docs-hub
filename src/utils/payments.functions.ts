@@ -61,17 +61,23 @@ async function resolveOrCreateCustomer(
   return created.id;
 }
 
+/**
+ * Creates a Stripe-hosted Checkout Session and returns the redirect URL.
+ * The client should navigate to this URL (window.location.href = url).
+ */
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator(
     (data: {
       priceId: string;
       customerEmail?: string;
       userId?: string;
-      returnUrl: string;
+      successUrl: string;
+      cancelUrl: string;
       environment: StripeEnv;
     }) => {
       if (!VALID_PRICE_IDS.has(data.priceId)) throw new Error("Invalid priceId");
       if (!data.userId) throw new Error("userId is required");
+      if (!data.successUrl || !data.cancelUrl) throw new Error("successUrl and cancelUrl are required");
       return data;
     },
   )
@@ -94,22 +100,19 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: 1 }],
         mode: "subscription",
-        ui_mode: "embedded_page" as any,
-        return_url: data.returnUrl,
+        success_url: data.successUrl,
+        cancel_url: data.cancelUrl,
         customer: customerId,
-        // No trial_period_days: the app already gives a 14-day no-card local
-        // trial via use-subscription. Adding Stripe's trial would stack 28
-        // free days. Users who reach checkout pay immediately.
         subscription_data: {
           metadata: { userId: data.userId!, priceId: data.priceId },
         },
         metadata: { userId: data.userId!, priceId: data.priceId },
       });
 
-      if (!session.client_secret) {
-        throw new Error("Stripe session created but client_secret is missing");
+      if (!session.url) {
+        throw new Error("Stripe session created but redirect url is missing");
       }
-      return session.client_secret;
+      return session.url;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[checkout] failed", { message });
