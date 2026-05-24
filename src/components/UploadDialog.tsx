@@ -166,33 +166,35 @@ export function UploadDialog({
   const askDateConfirm = (params: {
     documentId: string;
     fileName: string;
-    detectedDate: string;
+    detectedDate: string | null;
     currentDate: string;
   }) =>
     new Promise<boolean>((resolve) => {
       setDatePrompt(params);
+      setDatePromptValue(params.detectedDate ?? new Date().toISOString().slice(0, 10));
       datePromptResolveRef.current = resolve;
     });
 
   const datePromptResolveRef = useRef<((v: boolean) => void) | null>(null);
 
-  const resolveDatePrompt = async (accept: boolean) => {
+  const resolveDatePrompt = async (save: boolean) => {
     const prompt = datePrompt;
+    const chosenDate = datePromptValue;
     const resolver = datePromptResolveRef.current;
     setDatePrompt(null);
     datePromptResolveRef.current = null;
-    if (accept && prompt) {
+    if (save && prompt && chosenDate && chosenDate !== prompt.currentDate) {
       const { error } = await supabase
         .from("documents")
-        .update({ document_date: prompt.detectedDate })
+        .update({ document_date: chosenDate })
         .eq("id", prompt.documentId);
       if (error) {
         toast.error(`Dátum frissítés sikertelen: ${error.message}`);
       } else {
-        toast.success(`📅 Dátum frissítve: ${prompt.detectedDate}`);
+        toast.success(`📅 Dátum mentve: ${chosenDate}`);
       }
     }
-    resolver?.(accept);
+    resolver?.(save);
   };
 
 
