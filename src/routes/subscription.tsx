@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, XCircle, ExternalLink, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
+import { useBillingPortal } from "@/hooks/use-billing-portal";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+
 
 export const Route = createFileRoute("/subscription")({
   beforeLoad: async () => {
@@ -45,7 +47,10 @@ function SubscriptionPage() {
   const [checkout, setCheckout] = useState<{ priceId: string } | null>(null);
   const [email, setEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
+  const { openPortal, loading: portalLoading } = useBillingPortal();
+  const hasStripeSubscription = !!subscription?.stripe_subscription_id;
   const canCancel = subscription?.status !== "canceled";
+
 
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => {
@@ -103,8 +108,15 @@ function SubscriptionPage() {
                   )}
               </p>
             </div>
+            {hasStripeSubscription && (
+              <Button variant="outline" onClick={() => openPortal()} disabled={portalLoading}>
+                {portalLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-2" />}
+                Számlázás kezelése
+              </Button>
+            )}
           </div>
         </Card>
+
 
 
         {/* Interval toggle */}

@@ -21,6 +21,8 @@ import {
 import { toast } from "sonner";
 import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supabase";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
+import { useSubscription } from "@/hooks/use-subscription";
+import { can, documentCap } from "@/lib/entitlements";
 import { extractPdfText } from "@/lib/pdf";
 import { ocrImage, ocrPdfFirstPage } from "@/lib/ocr";
 import { getScanOcrText } from "@/lib/scan-cache";
@@ -37,6 +39,7 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
+
 
 type FileProgress = {
   file: File;
@@ -95,7 +98,13 @@ export function UploadDialog({
 }) {
   const { customRows, all: allCats } = useCategories();
   const { isStrict } = useCategoryHelpers();
+  const { subscription, isTrialing } = useSubscription();
+  const plan = subscription?.plan ?? null;
+  const canAi = can(plan, "ai_categorization", { isTrialing });
+  const canBulk = can(plan, "bulk_upload", { isTrialing });
+  const docCap = documentCap(plan, isTrialing);
   const [files, setFiles] = useState<FileProgress[]>([]);
+
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [running, setRunning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -203,6 +212,13 @@ export function UploadDialog({
       toast.info("Nincs kiválasztott fájl");
       return;
     }
+    // Plan: bulk upload (>1 file) requires Pro+.
+    if (files.length > 1 && !canBulk) {
+      toast.error("Tömeges feltöltés a Pro csomag része", {
+        description: "Válts Pro-ra, vagy tölts fel egyesével.",
+      });
+      return;
+    }
     const filenameMatches = files.map(({ file }) => {
       const match = matchFilenameCategory(file.name);
       const category = match ? (CATEGORY_ID_ALIAS[match.category] ?? match.category) : null;
@@ -219,9 +235,30 @@ export function UploadDialog({
       toast.error("Nincs bejelentkezett felhasználó");
       return;
     }
+    // Plan: document cap (Alap = 100).
+    if (docCap !== null) {
+      const { count: existing } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      const remaining = docCap - (existing ?? 0);
+      if (remaining <= 0) {
+        toast.error("Elérted a dokumentum limitet", {
+          description: `Alap csomag: max ${docCap} dokumentum. Válts Pro-ra a korlátlan tároláshoz.`,
+        });
+        return;
+      }
+      if (files.length > remaining) {
+        toast.error("Túl sok fájl", {
+          description: `Csak ${remaining} fájl fér el. Pro csomag → korlátlan.`,
+        });
+        return;
+      }
+    }
     setRunning(true);
     const customForAi = customRows.map((c: CustomCategoryRow) => ({ id: c.id, name: c.name, mode: c.is_strict_itm ? "strict" as const : "normal" as const }));
     let okCount = 0;
+
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i].file;
@@ -286,7 +323,22 @@ export function UploadDialog({
           if (hardCategory) {
             updateAt(i, { suggestedCategory: category, detectedDate: null });
             void logAudit("categorize", null, { filename: file.name, category, confidence: 1, hardRule: true });
+          } else if (!canAi) {
+            // Alap plan: no AI. Ask user to pick a category manually.
+            const chosen = await askConfirm({
+              fileName: file.name,
+              suggested: "egyeb",
+              confidence: 0,
+              reasoning: "AI kategorizálás Pro csomag funkciója — válassz kézzel.",
+            });
+            if (chosen === null) {
+              updateAt(i, { status: "error", progress: 0, error: "Kihagyva" });
+              continue;
+            }
+            category = chosen;
+            updateAt(i, { suggestedCategory: category });
           } else {
+
             console.log("CALLING AI FOR:", file.name, "sampleLen:", contentText.length);
             const { data: { session } } = await supabase.auth.getSession();
             const accessToken = session?.access_token;

@@ -80,13 +80,23 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       : 0;
     const trialExpired = isTrialing && trialEndsAt !== null && trialEndsAt.getTime() < now;
 
-    // active = paid sub still in period, OR trial not yet expired
-    const paidActive = hasStripe && subscription?.status === "active" && (!periodEnd || periodEnd.getTime() > now);
+    // active = paid sub still in period, canceled-but-still-in-period (Stripe
+    // cancel_at_period_end), past_due (Stripe is retrying), OR trial not yet expired
+    const paidActive =
+      hasStripe &&
+      (subscription?.status === "active" || subscription?.status === "past_due") &&
+      (!periodEnd || periodEnd.getTime() > now);
+    const canceledGrace =
+      hasStripe &&
+      subscription?.status === "canceled" &&
+      periodEnd !== null &&
+      periodEnd.getTime() > now;
     const trialActive = isTrialing && !trialExpired;
-    const active = !!(paidActive || trialActive);
+    const active = !!(paidActive || canceledGrace || trialActive);
 
     return { isTrialing, trialDaysLeft, trialExpired, trialEndsAt, active };
   }, [subscription]);
+
 
   return (
     <SubscriptionContext.Provider value={{ subscription, loading, reload, ...derived }}>
