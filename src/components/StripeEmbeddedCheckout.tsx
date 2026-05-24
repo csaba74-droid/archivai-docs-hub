@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { getStripe, getStripeEnvironment, hasStripePublishableKey } from "@/lib/stripe";
 import { createCheckoutSession } from "@/utils/payments.functions";
 
 interface Props {
@@ -14,11 +14,10 @@ export function StripeEmbeddedCheckout({ priceId, customerEmail, userId, returnU
   const [error, setError] = useState<string | null>(null);
 
   // Verify the Stripe publishable key is configured before mounting the provider.
-  const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
-  if (!clientToken) {
+  if (!hasStripePublishableKey()) {
     return (
       <div className="p-6 text-sm text-destructive">
-        Stripe nincs konfigurálva (hiányzik a VITE_PAYMENTS_CLIENT_TOKEN).
+        Stripe nincs konfigurálva (hiányzik a VITE_PAYMENTS_CLIENT_TOKEN vagy VITE_STRIPE_PUBLISHABLE_KEY).
       </div>
     );
   }
