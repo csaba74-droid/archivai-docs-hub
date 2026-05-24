@@ -157,7 +157,7 @@ function LandingPage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:pb-24 lg:pt-10">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
               <ShieldCheck className="h-3.5 w-3.5" />
@@ -263,9 +263,8 @@ function LandingPage() {
             Kettős szerveres biztonság
           </h2>
           <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-brand-foreground/80">
-            Adatai egyidejűleg két független EU-s adatközpontban tárolódnak. Ha az
-            egyik meghibásodik, a másik azonnal átveszi — egyetlen dokumentum sem
-            veszhet el.
+            Adatai egyidejűleg két független EU-s adatközpontban tárolódnak —
+            folyamatos elérhetőség és maximális biztonság garantálva.
           </p>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
             {[
@@ -371,12 +370,12 @@ function LandingPage() {
                 features: [
                   "100 GB tárhely",
                   "Korlátlan dokumentum",
-                  "Korlátlan meghívott",
+                  "Korlátlan meghívott felhasználó",
                   "Korlátlan egyéni kategória",
                   "Minden Pro funkció",
                   "Prioritás support",
                 ],
-                cta: "Kapcsolatfelvétel",
+                cta: "Kipróbálom ingyen",
                 highlight: false,
               },
             ].map((p) => (
