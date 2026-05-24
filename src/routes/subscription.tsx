@@ -45,7 +45,7 @@ function SubscriptionPage() {
   const { subscription, active, isTrialing, trialDaysLeft, trialExpired } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [interval, setInterval] = useState<Interval>("monthly");
-  const [checkout, setCheckout] = useState<{ priceId: string } | null>(null);
+  const [redirecting, setRedirecting] = useState<string | null>(null);
   const [email, setEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
   const { openPortal, loading: portalLoading } = useBillingPortal();
@@ -60,8 +60,34 @@ function SubscriptionPage() {
     });
   }, []);
 
-  const openCheckout = (plan: PlanKey) => {
-    setCheckout({ priceId: `${plan}_${interval === "monthly" ? "monthly" : "yearly"}` });
+  const openCheckout = async (plan: PlanKey) => {
+    if (!userId) return;
+    if (!hasStripePublishableKey()) {
+      toast.error("Stripe nincs konfigurálva", { description: "Hiányzik a VITE_PAYMENTS_CLIENT_TOKEN." });
+      return;
+    }
+    const priceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
+    setRedirecting(priceId);
+    try {
+      const origin = window.location.origin;
+      const url = await createCheckoutSession({
+        data: {
+          priceId,
+          customerEmail: email,
+          userId,
+          successUrl: `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/subscription?checkout=canceled`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if (!url) throw new Error("Üres válasz a szervertől");
+      window.location.href = url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[checkout] redirect failed", err);
+      toast.error("Fizetés nem indítható", { description: message });
+      setRedirecting(null);
+    }
   };
 
   return (
