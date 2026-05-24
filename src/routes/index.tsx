@@ -263,9 +263,8 @@ function LandingPage() {
             Kettős szerveres biztonság
           </h2>
           <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-brand-foreground/80">
-            Adatai egyidejűleg két független EU-s adatközpontban tárolódnak. Ha az
-            egyik meghibásodik, a másik azonnal átveszi — egyetlen dokumentum sem
-            veszhet el.
+            Adatai egyidejűleg két független EU-s adatközpontban tárolódnak —
+            folyamatos elérhetőség és maximális biztonság garantálva.
           </p>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
             {[
