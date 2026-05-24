@@ -1,13 +1,16 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/subscription")({
   beforeLoad: async () => {
@@ -18,20 +21,46 @@ export const Route = createFileRoute("/subscription")({
   component: SubscriptionPage,
 });
 
-const PLAN_FEATURES: Record<keyof typeof PLAN_INFO, string[]> = {
+type PlanKey = "alap" | "pro" | "vallalati";
+type Interval = "monthly" | "yearly";
+
+const PLAN_FEATURES: Record<PlanKey, string[]> = {
   alap: ["Max 100 dokumentum", "Alap kategorizálás", "Egyszerű kereső"],
   pro: ["Korlátlan dokumentum", "AI kategorizálás (Claude)", "Bulk upload", "Custom kategóriák", "Teljes szöveges kereső"],
   vallalati: ["Minden Pro funkció", "Több felhasználó", "Prioritásos támogatás", "Audit log export", "SLA garancia"],
 };
 
+const PRICES: Record<PlanKey, { monthly: number; yearly: number }> = {
+  alap: { monthly: 2990, yearly: 30490 },
+  pro: { monthly: 4990, yearly: 50890 },
+  vallalati: { monthly: 9990, yearly: 101890 },
+};
+
+const formatHuf = (n: number) => `${n.toLocaleString("hu-HU")} Ft`;
+
 function SubscriptionPage() {
   const { subscription, active } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [interval, setInterval] = useState<Interval>("monthly");
+  const [checkout, setCheckout] = useState<{ priceId: string } | null>(null);
+  const [email, setEmail] = useState<string | undefined>();
+  const [userId, setUserId] = useState<string | undefined>();
   const canCancel = subscription?.status !== "canceled";
 
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email);
+      setUserId(data.user?.id);
+    });
+  }, []);
+
+  const openCheckout = (plan: PlanKey) => {
+    setCheckout({ priceId: `${plan}_${interval === "monthly" ? "monthly" : "yearly"}` });
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <PaymentTestModeBanner />
       <header className="border-b bg-card px-6 py-4 flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
           <Link to="/dashboard"><ArrowLeft className="h-4 w-4 mr-1" /> Vissza</Link>
@@ -59,24 +88,40 @@ function SubscriptionPage() {
               </p>
             </div>
           </div>
-          <div className="mt-3 rounded-md bg-muted p-3 text-xs text-muted-foreground">
-            ⓘ A csomagváltást a Stripe fizetési integráció bekötése után tudjuk élesíteni. Addig is keress minket emailben:{" "}
-            <a href="mailto:hello@archivai.hu" className="underline">hello@archivai.hu</a>.
-          </div>
         </Card>
 
-        {/* Plan picker (read-only until Stripe is wired) */}
+        {/* Interval toggle */}
+        <div className="flex justify-center">
+          <div className="inline-flex rounded-lg border p-1 bg-card">
+            <button
+              onClick={() => setInterval("monthly")}
+              className={`px-4 py-1.5 text-sm rounded-md transition-colors ${interval === "monthly" ? "bg-brand text-white" : "text-muted-foreground"}`}
+            >
+              Havi
+            </button>
+            <button
+              onClick={() => setInterval("yearly")}
+              className={`px-4 py-1.5 text-sm rounded-md transition-colors ${interval === "yearly" ? "bg-brand text-white" : "text-muted-foreground"}`}
+            >
+              Éves <span className="text-xs opacity-80 ml-1">−15%</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Plan picker */}
         <div className="grid md:grid-cols-3 gap-4">
           {(["alap", "pro", "vallalati"] as const).map((plan) => {
             const info = PLAN_INFO[plan];
-            const isCurrent = subscription?.plan === plan;
+            const isCurrent = subscription?.plan === plan && active;
+            const amount = PRICES[plan][interval];
+            const priceLabel = interval === "monthly" ? `${formatHuf(amount)} / hó` : `${formatHuf(amount)} / év`;
             return (
-              <Card key={plan} className={`p-5 flex flex-col ${isCurrent ? "border-brand ring-2 ring-brand/20" : ""}`}>
+              <Card key={plan} className={`p-5 flex flex-col ${plan === "pro" ? "border-brand ring-2 ring-brand/20" : ""}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold">{info.label}</h3>
                   {plan === "pro" && <Sparkles className="h-4 w-4 text-brand" />}
                 </div>
-                <p className="text-2xl font-bold mt-2">{info.priceLabel}</p>
+                <p className="text-2xl font-bold mt-2">{priceLabel}</p>
                 <p className="text-sm text-muted-foreground mt-1">{info.description}</p>
                 <ul className="mt-4 space-y-2 text-sm flex-1">
                   {PLAN_FEATURES[plan].map((f) => (
@@ -88,15 +133,20 @@ function SubscriptionPage() {
                 </ul>
                 <Button
                   className="mt-5 w-full"
-                  variant={isCurrent ? "secondary" : "outline"}
-                  disabled
+                  variant={isCurrent ? "secondary" : plan === "pro" ? "default" : "outline"}
+                  disabled={isCurrent || !userId}
+                  onClick={() => openCheckout(plan)}
                 >
-                  {isCurrent ? "Jelenlegi csomag" : "Hamarosan elérhető"}
+                  {isCurrent ? "Jelenlegi csomag" : "14 napos próba indítása"}
                 </Button>
               </Card>
             );
           })}
         </div>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Minden új előfizetés 14 napos ingyenes próbaidővel indul. Bármikor lemondható.
+        </p>
 
         {/* GDPR data export */}
         <Card className="p-6">
@@ -123,7 +173,23 @@ function SubscriptionPage() {
         onOpenChange={setCancelOpen}
         currentPlan={subscription?.plan ?? null}
       />
+
+      <Dialog open={!!checkout} onOpenChange={(o) => !o && setCheckout(null)}>
+        <DialogContent className="max-w-3xl p-0 max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="px-6 pt-6">
+            <DialogTitle>Fizetés</DialogTitle>
+          </DialogHeader>
+          {checkout && userId && (
+            <div className="p-2">
+              <StripeEmbeddedCheckout
+                priceId={checkout.priceId}
+                userId={userId}
+                customerEmail={email}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
