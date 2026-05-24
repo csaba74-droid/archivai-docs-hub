@@ -444,7 +444,7 @@ function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer id="kapcsolat" className="border-t border-border bg-background py-12">
+      <footer id="kapcsolat" className="scroll-mt-20 border-t border-border bg-background py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
