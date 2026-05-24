@@ -112,9 +112,10 @@ export function UploadDialog({
   const [datePrompt, setDatePrompt] = useState<{
     documentId: string;
     fileName: string;
-    detectedDate: string;
+    detectedDate: string | null;
     currentDate: string;
   } | null>(null);
+  const [datePromptValue, setDatePromptValue] = useState<string>("");
 
   const reset = () => {
     setFiles([]);
