@@ -106,7 +106,7 @@ function LandingPage() {
               Belépés
             </Button>
             <Button
-              onClick={() => navigate({ to: "/login" })}
+              onClick={() => navigate({ to: "/register" })}
               className="bg-brand text-brand-foreground hover:bg-brand-hover"
             >
               Kipróbálom ingyen
