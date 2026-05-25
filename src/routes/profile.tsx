@@ -167,6 +167,7 @@ function ProfilePage() {
                 </span>
                 <Badge variant={active ? "secondary" : "destructive"}>
                   {subscription?.status === "active" ? "Aktív"
+                    : subscription?.status === "trialing" ? "Próbaidőszak"
                     : subscription?.status === "past_due" ? "Fizetés esedékes"
                     : subscription?.status === "canceled" ? "Lemondva" : "Inaktív"}
                 </Badge>
