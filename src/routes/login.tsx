@@ -32,6 +32,10 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (mode === "register" && !acceptedTerms) {
+      setError("A regisztrációhoz el kell fogadnod az ÁSZF feltételeit.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "register") {
