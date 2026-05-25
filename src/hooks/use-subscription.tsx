@@ -34,6 +34,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
+      console.log("[useSubscription] no auth user");
       setSubscription(null);
       setLoading(false);
       return;
@@ -43,22 +44,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       .select("*")
       .eq("user_id", u.user.id)
       .maybeSingle();
-    if (!error && data) {
-      setSubscription(data as SubscriptionRow);
-    } else if (!data) {
-      // First login → start 14-day no-card trial.
-      const trialEnd = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
-      const { data: created } = await supabase
-        .from("subscriptions")
-        .insert({
-          user_id: u.user.id,
-          plan: "pro",
-          status: "active",
-          current_period_end: trialEnd,
-        })
-        .select()
-        .single();
-      if (created) setSubscription(created as SubscriptionRow);
+    console.log("[useSubscription] loaded for", u.user.id, { data, error });
+    if (error) {
+      setSubscription(null);
+    } else {
+      setSubscription((data as SubscriptionRow | null) ?? null);
     }
     setLoading(false);
   }, []);
