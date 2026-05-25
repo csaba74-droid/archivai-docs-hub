@@ -20,11 +20,17 @@ import { CookieConsent } from "@/components/CookieConsent";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Archivai — Törvényi előírás szerint archiválva" },
+      { title: "Archivai – Digitális dokumentumarchiváló rendszer" },
       {
         name: "description",
         content:
-          "Az Archivai automatikusan kategorizálja és biztonságosan archiválja céges dokumentumait a hatályos megőrzési szabályok szerint.",
+          "Az Archivai automatikusan kategorizálja és biztonságosan archiválja céges dokumentumait a hatályos megőrzési szabályok szerint. 14 napos ingyenes próba.",
+      },
+      { property: "og:title", content: "Archivai – Digitális dokumentumarchiváló rendszer" },
+      {
+        property: "og:description",
+        content:
+          "Az Archivai automatikusan kategorizálja és biztonságosan archiválja céges dokumentumait a hatályos megőrzési szabályok szerint. 14 napos ingyenes próba.",
       },
     ],
   }),
