@@ -48,8 +48,21 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
             full_name: fullName,
             company,
           });
+          // Fallback: create trial subscription client-side in case the
+          // signup trigger isn't installed. RLS allows users to insert
+          // their own row; ON CONFLICT in trigger handles duplicates.
+          const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+          const { error: subErr } = await supabase.from("subscriptions").insert({
+            user_id: data.user.id,
+            plan: "alap",
+            status: "trialing",
+            trial_end: trialEnd,
+            current_period_end: trialEnd,
+          });
+          if (subErr) console.warn("[signup] trial subscription insert:", subErr.message);
         }
       } else {
+
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
