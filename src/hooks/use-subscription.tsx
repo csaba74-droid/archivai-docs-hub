@@ -70,18 +70,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const derived = useMemo(() => {
     const now = Date.now();
     const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
-    // Treat the user as paid as soon as Stripe has issued a customer or subscription id.
-    // The auto-created 14-day trial row has neither, so trial detection keys off "no Stripe linkage".
+    const trialEndsAt = subscription?.trial_end
+      ? new Date(subscription.trial_end)
+      : (subscription?.status === "trialing" ? periodEnd : null);
     const hasStripe = !!(subscription?.stripe_subscription_id || subscription?.stripe_customer_id);
-    const isTrialing = !!subscription && !hasStripe && subscription.status === "active";
-    const trialEndsAt = isTrialing ? periodEnd : null;
+
+    // Trial = explicit 'trialing' status (set by signup trigger / Stripe webhook).
+    const isTrialing = subscription?.status === "trialing";
     const trialDaysLeft = trialEndsAt
       ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / (24 * 60 * 60 * 1000)))
       : 0;
     const trialExpired = isTrialing && trialEndsAt !== null && trialEndsAt.getTime() < now;
 
-    // active = paid sub still in period, canceled-but-still-in-period (Stripe
-    // cancel_at_period_end), past_due (Stripe is retrying), OR trial not yet expired
     const paidActive =
       hasStripe &&
       (subscription?.status === "active" || subscription?.status === "past_due") &&

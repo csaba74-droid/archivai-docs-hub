@@ -157,12 +157,20 @@ create policy "Users delete own custom categories"
 create table if not exists public.subscriptions (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan text not null default 'alap' check (plan in ('alap', 'pro', 'vallalati')),
-  status text not null default 'active' check (status in ('active', 'past_due', 'canceled', 'inactive')),
+  status text not null default 'trialing' check (status in ('trialing', 'active', 'past_due', 'canceled', 'inactive')),
   current_period_end timestamptz,
+  trial_end timestamptz,
   stripe_customer_id text,
   stripe_subscription_id text,
   updated_at timestamptz not null default now()
 );
+
+-- If the table existed before, make sure new constraints/columns are applied.
+alter table public.subscriptions add column if not exists trial_end timestamptz;
+alter table public.subscriptions drop constraint if exists subscriptions_status_check;
+alter table public.subscriptions
+  add constraint subscriptions_status_check
+  check (status in ('trialing', 'active', 'past_due', 'canceled', 'inactive'));
 
 alter table public.subscriptions enable row level security;
 
@@ -171,24 +179,18 @@ create policy "Users view own subscription"
   on public.subscriptions for select to authenticated
   using (auth.uid() = user_id);
 
--- Insert: handled by the signup trigger only. Do NOT allow authenticated users
--- to insert subscriptions (otherwise they could self-provision a paid plan).
+-- Insert/update/delete are not allowed from the client.
 drop policy if exists "Users insert own subscription" on public.subscriptions;
-
--- Update: NOT allowed from the client. Plan/status changes must come from a
--- trusted backend (Stripe webhook handler running with the service role key).
 drop policy if exists "Users update own subscription" on public.subscriptions;
-
--- Delete: never allowed from the client.
 drop policy if exists "Users delete own subscription" on public.subscriptions;
 
 
--- Auto-create active 'alap' subscription on signup
+-- Auto-create a 14-day trial subscription on signup
 create or replace function public.handle_new_subscription()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.subscriptions (user_id, plan, status)
-  values (new.id, 'alap', 'active')
+  insert into public.subscriptions (user_id, plan, status, trial_end, current_period_end)
+  values (new.id, 'alap', 'trialing', now() + interval '14 days', now() + interval '14 days')
   on conflict (user_id) do nothing;
   return new;
 end;
@@ -198,6 +200,17 @@ drop trigger if exists on_auth_user_subscription on auth.users;
 create trigger on_auth_user_subscription
   after insert on auth.users
   for each row execute function public.handle_new_subscription();
+
+-- Backfill: existing rows that were auto-created as 'active' but never linked
+-- to Stripe become proper trial rows.
+update public.subscriptions
+set status = 'trialing',
+    trial_end = coalesce(trial_end, current_period_end, now() + interval '14 days'),
+    current_period_end = coalesce(current_period_end, trial_end, now() + interval '14 days')
+where stripe_subscription_id is null
+  and stripe_customer_id is null
+  and status = 'active';
+
 
 -- ============ STORAGE BUCKET ============
 insert into storage.buckets (id, name, public)

@@ -113,6 +113,7 @@ Deno.serve(async (req: Request) => {
 
     const params = new URLSearchParams();
     params.append("mode", "subscription");
+    params.append("locale", "hu");
     params.append("customer", customerId);
     params.append("success_url", successUrl);
     params.append("cancel_url", cancelUrl);

@@ -25,10 +25,11 @@ function lookupToPlan(lookupKey: string | undefined | null): Plan | null {
   return null;
 }
 
-function mapStatus(stripeStatus: string): "active" | "past_due" | "canceled" | "inactive" {
+function mapStatus(stripeStatus: string): "trialing" | "active" | "past_due" | "canceled" | "inactive" {
   switch (stripeStatus) {
-    case "active":
     case "trialing":
+      return "trialing";
+    case "active":
       return "active";
     case "past_due":
       return "past_due";
