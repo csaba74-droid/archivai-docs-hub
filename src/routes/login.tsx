@@ -20,6 +20,7 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
