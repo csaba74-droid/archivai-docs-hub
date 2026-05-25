@@ -476,6 +476,7 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 }
