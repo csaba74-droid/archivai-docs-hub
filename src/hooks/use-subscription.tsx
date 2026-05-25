@@ -66,13 +66,23 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void reload();
     const { data: sub } = supabase.auth.onAuthStateChange(() => void reload());
-    return () => sub.subscription.unsubscribe();
+    const onFocus = () => void reload();
+    const onVisible = () => { if (document.visibilityState === "visible") void reload(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      sub.subscription.unsubscribe();
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [reload]);
 
   const derived = useMemo(() => {
     const now = Date.now();
     const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
-    const hasStripe = !!subscription?.stripe_subscription_id;
+    // Treat the user as paid as soon as Stripe has issued a customer or subscription id.
+    // The auto-created 14-day trial row has neither, so trial detection keys off "no Stripe linkage".
+    const hasStripe = !!(subscription?.stripe_subscription_id || subscription?.stripe_customer_id);
     const isTrialing = !!subscription && !hasStripe && subscription.status === "active";
     const trialEndsAt = isTrialing ? periodEnd : null;
     const trialDaysLeft = trialEndsAt
