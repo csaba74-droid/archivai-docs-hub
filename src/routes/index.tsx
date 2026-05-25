@@ -459,12 +459,12 @@ function LandingPage() {
               </div>
             </div>
             <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              <span className="cursor-not-allowed">
-                ÁSZF <span className="text-xs">(Hamarosan)</span>
-              </span>
-              <span className="cursor-not-allowed">
-                Adatkezelés <span className="text-xs">(Hamarosan)</span>
-              </span>
+              <Link to="/aszf" className="hover:text-brand">
+                ÁSZF
+              </Link>
+              <Link to="/adatkezeles" className="hover:text-brand">
+                Adatkezelési tájékoztató
+              </Link>
               <a href="mailto:kapcsolat@archivai.hu" className="hover:text-brand">
                 kapcsolat@archivai.hu
               </a>
