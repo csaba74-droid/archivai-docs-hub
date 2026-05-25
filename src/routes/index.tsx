@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import heroImage from "@/assets/hero-archivai.png";
+import { CookieConsent } from "@/components/CookieConsent";
 
 export const Route = createFileRoute("/")({
   head: () => ({
