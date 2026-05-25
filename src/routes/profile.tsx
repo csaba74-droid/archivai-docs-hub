@@ -162,7 +162,7 @@ function ProfilePage() {
             <h2 className="text-base font-semibold">Előfizetés</h2>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <span className="text-lg font-bold">
                 {subscription ? PLAN_INFO[subscription.plan].label : "—"}
@@ -173,26 +173,23 @@ function ProfilePage() {
                   : subscription?.status === "past_due" ? "Fizetés esedékes"
                   : subscription?.status === "canceled" ? "Lemondva" : "Inaktív"}
               </Badge>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground ml-auto">
                 {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
               </span>
-              {canChangePlan && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="ml-auto"
-                  onClick={() => setChangePlanOpen(true)}
-                >
-                  Csomag váltása
-                </Button>
-              )}
             </div>
-            <Link
-              to="/subscription"
-              className="inline-block text-sm text-brand hover:underline"
-            >
-              Csomagok megtekintése →
-            </Link>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button variant="outline" asChild>
+                <Link to="/subscription">Csomagok megtekintése</Link>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setChangePlanOpen(true)}
+                disabled={!canChangePlan}
+              >
+                Csomag váltása
+              </Button>
+            </div>
           </div>
 
           <div className="mt-6 pt-4 border-t">
@@ -200,8 +197,9 @@ function ProfilePage() {
               type="button"
               onClick={() => setCancelOpen(true)}
               disabled={!canCancel}
-              className="text-xs text-destructive/80 hover:text-destructive hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 text-xs text-destructive/80 hover:text-destructive hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
             >
+              <AlertTriangle className="h-3.5 w-3.5" />
               {canCancel ? "Előfizetés felmondása" : "Előfizetés felmondva"}
             </button>
           </div>
