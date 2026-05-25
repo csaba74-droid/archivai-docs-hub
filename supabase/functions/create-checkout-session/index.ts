@@ -1,6 +1,5 @@
 // Supabase Edge Function: create-checkout-session
-// Creates a Stripe Checkout Session (subscription mode) using the
-// STRIPE_SECRET_KEY secret and returns the hosted checkout URL.
+// Creates a Stripe Checkout Session (subscription mode) and returns the URL.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,9 +11,6 @@ const corsHeaders = {
 type PlanKey = "alap" | "pro" | "vallalati";
 type Interval = "monthly" | "yearly";
 
-// Hardcoded HUF prices (in fillér = HUF * 100? No — HUF is zero-decimal).
-// Stripe HUF: amount is in the smallest currency unit. HUF is zero-decimal,
-// so the amount IS the forint value.
 const PRICES: Record<PlanKey, { monthly: number; yearly: number }> = {
   alap: { monthly: 2990, yearly: 30490 },
   pro: { monthly: 4990, yearly: 50890 },
@@ -28,22 +24,16 @@ const PLAN_NAMES: Record<PlanKey, string> = {
 };
 
 interface Payload {
-  plan: PlanKey;
-  interval: Interval;
-  successUrl: string;
-  cancelUrl: string;
+  priceId: string;
+  email?: string;
+  userId: string;
 }
 
-function decodeJwtSub(jwt: string): { sub?: string; email?: string } {
-  try {
-    const [, payload] = jwt.split(".");
-    const json = JSON.parse(
-      atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
-    );
-    return { sub: json.sub, email: json.email };
-  } catch {
-    return {};
-  }
+function parsePriceId(priceId: string): { plan: PlanKey; interval: Interval } | null {
+  const [plan, interval] = priceId.split("_") as [PlanKey, Interval];
+  if (!(plan in PRICES)) return null;
+  if (interval !== "monthly" && interval !== "yearly") return null;
+  return { plan, interval };
 }
 
 async function findOrCreateCustomer(
@@ -51,7 +41,6 @@ async function findOrCreateCustomer(
   userId: string,
   email: string | undefined,
 ): Promise<string> {
-  // Search by metadata.userId
   const search = await fetch(
     `https://api.stripe.com/v1/customers/search?query=${encodeURIComponent(
       `metadata['userId']:'${userId}'`,
@@ -96,54 +85,53 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const authHeader = req.headers.get("Authorization") || "";
-    const jwt = authHeader.replace(/^Bearer\s+/i, "");
-    const { sub: userId, email } = decodeJwtSub(jwt);
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: "Bejelentkezés szükséges" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
     const body = (await req.json()) as Payload;
-    if (!body.plan || !body.interval || !body.successUrl || !body.cancelUrl) {
+    if (!body.priceId || !body.userId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-    if (!(body.plan in PRICES)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid plan" }),
+        JSON.stringify({ error: "Missing required fields: priceId, userId" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const amount = PRICES[body.plan][body.interval];
-    const interval = body.interval === "monthly" ? "month" : "year";
+    const parsed = parsePriceId(body.priceId);
+    if (!parsed) {
+      return new Response(
+        JSON.stringify({ error: "Invalid priceId" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const { plan, interval } = parsed;
+    const amount = PRICES[plan][interval];
+    const stripeInterval = interval === "monthly" ? "month" : "year";
 
-    const customerId = await findOrCreateCustomer(stripeKey, userId, email);
+    const origin = req.headers.get("origin") || req.headers.get("referer") || "";
+    const baseUrl = origin.replace(/\/$/, "");
+    const successUrl = `${baseUrl}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}/subscription?checkout=canceled`;
+
+    const customerId = await findOrCreateCustomer(stripeKey, body.userId, body.email);
 
     const params = new URLSearchParams();
     params.append("mode", "subscription");
     params.append("customer", customerId);
-    params.append("success_url", body.successUrl);
-    params.append("cancel_url", body.cancelUrl);
+    params.append("success_url", successUrl);
+    params.append("cancel_url", cancelUrl);
     params.append("line_items[0][quantity]", "1");
     params.append("line_items[0][price_data][currency]", "huf");
     params.append("line_items[0][price_data][unit_amount]", String(amount));
-    params.append("line_items[0][price_data][recurring][interval]", interval);
+    params.append("line_items[0][price_data][recurring][interval]", stripeInterval);
     params.append(
       "line_items[0][price_data][product_data][name]",
-      `${PLAN_NAMES[body.plan]} (${body.interval === "monthly" ? "havi" : "éves"})`,
+      `${PLAN_NAMES[plan]} (${interval === "monthly" ? "havi" : "éves"})`,
     );
-    params.append("metadata[userId]", userId);
-    params.append("metadata[plan]", body.plan);
-    params.append("metadata[interval]", body.interval);
-    params.append("subscription_data[metadata][userId]", userId);
-    params.append("subscription_data[metadata][plan]", body.plan);
-    params.append("subscription_data[metadata][interval]", body.interval);
+    params.append("metadata[userId]", body.userId);
+    params.append("metadata[plan]", plan);
+    params.append("metadata[interval]", interval);
+    params.append("metadata[priceId]", body.priceId);
+    params.append("subscription_data[metadata][userId]", body.userId);
+    params.append("subscription_data[metadata][plan]", plan);
+    params.append("subscription_data[metadata][interval]", interval);
+    params.append("subscription_data[metadata][priceId]", body.priceId);
 
     const sessionRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",

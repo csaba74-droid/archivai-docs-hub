@@ -60,24 +60,25 @@ function SubscriptionPage() {
 
   const openCheckout = async (plan: PlanKey) => {
     if (!userId) return;
-    const priceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
-    setRedirecting(priceId);
+    const selectedPriceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
+    setRedirecting(selectedPriceId);
     try {
-      const origin = window.location.origin;
       const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(
         "create-checkout-session",
         {
           body: {
-            plan,
-            interval,
-            successUrl: `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-            cancelUrl: `${origin}/subscription?checkout=canceled`,
+            priceId: selectedPriceId,
+            email,
+            userId,
           },
         },
       );
       if (error) throw new Error(error.message);
-      if (!data?.url) throw new Error(data?.error || "Üres válasz a szervertől");
-      window.location.href = data.url;
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error(data?.error || "Üres válasz a szervertől");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[checkout] redirect failed", err);
