@@ -60,15 +60,41 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void reload();
+
     const { data: sub } = supabase.auth.onAuthStateChange(() => void reload());
+
     const onFocus = () => void reload();
     const onVisible = () => { if (document.visibilityState === "visible") void reload(); };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisible);
+
+    let realtimeSub: ReturnType<typeof supabase.channel> | null = null;
+
+    supabase.auth.getUser().then(({ data: u }) => {
+      if (!u.user) return;
+      realtimeSub = supabase
+        .channel(`subscriptions:${u.user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'subscriptions',
+            filter: `user_id=eq.${u.user.id}`,
+          },
+          (payload) => {
+            console.log('[useSubscription] realtime update:', payload);
+            void reload();
+          }
+        )
+        .subscribe();
+    });
+
     return () => {
       sub.subscription.unsubscribe();
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisible);
+      if (realtimeSub) supabase.removeChannel(realtimeSub);
     };
   }, [reload]);
 
