@@ -124,9 +124,36 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
 
+          {mode === "register" && (
+            <div className="flex items-start gap-2 pt-1">
+              <Checkbox
+                id="terms"
+                checked={acceptedTerms}
+                onCheckedChange={(v) => setAcceptedTerms(v === true)}
+                className="mt-0.5"
+              />
+              <Label htmlFor="terms" className="text-sm font-normal leading-snug cursor-pointer">
+                Elolvastam és elfogadom az{" "}
+                <a
+                  href="/aszf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand underline hover:no-underline"
+                >
+                  ÁSZF
+                </a>{" "}
+                feltételeit
+              </Label>
+            </div>
+          )}
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || (mode === "register" && !acceptedTerms)}
+          >
             {loading ? "Folyamatban..." : mode === "login" ? "Bejelentkezés" : "Regisztráció"}
           </Button>
         </form>
