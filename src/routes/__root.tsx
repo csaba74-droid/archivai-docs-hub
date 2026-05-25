@@ -15,19 +15,34 @@ import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
+      <Link to="/" className="flex items-center gap-2">
+        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-brand text-brand-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+        </span>
+        <span className="text-lg font-semibold tracking-tight text-brand">Archivai</span>
+      </Link>
+
+      <div className="mt-10 max-w-md text-center">
+        <h1 className="text-7xl font-bold tracking-tight text-brand sm:text-8xl">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground sm:text-2xl">
+          Ez az oldal nem található
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          A keresett oldal nem létezik vagy áthelyezték.
         </p>
-        <div className="mt-6">
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
           >
-            Go home
+            Vissza a főoldalra
+          </Link>
+          <Link
+            to="/login"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Belépés
           </Link>
         </div>
       </div>
