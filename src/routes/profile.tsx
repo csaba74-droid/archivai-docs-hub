@@ -159,7 +159,7 @@ function ProfilePage() {
             <h2 className="text-base font-semibold">Előfizetés</h2>
           </div>
 
-          <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold">
@@ -176,7 +176,7 @@ function ProfilePage() {
                 {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
               </p>
             </div>
-            <Button variant="outline" size="sm" asChild>
+            <Button size="lg" asChild className="w-full sm:w-auto">
               <Link to="/subscription">Csomagok megtekintése</Link>
             </Button>
           </div>
