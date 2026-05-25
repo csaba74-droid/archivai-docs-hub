@@ -74,14 +74,30 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const derived = useMemo(() => {
     const now = Date.now();
-    const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
-    const trialEndsAt = subscription?.trial_end
-      ? new Date(subscription.trial_end)
-      : (subscription?.status === "trialing" ? periodEnd : null);
-    const hasStripe = !!(subscription?.stripe_subscription_id || subscription?.stripe_customer_id);
+    const TRIAL_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
-    // Trial = explicit 'trialing' status (set by signup trigger / Stripe webhook).
-    const isTrialing = subscription?.status === "trialing";
+    // Fallback: no subscription row yet → treat as trial from account creation.
+    if (!subscription) {
+      const createdMs = userCreatedAt ? new Date(userCreatedAt).getTime() : now;
+      const trialEndsAt = new Date(createdMs + TRIAL_MS);
+      const trialDaysLeft = Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / (24 * 60 * 60 * 1000)));
+      const trialExpired = trialEndsAt.getTime() < now;
+      return {
+        isTrialing: true,
+        trialDaysLeft,
+        trialExpired,
+        trialEndsAt,
+        active: !trialExpired,
+      };
+    }
+
+    const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
+    const trialEndsAt = subscription.trial_end
+      ? new Date(subscription.trial_end)
+      : (subscription.status === "trialing" ? periodEnd : null);
+    const hasStripe = !!(subscription.stripe_subscription_id || subscription.stripe_customer_id);
+
+    const isTrialing = subscription.status === "trialing";
     const trialDaysLeft = trialEndsAt
       ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / (24 * 60 * 60 * 1000)))
       : 0;
@@ -89,18 +105,19 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
     const paidActive =
       hasStripe &&
-      (subscription?.status === "active" || subscription?.status === "past_due") &&
+      (subscription.status === "active" || subscription.status === "past_due") &&
       (!periodEnd || periodEnd.getTime() > now);
     const canceledGrace =
       hasStripe &&
-      subscription?.status === "canceled" &&
+      subscription.status === "canceled" &&
       periodEnd !== null &&
       periodEnd.getTime() > now;
     const trialActive = isTrialing && !trialExpired;
     const active = !!(paidActive || canceledGrace || trialActive);
 
     return { isTrialing, trialDaysLeft, trialExpired, trialEndsAt, active };
-  }, [subscription]);
+  }, [subscription, userCreatedAt]);
+
 
 
   return (
