@@ -56,8 +56,9 @@ export type CustomCategoryRow = {
 export type SubscriptionRow = {
   user_id: string;
   plan: "alap" | "pro" | "vallalati";
-  status: "active" | "past_due" | "canceled" | "inactive";
+  status: "trialing" | "active" | "past_due" | "canceled" | "inactive";
   current_period_end: string | null;
+  trial_end: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   updated_at: string;
