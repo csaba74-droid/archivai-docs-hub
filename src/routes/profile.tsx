@@ -11,6 +11,7 @@ import { supabase, type ProfileRow } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
+import { ChangePlanDialog } from "@/components/ChangePlanDialog";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -41,7 +42,9 @@ function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
   const canCancel = subscription?.status !== "canceled";
+  const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
 
   useEffect(() => {
     (async () => {
@@ -176,9 +179,21 @@ function ProfilePage() {
                 {subscription ? PLAN_INFO[subscription.plan].priceLabel : ""}
               </p>
             </div>
-            <Button size="lg" asChild className="w-full sm:w-auto">
-              <Link to="/subscription">Csomagok megtekintése</Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button size="lg" asChild className="w-full sm:w-auto">
+                <Link to="/subscription">Csomagok megtekintése</Link>
+              </Button>
+              {canChangePlan && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setChangePlanOpen(true)}
+                >
+                  Csomag váltása
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Cancel subscription — always visible below plan info */}
@@ -250,6 +265,8 @@ function ProfilePage() {
         onOpenChange={setCancelOpen}
         currentPlan={subscription?.plan ?? null}
       />
+
+      <ChangePlanDialog open={changePlanOpen} onOpenChange={setChangePlanOpen} />
     </div>
   );
 }
