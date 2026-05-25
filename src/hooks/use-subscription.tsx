@@ -30,15 +30,19 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+
   const reload = useCallback(async () => {
     setLoading(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
       console.log("[useSubscription] no auth user");
       setSubscription(null);
+      setUserCreatedAt(null);
       setLoading(false);
       return;
     }
+    setUserCreatedAt(u.user.created_at ?? null);
     const { data, error } = await supabase
       .from("subscriptions")
       .select("*")
@@ -52,6 +56,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
     setLoading(false);
   }, []);
+
 
   useEffect(() => {
     void reload();
