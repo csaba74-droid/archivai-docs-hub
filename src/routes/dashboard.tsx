@@ -539,6 +539,45 @@ function Dashboard() {
             )}
           </div>
 
+          {/* Dedicated Archivai inbox email — visible on home (no filter/search) */}
+          {!activeCat && !search.trim() && archivaiFullEmail && (
+            <div
+              className="rounded-xl border p-4 md:p-5 text-white shadow-sm"
+              style={{ backgroundColor: "#1A2B4A", borderColor: "#1A2B4A" }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Bell className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold tracking-tight text-sm md:text-base">
+                    Az Ön dedikált Archivai e-mail címe
+                  </h3>
+                  <p className="text-xs md:text-sm text-white/70 mt-1">
+                    Küldje erre a címre dokumentumait és azok automatikusan bekerülnek az Archivai-ba.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <code className="px-3 py-1.5 rounded-md bg-white/10 text-white text-xs md:text-sm font-mono break-all">
+                      {archivaiFullEmail}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={copyArchivaiEmail}
+                      className="bg-white text-[#1A2B4A] hover:bg-white/90"
+                    >
+                      {archivaiEmailCopied ? (
+                        <><Check className="h-4 w-4 mr-1.5" /> Kimásolva</>
+                      ) : (
+                        <><Copy className="h-4 w-4 mr-1.5" /> Másolás</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Mobile home overview — only when no filter/search */}
           {!activeCat && !search.trim() && (
             <MobileHome
