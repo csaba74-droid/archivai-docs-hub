@@ -56,6 +56,8 @@ function Dashboard() {
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [archivaiEmail, setArchivaiEmail] = useState<string>("");
+  const [archivaiEmailCopied, setArchivaiEmailCopied] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
