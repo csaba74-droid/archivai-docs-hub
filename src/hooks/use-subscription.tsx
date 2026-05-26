@@ -6,7 +6,7 @@ const TRIAL_DAYS = 14;
 type Ctx = {
   subscription: SubscriptionRow | null;
   loading: boolean;
-  /** True if user has access right now (paid OR trial-not-expired). */
+  /** True if user has access right now (paid OR trial-not-expired OR lifetime partner). */
   active: boolean;
   /** True if user is on the no-card trial (no stripe subscription yet). */
   isTrialing: boolean;
@@ -15,6 +15,8 @@ type Ctx = {
   /** True if trial ended and no paid subscription exists. */
   trialExpired: boolean;
   trialEndsAt: Date | null;
+  /** Partner type from profiles (e.g. 'accountant_lifetime'). */
+  partnerType: string | null;
   reload: () => Promise<void>;
 };
 
