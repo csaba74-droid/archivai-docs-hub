@@ -10,6 +10,9 @@ create table if not exists public.profiles (
 
 -- Add columns if missing
 alter table public.profiles add column if not exists archivai_email text unique;
+alter table public.profiles add column if not exists referred_by uuid references auth.users(id) on delete set null;
+alter table public.profiles add column if not exists partner_type text;
+create index if not exists profiles_referred_by_idx on public.profiles(referred_by);
 
 -- Auto-fill archivai_email for new profiles (derived from user id)
 create or replace function public.gen_archivai_email()
@@ -46,15 +49,22 @@ create policy "Users can update own profile"
   on public.profiles for update to authenticated
   using (auth.uid() = id);
 
--- Auto-create profile on signup
+-- Auto-create profile on signup (reads referred_by from user metadata)
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
+declare _ref uuid;
 begin
-  insert into public.profiles (id, full_name, company)
+  begin
+    _ref := nullif(new.raw_user_meta_data->>'referred_by', '')::uuid;
+  exception when others then
+    _ref := null;
+  end;
+  insert into public.profiles (id, full_name, company, referred_by)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    coalesce(new.raw_user_meta_data->>'company', '')
+    coalesce(new.raw_user_meta_data->>'company', ''),
+    _ref
   )
   on conflict (id) do nothing;
   return new;
@@ -65,6 +75,62 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ============ ADMIN REFERRAL FUNCTIONS ============
+-- Hardcoded admin email check inside SECURITY DEFINER functions.
+create or replace function public.admin_referrals()
+returns table (
+  referrer_id uuid,
+  referrer_email text,
+  referrer_partner_type text,
+  referred_count bigint,
+  referred jsonb
+) language plpgsql security definer set search_path = public, auth as $$
+begin
+  if lower(coalesce((auth.jwt()->>'email'), '')) <> 'lenard.csaba74@gmail.com' then
+    raise exception 'forbidden';
+  end if;
+  return query
+  select
+    p.id,
+    u.email::text,
+    p.partner_type,
+    count(r.id),
+    coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', r.id,
+          'email', ru.email,
+          'full_name', r.full_name,
+          'created_at', r.created_at
+        ) order by r.created_at desc
+      ) filter (where r.id is not null),
+      '[]'::jsonb
+    )
+  from public.profiles p
+  join auth.users u on u.id = p.id
+  left join public.profiles r on r.referred_by = p.id
+  left join auth.users ru on ru.id = r.id
+  where exists (select 1 from public.profiles x where x.referred_by = p.id)
+  group by p.id, u.email, p.partner_type;
+end;
+$$;
+
+revoke all on function public.admin_referrals() from public;
+grant execute on function public.admin_referrals() to authenticated;
+
+create or replace function public.admin_set_partner_type(_user uuid, _type text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if lower(coalesce((auth.jwt()->>'email'), '')) <> 'lenard.csaba74@gmail.com' then
+    raise exception 'forbidden';
+  end if;
+  update public.profiles set partner_type = _type where id = _user;
+end;
+$$;
+
+revoke all on function public.admin_set_partner_type(uuid, text) from public;
+grant execute on function public.admin_set_partner_type(uuid, text) to authenticated;
 
 -- ============ DOCUMENTS ============
 create table if not exists public.documents (

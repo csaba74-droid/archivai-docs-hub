@@ -6,7 +6,7 @@ const TRIAL_DAYS = 14;
 type Ctx = {
   subscription: SubscriptionRow | null;
   loading: boolean;
-  /** True if user has access right now (paid OR trial-not-expired). */
+  /** True if user has access right now (paid OR trial-not-expired OR lifetime partner). */
   active: boolean;
   /** True if user is on the no-card trial (no stripe subscription yet). */
   isTrialing: boolean;
@@ -15,6 +15,8 @@ type Ctx = {
   /** True if trial ended and no paid subscription exists. */
   trialExpired: boolean;
   trialEndsAt: Date | null;
+  /** Partner type from profiles (e.g. 'accountant_lifetime'). */
+  partnerType: string | null;
   reload: () => Promise<void>;
 };
 
@@ -29,6 +31,7 @@ export const PLAN_INFO: Record<SubscriptionRow["plan"], { label: string; priceLa
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [partnerType, setPartnerType] = useState<string | null>(null);
 
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
 
@@ -39,21 +42,22 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.log("[useSubscription] no auth user");
       setSubscription(null);
       setUserCreatedAt(null);
+      setPartnerType(null);
       setLoading(false);
       return;
     }
     setUserCreatedAt(u.user.created_at ?? null);
-    const { data, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", u.user.id)
-      .maybeSingle();
-    console.log("[useSubscription] loaded for", u.user.id, { data, error });
+    const [{ data, error }, { data: prof }] = await Promise.all([
+      supabase.from("subscriptions").select("*").eq("user_id", u.user.id).maybeSingle(),
+      supabase.from("profiles").select("partner_type").eq("id", u.user.id).maybeSingle(),
+    ]);
+    console.log("[useSubscription] loaded for", u.user.id, { data, error, prof });
     if (error) {
       setSubscription(null);
     } else {
       setSubscription((data as SubscriptionRow | null) ?? null);
     }
+    setPartnerType((prof as { partner_type: string | null } | null)?.partner_type ?? null);
     setLoading(false);
   }, []);
 
@@ -101,6 +105,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const derived = useMemo(() => {
     const now = Date.now();
     const TRIAL_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
+    const lifetimePartner = partnerType === "accountant_lifetime";
 
     // Fallback: no subscription row yet → treat as trial from account creation.
     if (!subscription) {
@@ -109,11 +114,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const trialDaysLeft = Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / (24 * 60 * 60 * 1000)));
       const trialExpired = trialEndsAt.getTime() < now;
       return {
-        isTrialing: true,
+        isTrialing: !lifetimePartner,
         trialDaysLeft,
         trialExpired,
         trialEndsAt,
-        active: !trialExpired,
+        active: lifetimePartner || !trialExpired,
       };
     }
 
@@ -139,15 +144,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       periodEnd !== null &&
       periodEnd.getTime() > now;
     const trialActive = isTrialing && !trialExpired;
-    const active = !!(paidActive || canceledGrace || trialActive);
+    const active = lifetimePartner || !!(paidActive || canceledGrace || trialActive);
 
     return { isTrialing, trialDaysLeft, trialExpired, trialEndsAt, active };
-  }, [subscription, userCreatedAt]);
+  }, [subscription, userCreatedAt, partnerType]);
 
 
 
   return (
-    <SubscriptionContext.Provider value={{ subscription, loading, reload, ...derived }}>
+    <SubscriptionContext.Provider value={{ subscription, loading, reload, partnerType, ...derived }}>
       {children}
     </SubscriptionContext.Provider>
   );
@@ -164,6 +169,7 @@ export function useSubscription() {
       trialDaysLeft: 0,
       trialExpired: false,
       trialEndsAt: null,
+      partnerType: null,
       reload: async () => {},
     } as Ctx;
   }

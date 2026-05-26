@@ -21,6 +21,7 @@ import { Route as AszfRouteImport } from './routes/aszf'
 import { Route as AdatkezelesRouteImport } from './routes/adatkezeles'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const SubscriptionRoute = SubscriptionRouteImport.update({
@@ -83,6 +84,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminReferralsRoute = AdminReferralsRouteImport.update({
+  id: '/admin/referrals',
+  path: '/admin/referrals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
+    | '/admin/referrals'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
+    | '/admin/referrals'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
+    | '/admin/referrals'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   ScanGuideRoute: typeof ScanGuideRoute
   SharingRoute: typeof SharingRoute
   SubscriptionRoute: typeof SubscriptionRoute
+  AdminReferralsRoute: typeof AdminReferralsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/referrals': {
+      id: '/admin/referrals'
+      path: '/admin/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AdminReferralsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanGuideRoute: ScanGuideRoute,
   SharingRoute: SharingRoute,
   SubscriptionRoute: SubscriptionRoute,
+  AdminReferralsRoute: AdminReferralsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

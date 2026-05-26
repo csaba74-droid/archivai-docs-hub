@@ -39,12 +39,24 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
     setLoading(true);
     try {
       if (mode === "register") {
+        // Read referral code from URL (?ref=USER_ID)
+        let referredBy: string | null = null;
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const ref = params.get("ref");
+          if (ref && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+            referredBy = ref;
+          }
+        } catch {
+          referredBy = null;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, company },
+            data: { full_name: fullName, company, referred_by: referredBy },
           },
         });
         if (error) throw error;
@@ -53,6 +65,7 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
             id: data.user.id,
             full_name: fullName,
             company,
+            referred_by: referredBy,
           });
           // Fallback: create trial subscription client-side in case the
           // signup trigger isn't installed. RLS allows users to insert

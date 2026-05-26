@@ -15,6 +15,7 @@ const ALLOWED_PREFIXES = [
   "/aszf",
   "/adatkezeles",
   "/accept-invitation",
+  "/admin",
 ];
 
 export function TrialExpiredGuard() {
