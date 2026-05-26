@@ -105,6 +105,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const derived = useMemo(() => {
     const now = Date.now();
     const TRIAL_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
+    const lifetimePartner = partnerType === "accountant_lifetime";
 
     // Fallback: no subscription row yet → treat as trial from account creation.
     if (!subscription) {
@@ -113,11 +114,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const trialDaysLeft = Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / (24 * 60 * 60 * 1000)));
       const trialExpired = trialEndsAt.getTime() < now;
       return {
-        isTrialing: true,
+        isTrialing: !lifetimePartner,
         trialDaysLeft,
         trialExpired,
         trialEndsAt,
-        active: !trialExpired,
+        active: lifetimePartner || !trialExpired,
       };
     }
 
@@ -143,15 +144,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       periodEnd !== null &&
       periodEnd.getTime() > now;
     const trialActive = isTrialing && !trialExpired;
-    const active = !!(paidActive || canceledGrace || trialActive);
+    const active = lifetimePartner || !!(paidActive || canceledGrace || trialActive);
 
     return { isTrialing, trialDaysLeft, trialExpired, trialEndsAt, active };
-  }, [subscription, userCreatedAt]);
+  }, [subscription, userCreatedAt, partnerType]);
 
 
 
   return (
-    <SubscriptionContext.Provider value={{ subscription, loading, reload, ...derived }}>
+    <SubscriptionContext.Provider value={{ subscription, loading, reload, partnerType, ...derived }}>
       {children}
     </SubscriptionContext.Provider>
   );
@@ -168,6 +169,7 @@ export function useSubscription() {
       trialDaysLeft: 0,
       trialExpired: false,
       trialEndsAt: null,
+      partnerType: null,
       reload: async () => {},
     } as Ctx;
   }
