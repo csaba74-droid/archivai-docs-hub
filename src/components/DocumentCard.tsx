@@ -258,7 +258,7 @@ export function DocumentCard({
             <DropdownMenuItem onSelect={() => void handleRename()}>
               <Pencil className="h-4 w-4" /> Átnevezés
             </DropdownMenuItem>
-            {strict ? (
+            {strict && !inGrace ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
