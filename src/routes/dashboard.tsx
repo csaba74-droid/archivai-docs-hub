@@ -598,7 +598,7 @@ function Dashboard() {
                 const baseDate = doc.document_date ?? doc.created_at;
                 const deadline = getRetentionDeadline(doc.category, baseDate);
                 const expired = !!(deadline && deadline.getTime() < Date.now());
-                const canDelete = canUpload && (!strict || expired);
+                const canDelete = canUpload && (!strict || expired || isInGracePeriod(doc.created_at));
                 return (
                   <DocumentHoverPreview key={doc.id} doc={doc}>
                     <DocumentCard
