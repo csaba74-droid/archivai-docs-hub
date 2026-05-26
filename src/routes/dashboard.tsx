@@ -56,6 +56,8 @@ function Dashboard() {
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [archivaiEmail, setArchivaiEmail] = useState<string>("");
+  const [archivaiEmailCopied, setArchivaiEmailCopied] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
@@ -101,12 +103,38 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setUserEmail(data.user?.email ?? "");
       setUserId(data.user?.id ?? "");
+      if (data.user?.id) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("archivai_email")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        const row = prof as { archivai_email: string | null } | null;
+        const fallback = "u" + data.user.id.replace(/-/g, "").slice(0, 12);
+        setArchivaiEmail(row?.archivai_email ?? fallback);
+      }
     });
     loadDocs();
   }, [loadDocs]);
+
+  const archivaiFullEmail = useMemo(
+    () => (archivaiEmail ? `${archivaiEmail}@inbox.archivai.hu` : ""),
+    [archivaiEmail],
+  );
+  const copyArchivaiEmail = useCallback(async () => {
+    if (!archivaiFullEmail) return;
+    try {
+      await navigator.clipboard.writeText(archivaiFullEmail);
+      setArchivaiEmailCopied(true);
+      toast.success("E-mail cím kimásolva");
+      setTimeout(() => setArchivaiEmailCopied(false), 2000);
+    } catch {
+      toast.error("Másolás sikertelen");
+    }
+  }, [archivaiFullEmail]);
 
   const referralLink = useMemo(
     () => (userId && typeof window !== "undefined" ? `${window.location.origin}/?ref=${userId}` : ""),
@@ -510,6 +538,45 @@ function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* Dedicated Archivai inbox email — visible on home (no filter/search) */}
+          {!activeCat && !search.trim() && archivaiFullEmail && (
+            <div
+              className="rounded-xl border p-4 md:p-5 text-white shadow-sm"
+              style={{ backgroundColor: "#1A2B4A", borderColor: "#1A2B4A" }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Bell className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold tracking-tight text-sm md:text-base">
+                    Az Ön dedikált Archivai e-mail címe
+                  </h3>
+                  <p className="text-xs md:text-sm text-white/70 mt-1">
+                    Küldje erre a címre dokumentumait és azok automatikusan bekerülnek az Archivai-ba.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <code className="px-3 py-1.5 rounded-md bg-white/10 text-white text-xs md:text-sm font-mono break-all">
+                      {archivaiFullEmail}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={copyArchivaiEmail}
+                      className="bg-white text-[#1A2B4A] hover:bg-white/90"
+                    >
+                      {archivaiEmailCopied ? (
+                        <><Check className="h-4 w-4 mr-1.5" /> Kimásolva</>
+                      ) : (
+                        <><Copy className="h-4 w-4 mr-1.5" /> Másolás</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mobile home overview — only when no filter/search */}
           {!activeCat && !search.trim() && (

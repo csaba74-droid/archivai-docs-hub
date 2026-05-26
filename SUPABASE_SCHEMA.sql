@@ -8,6 +8,30 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
+-- Add columns if missing
+alter table public.profiles add column if not exists archivai_email text unique;
+
+-- Auto-fill archivai_email for new profiles (derived from user id)
+create or replace function public.gen_archivai_email()
+returns trigger language plpgsql as $$
+begin
+  if new.archivai_email is null then
+    new.archivai_email := 'u' || substr(replace(new.id::text, '-', ''), 1, 12);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_archivai_email on public.profiles;
+create trigger profiles_archivai_email
+  before insert on public.profiles
+  for each row execute function public.gen_archivai_email();
+
+-- Backfill existing rows
+update public.profiles
+set archivai_email = 'u' || substr(replace(id::text, '-', ''), 1, 12)
+where archivai_email is null;
+
 alter table public.profiles enable row level security;
 
 create policy "Users can view own profile"

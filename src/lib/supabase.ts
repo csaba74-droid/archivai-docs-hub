@@ -32,6 +32,7 @@ export type ProfileRow = {
   id: string;
   full_name: string | null;
   company: string | null;
+  archivai_email: string | null;
 };
 
 export type AuditLogRow = {
