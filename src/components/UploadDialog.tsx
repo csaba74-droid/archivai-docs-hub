@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supabase";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription } from "@/hooks/use-subscription";
-import { can, documentCap } from "@/lib/entitlements";
+import { can, documentCap, storageCap } from "@/lib/entitlements";
 import { extractPdfText } from "@/lib/pdf";
 import { ocrImage, ocrPdfFirstPage } from "@/lib/ocr";
 import { getScanOcrText } from "@/lib/scan-cache";
