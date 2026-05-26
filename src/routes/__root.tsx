@@ -146,6 +146,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <SubscriptionProvider>
         <CategoriesProvider>
+          <TrialExpiredGuard />
           <Outlet />
           <Toaster richColors position="top-right" />
         </CategoriesProvider>
