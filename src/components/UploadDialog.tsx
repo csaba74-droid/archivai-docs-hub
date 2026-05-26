@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow, type CustomCategoryRow } from "@/lib/supabase";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription } from "@/hooks/use-subscription";
-import { can, documentCap } from "@/lib/entitlements";
+import { can, documentCap, storageCap } from "@/lib/entitlements";
 import { extractPdfText } from "@/lib/pdf";
 import { ocrImage, ocrPdfFirstPage } from "@/lib/ocr";
 import { getScanOcrText } from "@/lib/scan-cache";
@@ -103,6 +103,7 @@ export function UploadDialog({
   const canAi = can(plan, "ai_categorization", { isTrialing });
   const canBulk = can(plan, "bulk_upload", { isTrialing });
   const docCap = documentCap(plan, isTrialing);
+  const storCap = storageCap(plan, isTrialing);
   const [files, setFiles] = useState<FileProgress[]>([]);
 
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
@@ -235,22 +236,44 @@ export function UploadDialog({
       toast.error("Nincs bejelentkezett felhasználó");
       return;
     }
-    // Plan: document cap (Alap = 100).
+    // Plan: monthly document cap.
     if (docCap !== null) {
-      const { count: existing } = await supabase
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const { count: monthly } = await supabase
         .from("documents")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      const remaining = docCap - (existing ?? 0);
-      if (remaining <= 0) {
-        toast.error("Elérted a dokumentum limitet", {
-          description: `Alap csomag: max ${docCap} dokumentum. Válts Pro-ra a korlátlan tároláshoz.`,
+        .eq("user_id", user.id)
+        .gte("created_at", startOfMonth.toISOString());
+      const remaining = docCap - (monthly ?? 0);
+      if (remaining <= 0 || files.length > remaining) {
+        toast.error("Elérted a havi dokumentum limitet. Válts magasabb csomagra a folytatáshoz.", {
+          action: {
+            label: "Csomagváltás",
+            onClick: () => { window.location.href = "/subscription"; },
+          },
         });
         return;
       }
-      if (files.length > remaining) {
-        toast.error("Túl sok fájl", {
-          description: `Csak ${remaining} fájl fér el. Pro csomag → korlátlan.`,
+    }
+    // Plan: total storage cap.
+    if (storCap !== null) {
+      const { data: sizeRows } = await supabase
+        .from("documents")
+        .select("size_bytes")
+        .eq("user_id", user.id);
+      const usedBytes = (sizeRows ?? []).reduce(
+        (sum, r) => sum + (Number((r as { size_bytes: number | null }).size_bytes) || 0),
+        0,
+      );
+      const incomingBytes = files.reduce((s, f) => s + f.file.size, 0);
+      if (usedBytes + incomingBytes > storCap) {
+        toast.error("Elérted a tárhelylimitet. Válts magasabb csomagra a folytatáshoz.", {
+          action: {
+            label: "Csomagváltás",
+            onClick: () => { window.location.href = "/subscription"; },
+          },
         });
         return;
       }
