@@ -1,5 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  GRACE_AUDIT_NOTE,
+  formatGraceRemaining,
+  getGraceRemainingMs,
+} from "@/lib/grace-period";
+import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -101,6 +107,19 @@ export function DocumentCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [moving, setMoving] = useState(false);
+  const [graceRemainingMs, setGraceRemainingMs] = useState(() => getGraceRemainingMs(doc.created_at));
+  const inGrace = graceRemainingMs > 0;
+  useEffect(() => {
+    const initial = getGraceRemainingMs(doc.created_at);
+    setGraceRemainingMs(initial);
+    if (initial <= 0) return;
+    const id = window.setInterval(() => {
+      const left = getGraceRemainingMs(doc.created_at);
+      setGraceRemainingMs(left);
+      if (left <= 0) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [doc.created_at]);
   const { all: allCategories } = useCategories();
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
@@ -162,7 +181,11 @@ export function DocumentCard({
       toast.error("Áthelyezés sikertelen", { description: error.message });
       return;
     }
-    void logAudit("move", doc.id, { from: doc.category, to: targetCatId });
+    void logAudit("move", doc.id, {
+      from: doc.category,
+      to: targetCatId,
+      ...(inGrace ? { within_grace: true, note: GRACE_AUDIT_NOTE } : {}),
+    });
     toast.success(`Dokumentum áthelyezve: ${targetCat?.label ?? targetCatId}`);
     setMoveOpen(false);
     onMoved?.(data as DocumentRow);
@@ -199,6 +222,16 @@ export function DocumentCard({
           <span className="text-[11px] text-muted-foreground">
             {formatDate(doc.created_at)}
           </span>
+          {inGrace && (
+            <Badge
+              variant="outline"
+              className="text-[10px] py-0 h-4 px-1.5 gap-1 border-brand/40 text-brand bg-brand/5 font-medium"
+              title="Visszavonási ablak — ezen idő alatt áthelyezhető vagy törölhető"
+            >
+              <Clock className="h-2.5 w-2.5" />
+              {formatGraceRemaining(graceRemainingMs)}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -225,7 +258,7 @@ export function DocumentCard({
             <DropdownMenuItem onSelect={() => void handleRename()}>
               <Pencil className="h-4 w-4" /> Átnevezés
             </DropdownMenuItem>
-            {strict ? (
+            {strict && !inGrace ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
