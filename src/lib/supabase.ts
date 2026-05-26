@@ -33,6 +33,8 @@ export type ProfileRow = {
   full_name: string | null;
   company: string | null;
   archivai_email: string | null;
+  referred_by: string | null;
+  partner_type: string | null;
 };
 
 export type AuditLogRow = {
