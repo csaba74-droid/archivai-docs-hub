@@ -26,9 +26,34 @@ type PlanKey = "alap" | "pro" | "vallalati";
 type Interval = "monthly" | "yearly";
 
 const PLAN_FEATURES: Record<PlanKey, string[]> = {
-  alap: ["Max 100 dokumentum", "Alap kategorizálás", "Egyszerű kereső"],
-  pro: ["Korlátlan dokumentum", "AI kategorizálás (Claude)", "Bulk upload", "Custom kategóriák", "Teljes szöveges kereső"],
-  vallalati: ["Minden Pro funkció", "Több felhasználó", "Prioritásos támogatás", "Audit log export", "SLA garancia"],
+  alap: [
+    "5 GB tárhely",
+    "Max 200 dokumentum / hó",
+    "AI alapú kategorizálás",
+    "Teljes szöveges keresés",
+    "SHA-256 integritásvédelem",
+    "Audit napló",
+    "GDPR adatexport",
+    "ITM rendelet szerinti archiválás",
+  ],
+  pro: [
+    "25 GB tárhely",
+    "Max 500 dokumentum / hó",
+    "Minden Alap funkció",
+    "Tömeges feltöltés",
+    "Egyéni kategóriák",
+    "Hozzáférés megosztás",
+    "Dokumentum előnézet",
+    "Dedikált Archivai e-mail cím",
+  ],
+  vallalati: [
+    "100 GB tárhely",
+    "Korlátlan dokumentum",
+    "Minden Pro funkció",
+    "Több felhasználó kezelése",
+    "Prioritásos ügyfélszolgálat",
+    "NAV API integráció",
+  ],
 };
 
 const PRICES: Record<PlanKey, { monthly: number; yearly: number }> = {
