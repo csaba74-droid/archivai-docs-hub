@@ -55,7 +55,7 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
   return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-const CONFIDENCE_THRESHOLD = 0.75;
+const CONFIDENCE_THRESHOLD = 0.85;
 
 // Map document-rules category ids → canonical BUILT_IN_CATEGORIES ids in categories.ts
 const CATEGORY_ID_ALIAS: Record<string, string> = {
@@ -592,7 +592,7 @@ export function UploadDialog({
         </DialogContent>
       </Dialog>
 
-      {/* Confirm category + date dialog */}
+      {/* Confirm category dialog (shown when AI confidence < threshold) */}
       <Dialog open={!!pendingConfirm} onOpenChange={(v) => { if (!v) resolveConfirm(null); }}>
         <DialogContent>
           <DialogHeader>
@@ -603,41 +603,72 @@ export function UploadDialog({
               {pendingConfirm?.fileName}
             </DialogDescription>
           </DialogHeader>
-          {pendingConfirm && (
-            <div className="space-y-4 py-2">
-              <div>
-                <Label>Kategória {pendingConfirm.confidence > 0 && `(AI biztonság: ${Math.round(pendingConfirm.confidence * 100)}%)`}</Label>
-                <Select value={confirmCategory} onValueChange={setConfirmCategory}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {allCats.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.label}{c.mode === "strict" && " 🔒"}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {pendingConfirm.reasoning && (
-                  <p className="text-xs text-muted-foreground mt-1">AI: {pendingConfirm.reasoning}</p>
+          {pendingConfirm && (() => {
+            const suggestedLabel = allCats.find((c) => c.id === pendingConfirm.suggested)?.label ?? pendingConfirm.suggested;
+            const confirmLabel = allCats.find((c) => c.id === confirmCategory)?.label ?? confirmCategory;
+            const pct = Math.round(pendingConfirm.confidence * 100);
+            return (
+              <div className="space-y-4 py-2">
+                {pendingConfirm.confidence > 0 ? (
+                  <p className="text-sm">
+                    Az AI szerint ez a dokumentum a(z){" "}
+                    <span className="font-semibold">{suggestedLabel}</span> kategóriába tartozik
+                    {" "}({pct}% biztos). Megerősíted, vagy más kategóriát választasz?
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Válassz kategóriát a dokumentumhoz.
+                  </p>
                 )}
-                {(confirmCategory === "egyeb" || pendingConfirm.suggested === "egyeb" || pendingConfirm.confidence < 0.75) && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 w-full"
-                    onClick={() => setNewCatOpen(true)}
-                  >
-                    + Új kategória létrehozása
-                  </Button>
-                )}
+                <div>
+                  <Label>Kategória</Label>
+                  <Select value={confirmCategory} onValueChange={setConfirmCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {allCats.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.label}{c.mode === "strict" && " 🔒"}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {pendingConfirm.reasoning && (
+                    <p className="text-xs text-muted-foreground mt-1">AI: {pendingConfirm.reasoning}</p>
+                  )}
+                  {(confirmCategory === "egyeb" || pendingConfirm.suggested === "egyeb") && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full"
+                      onClick={() => setNewCatOpen(true)}
+                    >
+                      + Új kategória létrehozása
+                    </Button>
+                  )}
+                </div>
+                <DialogFooter className="flex flex-row gap-2 sm:justify-end">
+                  <Button variant="outline" onClick={() => resolveConfirm(null)}>Kihagyás</Button>
+                  {confirmCategory === pendingConfirm.suggested && pendingConfirm.confidence > 0 ? (
+                    <Button
+                      className="bg-brand hover:bg-brand-hover text-brand-foreground"
+                      onClick={() => resolveConfirm(pendingConfirm.suggested)}
+                    >
+                      Igen, {suggestedLabel}
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-brand hover:bg-brand-hover text-brand-foreground"
+                      onClick={() => resolveConfirm(confirmCategory)}
+                    >
+                      Mentés: {confirmLabel}
+                    </Button>
+                  )}
+                </DialogFooter>
               </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => resolveConfirm(null)}>Kihagyás</Button>
-            <Button onClick={() => resolveConfirm(confirmCategory)}>Mentés</Button>
-          </DialogFooter>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
 
       {/* Inline new-category dialog for "Egyéb" cases */}
       <CustomCategoryDialog
