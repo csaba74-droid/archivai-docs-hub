@@ -222,6 +222,16 @@ export function DocumentCard({
           <span className="text-[11px] text-muted-foreground">
             {formatDate(doc.created_at)}
           </span>
+          {inGrace && (
+            <Badge
+              variant="outline"
+              className="text-[10px] py-0 h-4 px-1.5 gap-1 border-brand/40 text-brand bg-brand/5 font-medium"
+              title="Visszavonási ablak — ezen idő alatt áthelyezhető vagy törölhető"
+            >
+              <Clock className="h-2.5 w-2.5" />
+              {formatGraceRemaining(graceRemainingMs)}
+            </Badge>
+          )}
         </div>
       </div>
 
