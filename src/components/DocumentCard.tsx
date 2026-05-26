@@ -107,6 +107,19 @@ export function DocumentCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [moving, setMoving] = useState(false);
+  const [graceRemainingMs, setGraceRemainingMs] = useState(() => getGraceRemainingMs(doc.created_at));
+  const inGrace = graceRemainingMs > 0;
+  useEffect(() => {
+    const initial = getGraceRemainingMs(doc.created_at);
+    setGraceRemainingMs(initial);
+    if (initial <= 0) return;
+    const id = window.setInterval(() => {
+      const left = getGraceRemainingMs(doc.created_at);
+      setGraceRemainingMs(left);
+      if (left <= 0) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [doc.created_at]);
   const { all: allCategories } = useCategories();
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
