@@ -103,6 +103,7 @@ export function UploadDialog({
   const canAi = can(plan, "ai_categorization", { isTrialing });
   const canBulk = can(plan, "bulk_upload", { isTrialing });
   const docCap = documentCap(plan, isTrialing);
+  const storCap = storageCap(plan, isTrialing);
   const [files, setFiles] = useState<FileProgress[]>([]);
 
   const [documentDate, setDocumentDate] = useState<string>(new Date().toISOString().slice(0, 10));
