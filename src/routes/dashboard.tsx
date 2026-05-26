@@ -20,6 +20,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { logAudit } from "@/lib/audit";
+import { isInGracePeriod, GRACE_AUDIT_NOTE } from "@/lib/grace-period";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { DocumentHoverPreview } from "@/components/DocumentHoverPreview";
 import { DocumentThumbnail } from "@/components/DocumentThumbnail";
