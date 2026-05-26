@@ -161,7 +161,7 @@ OUTPUT: Respond with STRICT JSON only, no prose, no markdown:
 
     const userPrompt = `FILENAME: ${data.filename}
 MIME: ${data.mimeType ?? "unknown"}
-${data.sample ? `CONTENT SAMPLE (first 3000 chars):\n${data.sample.slice(0, 3000)}` : "CONTENT SAMPLE: (none — classify from filename only)"}`;
+${data.sample ? `CONTENT SAMPLE (first 4000 chars):\n${data.sample.slice(0, 4000)}` : "CONTENT SAMPLE: (none — classify from filename only)"}`;
 
     try {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
