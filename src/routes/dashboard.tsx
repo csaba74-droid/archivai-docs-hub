@@ -168,7 +168,8 @@ function Dashboard() {
     const baseDate = doc.document_date ?? doc.created_at;
     const deadline = getRetentionDeadline(doc.category, baseDate);
     const expired = deadline && deadline.getTime() < Date.now();
-    if (isStrict(doc.category) && !expired) {
+    const inGrace = isInGracePeriod(doc.created_at);
+    if (isStrict(doc.category) && !expired && !inGrace) {
       void logAudit("delete_blocked", doc.id, { reason: "strict" });
       toast.error("Törvényi megőrzés alatt", { description: "Törvényileg védett iratok nem törölhetők." });
       return;
@@ -182,7 +183,11 @@ function Dashboard() {
       const { error } = await supabase.from("documents").delete().eq("id", doc.id);
       if (error) throw error;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
-      void logAudit("delete", doc.id, { filename: doc.filename, expired: !!expired });
+      void logAudit("delete", doc.id, {
+        filename: doc.filename,
+        expired: !!expired,
+        ...(inGrace ? { within_grace: true, note: GRACE_AUDIT_NOTE } : {}),
+      });
       toast.success("Törölve");
     } catch (e) {
       toast.error("Törlés sikertelen", { description: e instanceof Error ? e.message : String(e) });
