@@ -10,6 +10,7 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { CategoriesProvider } from "@/hooks/use-categories";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
+import { TrialExpiredGuard } from "@/components/TrialExpiredGuard";
 
 import appCss from "../styles.css?url";
 
