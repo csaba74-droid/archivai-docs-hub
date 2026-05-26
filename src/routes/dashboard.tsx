@@ -103,12 +103,38 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setUserEmail(data.user?.email ?? "");
       setUserId(data.user?.id ?? "");
+      if (data.user?.id) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("archivai_email")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        const row = prof as { archivai_email: string | null } | null;
+        const fallback = "u" + data.user.id.replace(/-/g, "").slice(0, 12);
+        setArchivaiEmail(row?.archivai_email ?? fallback);
+      }
     });
     loadDocs();
   }, [loadDocs]);
+
+  const archivaiFullEmail = useMemo(
+    () => (archivaiEmail ? `${archivaiEmail}@inbox.archivai.hu` : ""),
+    [archivaiEmail],
+  );
+  const copyArchivaiEmail = useCallback(async () => {
+    if (!archivaiFullEmail) return;
+    try {
+      await navigator.clipboard.writeText(archivaiFullEmail);
+      setArchivaiEmailCopied(true);
+      toast.success("E-mail cím kimásolva");
+      setTimeout(() => setArchivaiEmailCopied(false), 2000);
+    } catch {
+      toast.error("Másolás sikertelen");
+    }
+  }, [archivaiFullEmail]);
 
   const referralLink = useMemo(
     () => (userId && typeof window !== "undefined" ? `${window.location.origin}/?ref=${userId}` : ""),
