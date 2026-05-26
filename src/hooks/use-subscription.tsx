@@ -31,6 +31,7 @@ export const PLAN_INFO: Record<SubscriptionRow["plan"], { label: string; priceLa
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [partnerType, setPartnerType] = useState<string | null>(null);
 
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
 
@@ -41,21 +42,22 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.log("[useSubscription] no auth user");
       setSubscription(null);
       setUserCreatedAt(null);
+      setPartnerType(null);
       setLoading(false);
       return;
     }
     setUserCreatedAt(u.user.created_at ?? null);
-    const { data, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", u.user.id)
-      .maybeSingle();
-    console.log("[useSubscription] loaded for", u.user.id, { data, error });
+    const [{ data, error }, { data: prof }] = await Promise.all([
+      supabase.from("subscriptions").select("*").eq("user_id", u.user.id).maybeSingle(),
+      supabase.from("profiles").select("partner_type").eq("id", u.user.id).maybeSingle(),
+    ]);
+    console.log("[useSubscription] loaded for", u.user.id, { data, error, prof });
     if (error) {
       setSubscription(null);
     } else {
       setSubscription((data as SubscriptionRow | null) ?? null);
     }
+    setPartnerType((prof as { partner_type: string | null } | null)?.partner_type ?? null);
     setLoading(false);
   }, []);
 
