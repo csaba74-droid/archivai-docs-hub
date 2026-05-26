@@ -181,7 +181,11 @@ export function DocumentCard({
       toast.error("Áthelyezés sikertelen", { description: error.message });
       return;
     }
-    void logAudit("move", doc.id, { from: doc.category, to: targetCatId });
+    void logAudit("move", doc.id, {
+      from: doc.category,
+      to: targetCatId,
+      ...(inGrace ? { within_grace: true, note: GRACE_AUDIT_NOTE } : {}),
+    });
     toast.success(`Dokumentum áthelyezve: ${targetCat?.label ?? targetCatId}`);
     setMoveOpen(false);
     onMoved?.(data as DocumentRow);
