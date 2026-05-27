@@ -9,6 +9,7 @@ import {
   Wrench,
   FileText,
   Folder,
+  Inbox,
   Tag,
   type LucideIcon,
 } from "lucide-react";
