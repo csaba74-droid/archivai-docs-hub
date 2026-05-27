@@ -347,6 +347,14 @@ function Dashboard() {
       >
         <ClipboardList className="h-4 w-4" /> Audit napló
       </Link>
+      {userEmail === "lenard.csaba74@gmail.com" && (
+        <Link
+          to="/admin"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+        >
+          <Shield className="h-4 w-4" /> Admin
+        </Link>
+      )}
       <button
         onClick={signOut}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors text-left"
