@@ -14,6 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          document_id: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_categories: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          mode: string
+          name: string
+          retention_years: number | null
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          mode: string
+          name: string
+          retention_years?: number | null
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          mode?: string
+          name?: string
+          retention_years?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          ai_confidence: number | null
+          category: string
+          content_text: string | null
+          created_at: string
+          document_date: string | null
+          filename: string
+          id: string
+          itm_compliant: boolean
+          mime_type: string | null
+          original_filename: string | null
+          sha256: string | null
+          size_bytes: number | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          category: string
+          content_text?: string | null
+          created_at?: string
+          document_date?: string | null
+          filename: string
+          id?: string
+          itm_compliant?: boolean
+          mime_type?: string | null
+          original_filename?: string | null
+          sha256?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          category?: string
+          content_text?: string | null
+          created_at?: string
+          document_date?: string | null
+          filename?: string
+          id?: string
+          itm_compliant?: boolean
+          mime_type?: string | null
+          original_filename?: string | null
+          sha256?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          archivai_email: string | null
+          company: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          partner_type: string | null
+          referred_by: string | null
+        }
+        Insert: {
+          archivai_email?: string | null
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          partner_type?: string | null
+          referred_by?: string | null
+        }
+        Update: {
+          archivai_email?: string | null
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          partner_type?: string | null
+          referred_by?: string | null
+        }
+        Relationships: []
+      }
       shared_access: {
         Row: {
           categories: string[]
@@ -44,6 +190,39 @@ export type Database = {
           owner_user_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          current_period_end: string | null
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_period_end?: string | null
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_period_end?: string | null
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
