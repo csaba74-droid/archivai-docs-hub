@@ -81,6 +81,9 @@ function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [extendDays, setExtendDays] = useState<Record<string, string>>({});
+  const [referralStats, setReferralStats] = useState<ReferralStatRow[]>([]);
+  const [referralLoading, setReferralLoading] = useState(true);
+
   
 
   const load = useCallback(async () => {
