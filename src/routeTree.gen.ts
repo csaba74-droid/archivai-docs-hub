@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AszfRouteImport } from './routes/aszf'
+import { Route as ArchivaiUtmutatoDothtmlRouteImport } from './routes/archivai-utmutato[.]html'
 import { Route as AdatkezelesRouteImport } from './routes/adatkezeles'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as IndexRouteImport } from './routes/index'
@@ -75,6 +76,11 @@ const AszfRoute = AszfRouteImport.update({
   path: '/aszf',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArchivaiUtmutatoDothtmlRoute = ArchivaiUtmutatoDothtmlRouteImport.update({
+  id: '/archivai-utmutato.html',
+  path: '/archivai-utmutato.html',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdatkezelesRoute = AdatkezelesRouteImport.update({
   id: '/adatkezeles',
   path: '/adatkezeles',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/adatkezeles': typeof AdatkezelesRoute
+  '/archivai-utmutato.html': typeof ArchivaiUtmutatoDothtmlRoute
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/adatkezeles': typeof AdatkezelesRoute
+  '/archivai-utmutato.html': typeof ArchivaiUtmutatoDothtmlRoute
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/adatkezeles': typeof AdatkezelesRoute
+  '/archivai-utmutato.html': typeof ArchivaiUtmutatoDothtmlRoute
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/adatkezeles'
+    | '/archivai-utmutato.html'
     | '/aszf'
     | '/audit'
     | '/dashboard'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/adatkezeles'
+    | '/archivai-utmutato.html'
     | '/aszf'
     | '/audit'
     | '/dashboard'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/adatkezeles'
+    | '/archivai-utmutato.html'
     | '/aszf'
     | '/audit'
     | '/dashboard'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptInvitationRoute: typeof AcceptInvitationRoute
   AdatkezelesRoute: typeof AdatkezelesRoute
+  ArchivaiUtmutatoDothtmlRoute: typeof ArchivaiUtmutatoDothtmlRoute
   AszfRoute: typeof AszfRoute
   AuditRoute: typeof AuditRoute
   DashboardRoute: typeof DashboardRoute
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AszfRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/archivai-utmutato.html': {
+      id: '/archivai-utmutato.html'
+      path: '/archivai-utmutato.html'
+      fullPath: '/archivai-utmutato.html'
+      preLoaderRoute: typeof ArchivaiUtmutatoDothtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/adatkezeles': {
       id: '/adatkezeles'
       path: '/adatkezeles'
@@ -340,6 +360,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptInvitationRoute: AcceptInvitationRoute,
   AdatkezelesRoute: AdatkezelesRoute,
+  ArchivaiUtmutatoDothtmlRoute: ArchivaiUtmutatoDothtmlRoute,
   AszfRoute: AszfRoute,
   AuditRoute: AuditRoute,
   DashboardRoute: DashboardRoute,
