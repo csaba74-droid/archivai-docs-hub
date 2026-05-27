@@ -39,13 +39,18 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
     setLoading(true);
     try {
       if (mode === "register") {
-        // Read referral code from URL (?ref=USER_ID)
+        // Read referral code from URL (?ref=USER_ID) or sessionStorage fallback
+        // (landing page stores it there when user clicks "Kipróbálom ingyen")
         let referredBy: string | null = null;
         try {
+          const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           const params = new URLSearchParams(window.location.search);
           const ref = params.get("ref");
-          if (ref && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+          if (ref && uuidRe.test(ref)) {
             referredBy = ref;
+          } else {
+            const stored = sessionStorage.getItem("ref") || localStorage.getItem("ref");
+            if (stored && uuidRe.test(stored)) referredBy = stored;
           }
         } catch {
           referredBy = null;
