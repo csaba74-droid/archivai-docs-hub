@@ -99,7 +99,7 @@ function ReferralPage() {
           <Gift className="h-6 w-6 text-brand" /> Partneri program
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Oszd meg a linkedet, és minden előfizető ajánlott felhasználóért 1 hónap kreditet kapsz.
+          Ajánlja az Archivai-t ismerőseinek és könyvelő ügyfeleinek — és jutalmat kap minden előfizető után:
         </p>
       </div>
 
@@ -108,17 +108,15 @@ function ReferralPage() {
           <CardTitle className="text-base">Program szintek</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <p>
-            Ajánlja az Archivai-t ismerőseinek és könyvelő ügyfeleinek — és jutalmat kap minden előfizető után:
-          </p>
-          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-            <li><span className="text-foreground font-medium">1–4 előfizető:</span> 1 hónap jóváírás mindkét félnek</li>
-            <li><span className="text-foreground font-medium">5–9 előfizető:</span> 1 év Pro csomag ingyen</li>
-            <li><span className="text-foreground font-medium">10–19 előfizető:</span> Örökös Pro csomag ingyen</li>
-            <li><span className="text-foreground font-medium">20+ előfizető:</span> Örökös Vállalati csomag ingyen</li>
+          <ul className="space-y-2">
+            <li><span className="mr-1">🥉</span><span className="text-foreground font-medium">1–4 előfizető:</span> <span className="text-muted-foreground">1 hónap jóváírás mindkét félnek</span></li>
+            <li><span className="mr-1">🥈</span><span className="text-foreground font-medium">5–9 előfizető:</span> <span className="text-muted-foreground">1 év Pro csomag ingyen</span></li>
+            <li><span className="mr-1">🥇</span><span className="text-foreground font-medium">10–19 előfizető:</span> <span className="text-muted-foreground">Örökös Pro csomag ingyen</span></li>
+            <li><span className="mr-1">👑</span><span className="text-foreground font-medium">20+ előfizető:</span> <span className="text-muted-foreground">Örökös Vállalati csomag ingyen</span></li>
           </ul>
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader>
