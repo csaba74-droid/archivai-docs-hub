@@ -213,6 +213,15 @@ export function UploadDialog({
       toast.info("Nincs kiválasztott fájl");
       return;
     }
+    if (!active) {
+      toast.error("A próbaidőszakod lejárt. Válassz előfizetési csomagot a dokumentumok feltöltéséhez.", {
+        action: {
+          label: "Csomagválasztás",
+          onClick: () => { window.location.href = "/subscription"; },
+        },
+      });
+      return;
+    }
     // Plan: bulk upload (>1 file) requires Pro+.
     if (files.length > 1 && !canBulk) {
       toast.error("Tömeges feltöltés a Pro csomag része", {
