@@ -445,6 +445,10 @@ export function UploadDialog({
         if (inserted) {
           void logAudit("upload", (inserted as DocumentRow).id, { filename: file.name, category, confidence: aiConfidence });
         }
+        // Fire-and-forget S3 backup; ignore errors (background task).
+        void supabase.functions
+          .invoke("s3-backup", { body: { storage_path: path, mime_type: file.type } })
+          .catch((err) => console.warn("s3-backup failed", err));
         updateAt(i, { status: "done", progress: 100 });
 
         // Post-upload: always confirm document date (pre-filled with detected date or today).
