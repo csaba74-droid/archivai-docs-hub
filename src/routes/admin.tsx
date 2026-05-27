@@ -145,9 +145,9 @@ function AdminPage() {
       }
       setAllowed(true);
       setAuthChecked(true);
-      await load();
+      await Promise.all([load(), loadReferralStats()]);
     })();
-  }, [load, navigate]);
+  }, [load, loadReferralStats, navigate]);
 
   const toggleLifetime = async (userId: string, enable: boolean) => {
     console.log("[admin] toggleLifetime userId:", userId, "enable:", enable);
