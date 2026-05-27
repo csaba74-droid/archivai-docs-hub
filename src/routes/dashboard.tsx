@@ -14,7 +14,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, Users, Camera,
+  Home, Gift, Copy, Check, Users, Camera, BookOpen,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -302,6 +302,12 @@ function Dashboard() {
       >
         <Home className="h-4 w-4" /> Kezdőlap
       </button>
+      <Link
+        to="/profile"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <UserCog className="h-4 w-4" /> Profil & Beállítások
+      </Link>
       <button
         onClick={() => { searchRef.current?.focus(); }}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
@@ -309,16 +315,16 @@ function Dashboard() {
         <Search className="h-4 w-4" /> Keresés
       </button>
       <Link
-        to="/audit"
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-      >
-        <ClipboardList className="h-4 w-4" /> Audit napló
-      </Link>
-      <Link
         to="/scan-guide"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
         <Camera className="h-4 w-4" /> Hogyan szkennelj
+      </Link>
+      <Link
+        to="/sugo"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <BookOpen className="h-4 w-4" /> Súgó
       </Link>
       <Link
         to="/sharing"
@@ -333,10 +339,10 @@ function Dashboard() {
         <Gift className="h-4 w-4 text-brand" /> Ajánld az Archivai-t
       </button>
       <Link
-        to="/profile"
+        to="/audit"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
-        <UserCog className="h-4 w-4" /> Profil & Beállítások
+        <ClipboardList className="h-4 w-4" /> Audit napló
       </Link>
       <button
         onClick={signOut}
