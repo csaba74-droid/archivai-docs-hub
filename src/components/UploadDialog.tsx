@@ -98,7 +98,7 @@ export function UploadDialog({
 }) {
   const { customRows, all: allCats } = useCategories();
   const { isStrict } = useCategoryHelpers();
-  const { subscription, isTrialing } = useSubscription();
+  const { subscription, isTrialing, active } = useSubscription();
   const plan = subscription?.plan ?? null;
   const canAi = can(plan, "ai_categorization", { isTrialing });
   const canBulk = can(plan, "bulk_upload", { isTrialing });
@@ -211,6 +211,15 @@ export function UploadDialog({
   const startUpload = async () => {
     if (files.length === 0) {
       toast.info("Nincs kiválasztott fájl");
+      return;
+    }
+    if (!active) {
+      toast.error("A próbaidőszakod lejárt. Válassz előfizetési csomagot a dokumentumok feltöltéséhez.", {
+        action: {
+          label: "Csomagválasztás",
+          onClick: () => { window.location.href = "/subscription"; },
+        },
+      });
       return;
     }
     // Plan: bulk upload (>1 file) requires Pro+.
