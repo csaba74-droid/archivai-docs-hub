@@ -597,7 +597,45 @@ function Dashboard() {
             </div>
           )}
 
-          {/* Mobile home overview — only when no filter/search */}
+          {/* Plan usage — monthly docs & storage */}
+          {!activeCat && !search.trim() && (() => {
+            const plan = subscription?.plan ?? null;
+            const docCap = documentCap(plan, isTrialing);
+            const storCap = storageCap(plan, isTrialing);
+            const now = new Date();
+            const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            const monthlyCount = docs.filter((d) => new Date(d.created_at).getTime() >= startMonth).length;
+            const usedBytes = docs.reduce((s, d) => s + (Number(d.size_bytes) || 0), 0);
+            const fmtBytes = (b: number) => {
+              if (b < 1024) return `${b} B`;
+              if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+              if (b < 1024 * 1024 * 1024) return `${(b / 1024 / 1024).toFixed(1)} MB`;
+              return `${(b / 1024 / 1024 / 1024).toFixed(2)} GB`;
+            };
+            const fmtCap = (b: number | null) => (b === null ? "∞" : b >= 1024 * 1024 * 1024 ? `${Math.round(b / 1024 / 1024 / 1024)} GB` : `${Math.round(b / 1024 / 1024)} MB`);
+            const docPct = docCap === null ? 0 : Math.min(100, (monthlyCount / docCap) * 100);
+            const storPct = storCap === null ? 0 : Math.min(100, (usedBytes / storCap) * 100);
+            return (
+              <div className="rounded-xl border bg-card p-4 md:p-5 grid gap-4 md:grid-cols-2">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-medium">Havi dokumentumok</span>
+                    <span className="text-muted-foreground">{monthlyCount} / {docCap ?? "∞"} feltöltve</span>
+                  </div>
+                  <Progress value={docPct} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-medium">Tárhely</span>
+                    <span className="text-muted-foreground">{fmtBytes(usedBytes)} / {fmtCap(storCap)} használva</span>
+                  </div>
+                  <Progress value={storPct} />
+                </div>
+              </div>
+            );
+          })()}
+
+
           {!activeCat && !search.trim() && (
             <MobileHome
               docs={docs}
