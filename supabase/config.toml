@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.admin-partner-type]
 verify_jwt = false
+
+[functions.trial-expiry-notification]
+verify_jwt = false
