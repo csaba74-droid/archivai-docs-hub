@@ -54,6 +54,7 @@ export type Database = {
           color: string
           created_at: string
           id: string
+          is_system: boolean
           mode: string
           name: string
           retention_years: number | null
@@ -63,6 +64,7 @@ export type Database = {
           color?: string
           created_at?: string
           id?: string
+          is_system?: boolean
           mode: string
           name: string
           retention_years?: number | null
@@ -72,6 +74,7 @@ export type Database = {
           color?: string
           created_at?: string
           id?: string
+          is_system?: boolean
           mode?: string
           name?: string
           retention_years?: number | null
