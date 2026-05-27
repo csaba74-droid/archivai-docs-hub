@@ -1037,11 +1037,47 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
         </div>
       </div>
 
+      {/* Inbox banner */}
+      {(() => {
+        const inbox = allCats.find((c) => c.id === "beerkezett");
+        if (!inbox) return null;
+        const inboxCount = counts[inbox.id] ?? 0;
+        const hasInboxDocs = inboxCount > 0;
+        const InboxIcon = inbox.icon;
+        return (
+          <button
+            onClick={() => onOpenCategory(inbox.id)}
+            className={`w-full text-left rounded-xl flex items-center gap-3 transition-all ${
+              hasInboxDocs
+                ? "bg-[#F59E0B] active:bg-[#D97706] text-white p-4 shadow-md ring-1 ring-amber-600/30"
+                : "bg-amber-50 active:bg-amber-100 text-amber-900 p-3 border border-amber-200/70"
+            }`}
+          >
+            <div className={`rounded-lg flex items-center justify-center shrink-0 ${hasInboxDocs ? "h-12 w-12 bg-white/20" : "h-9 w-9 bg-amber-200/60"}`}>
+              <InboxIcon className={hasInboxDocs ? "h-6 w-6" : "h-4 w-4"} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`font-bold truncate ${hasInboxDocs ? "text-lg" : "text-sm"}`}>{inbox.label}</div>
+              <div className={`truncate ${hasInboxDocs ? "text-xs text-white/90" : "text-[11px] text-amber-800/80"}`}>
+                Osztályozásra váró dokumentumok
+              </div>
+            </div>
+            {hasInboxDocs ? (
+              <div className="rounded-full bg-white text-[#B45309] font-extrabold tabular-nums px-3 py-1.5 text-xl shadow-sm min-w-[44px] text-center shrink-0">
+                {inboxCount}
+              </div>
+            ) : (
+              <span className="text-sm tabular-nums text-amber-800/70 shrink-0">0</span>
+            )}
+          </button>
+        );
+      })()}
+
       {/* Categories list */}
       <div>
         <h3 className="text-sm font-semibold text-brand px-1 mb-2">Kategóriák</h3>
         <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-          {allCats.map((cat) => {
+          {allCats.filter((c) => c.id !== "beerkezett").map((cat) => {
             const strict = cat.mode === "strict";
             const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
             const count = counts[cat.id] ?? 0;
@@ -1091,6 +1127,7 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
           </button>
         </div>
       </div>
+
 
       {/* Recent uploads */}
       {recent.length > 0 && (
