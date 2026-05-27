@@ -2,3 +2,6 @@ project_id = "ychygdoirpngsgrqmlng"
 
 [functions.send-invitation]
 verify_jwt = true
+
+[functions.admin-partner-type]
+verify_jwt = false
