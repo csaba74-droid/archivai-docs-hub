@@ -1,12 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ADMIN_EMAIL = "lenard.csaba74@gmail.com";
 
 export const adminSetPartnerType = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
@@ -15,8 +14,23 @@ export const adminSetPartnerType = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
-    const email = (context.claims?.email as string | undefined)?.toLowerCase() ?? "";
+  .handler(async ({ data }) => {
+    const authHeader = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new Error("Unauthorized: missing bearer token");
+    }
+    const token = authHeader.slice("Bearer ".length).trim();
+    if (!token) {
+      throw new Error("Unauthorized: empty token");
+    }
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      console.error("[adminSetPartnerType] getUser error:", userErr);
+      throw new Error("Unauthorized: invalid token");
+    }
+
+    const email = userData.user.email?.toLowerCase() ?? "";
     if (email !== ADMIN_EMAIL) {
       throw new Error("Forbidden");
     }
