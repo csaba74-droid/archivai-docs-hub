@@ -992,6 +992,7 @@ const MOBILE_CAT_COLORS: Record<string, string> = {
 };
 
 const BUILTIN_ORDER = [
+  "beerkezett",
   "szamlak", "szerzodesek", "szallitolevek", "munkaugyi", "adobevallasok",
   "kozuzemi", "banki", "muszaki", "belso", "egyeb",
 ];
@@ -1036,11 +1037,47 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
         </div>
       </div>
 
+      {/* Inbox banner */}
+      {(() => {
+        const inbox = allCats.find((c) => c.id === "beerkezett");
+        if (!inbox) return null;
+        const inboxCount = counts[inbox.id] ?? 0;
+        const hasInboxDocs = inboxCount > 0;
+        const InboxIcon = inbox.icon;
+        return (
+          <button
+            onClick={() => onOpenCategory(inbox.id)}
+            className={`w-full text-left rounded-xl flex items-center gap-3 transition-all ${
+              hasInboxDocs
+                ? "bg-[#F59E0B] active:bg-[#D97706] text-white p-4 shadow-md ring-1 ring-amber-600/30"
+                : "bg-amber-50 active:bg-amber-100 text-amber-900 p-3 border border-amber-200/70"
+            }`}
+          >
+            <div className={`rounded-lg flex items-center justify-center shrink-0 ${hasInboxDocs ? "h-12 w-12 bg-white/20" : "h-9 w-9 bg-amber-200/60"}`}>
+              <InboxIcon className={hasInboxDocs ? "h-6 w-6" : "h-4 w-4"} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`font-bold truncate ${hasInboxDocs ? "text-lg" : "text-sm"}`}>{inbox.label}</div>
+              <div className={`truncate ${hasInboxDocs ? "text-xs text-white/90" : "text-[11px] text-amber-800/80"}`}>
+                Osztályozásra váró dokumentumok
+              </div>
+            </div>
+            {hasInboxDocs ? (
+              <div className="rounded-full bg-white text-[#B45309] font-extrabold tabular-nums px-3 py-1.5 text-xl shadow-sm min-w-[44px] text-center shrink-0">
+                {inboxCount}
+              </div>
+            ) : (
+              <span className="text-sm tabular-nums text-amber-800/70 shrink-0">0</span>
+            )}
+          </button>
+        );
+      })()}
+
       {/* Categories list */}
       <div>
         <h3 className="text-sm font-semibold text-brand px-1 mb-2">Kategóriák</h3>
         <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-          {allCats.map((cat) => {
+          {allCats.filter((c) => c.id !== "beerkezett").map((cat) => {
             const strict = cat.mode === "strict";
             const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
             const count = counts[cat.id] ?? 0;
@@ -1090,6 +1127,7 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
           </button>
         </div>
       </div>
+
 
       {/* Recent uploads */}
       {recent.length > 0 && (
@@ -1141,64 +1179,111 @@ type CategoryGridProps = {
 
 function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCat }: CategoryGridProps) {
   const ordered = sortCategories(allCats);
+  const inbox = ordered.find((c) => c.id === "beerkezett");
+  const rest = ordered.filter((c) => c.id !== "beerkezett");
+  const inboxCount = inbox ? counts[inbox.id] ?? 0 : 0;
+  const hasInboxDocs = inboxCount > 0;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-      {ordered.map((cat) => {
-        const strict = cat.mode === "strict";
-        const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
-        const count = counts[cat.id] ?? 0;
-        const retentionText = cat.retentionYears
-          ? `Megőrzés: ${cat.retentionYears} év`
-          : strict
-          ? "Határozatlan megőrzés"
-          : "Szabad tárolás";
-        const Icon = cat.icon;
-        return (
-          <div key={cat.id} className="relative group">
-            <button
-              onClick={() => onOpen(cat.id)}
-              style={{ borderLeft: `5px solid ${color}` }}
-              className="w-full text-left bg-white rounded-md border border-border/40 pl-4 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border/70"
-            >
-              <div
-                className="h-10 w-10 rounded-md flex items-center justify-center shrink-0"
-                style={{ background: `${color}14`, color }}
-              >
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[15px] text-brand truncate">{cat.label}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {count} dokumentum
-                </div>
-                <div className="text-[11px] text-muted-foreground/80 mt-0.5 truncate">
-                  {retentionText}
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {strict && <Lock className="h-4 w-4 text-[#0F6E56]" />}
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </button>
-            {cat.custom && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onDeleteCustomCat(cat.id); }}
-                className="absolute top-2 right-2 h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-destructive transition-opacity"
-                aria-label="Kategória törlése"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+    <div className="space-y-3">
+      {inbox && (
+        <button
+          onClick={() => onOpen(inbox.id)}
+          className={`w-full text-left rounded-xl flex items-center gap-4 transition-all ${
+            hasInboxDocs
+              ? "bg-[#F59E0B] hover:bg-[#D97706] text-white p-5 md:p-6 shadow-md hover:shadow-lg ring-1 ring-amber-600/30"
+              : "bg-amber-50 hover:bg-amber-100 text-amber-900 p-3.5 md:p-4 border border-amber-200/70"
+          }`}
+        >
+          <div
+            className={`rounded-lg flex items-center justify-center shrink-0 ${
+              hasInboxDocs ? "h-14 w-14 bg-white/20" : "h-10 w-10 bg-amber-200/60"
+            }`}
+          >
+            <inbox.icon className={hasInboxDocs ? "h-7 w-7" : "h-5 w-5"} />
           </div>
-        );
-      })}
-      <button
-        onClick={onNewCategory}
-        className="rounded-md border border-dashed border-border bg-muted/20 min-h-[90px] flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-border transition-colors"
-      >
-        <Plus className="h-5 w-5" />
-        <span className="text-sm font-medium">Új kategória</span>
-      </button>
+          <div className="flex-1 min-w-0">
+            <div className={`font-bold truncate ${hasInboxDocs ? "text-xl md:text-2xl" : "text-base"}`}>
+              {inbox.label}
+            </div>
+            <div className={`truncate ${hasInboxDocs ? "text-sm text-white/90 mt-0.5" : "text-xs text-amber-800/80 mt-0.5"}`}>
+              Osztályozásra váró dokumentumok
+            </div>
+          </div>
+          {hasInboxDocs ? (
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="rounded-full bg-white text-[#B45309] font-extrabold tabular-nums px-4 py-2 text-2xl md:text-3xl shadow-sm min-w-[56px] text-center">
+                {inboxCount}
+              </div>
+              <ChevronRight className="h-6 w-6 text-white/90" />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 shrink-0 text-amber-800/70">
+              <span className="text-sm tabular-nums">0</span>
+              <ChevronRight className="h-4 w-4" />
+            </div>
+          )}
+        </button>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        {rest.map((cat) => {
+          const strict = cat.mode === "strict";
+          const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
+          const count = counts[cat.id] ?? 0;
+          const retentionText = cat.retentionYears
+            ? `Megőrzés: ${cat.retentionYears} év`
+            : strict
+            ? "Határozatlan megőrzés"
+            : "Szabad tárolás";
+          const Icon = cat.icon;
+          return (
+            <div key={cat.id} className="relative group">
+              <button
+                onClick={() => onOpen(cat.id)}
+                style={{ borderLeft: `5px solid ${color}` }}
+                className="w-full text-left bg-white rounded-md border border-border/40 pl-4 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border/70"
+              >
+                <div
+                  className="h-10 w-10 rounded-md flex items-center justify-center shrink-0"
+                  style={{ background: `${color}14`, color }}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-[15px] text-brand truncate">{cat.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {count} dokumentum
+                  </div>
+                  <div className="text-[11px] text-muted-foreground/80 mt-0.5 truncate">
+                    {retentionText}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {strict && <Lock className="h-4 w-4 text-[#0F6E56]" />}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </button>
+              {cat.custom && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDeleteCustomCat(cat.id); }}
+                  className="absolute top-2 right-2 h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-destructive transition-opacity"
+                  aria-label="Kategória törlése"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+        <button
+          onClick={onNewCategory}
+          className="rounded-md border border-dashed border-border bg-muted/20 min-h-[90px] flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-border transition-colors"
+        >
+          <Plus className="h-5 w-5" />
+          <span className="text-sm font-medium">Új kategória</span>
+        </button>
+      </div>
     </div>
   );
 }
