@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { useServerFn } from "@tanstack/react-start";
-import { adminSetPartnerType } from "@/lib/admin.functions";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -67,7 +66,7 @@ function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [extendDays, setExtendDays] = useState<Record<string, string>>({});
-  const setPartnerType = useServerFn(adminSetPartnerType);
+  
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -121,10 +120,15 @@ function AdminPage() {
     }
     setBusyId(userId);
     try {
-      const result = await setPartnerType({
-        data: { userId, partnerType: enable ? "accountant_lifetime" : null },
-      });
-      console.log("[admin] setPartnerType result:", result);
+      const { data: result, error: fnError } = await supabase.functions.invoke(
+        "admin-partner-type",
+        { body: { userId, partnerType: enable ? "accountant_lifetime" : null } },
+      );
+      if (fnError) throw fnError;
+      if (result && typeof result === "object" && "error" in result && result.error) {
+        throw new Error(String((result as { error: unknown }).error));
+      }
+      console.log("[admin] admin-partner-type result:", result);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error("[admin] setPartnerType error:", e);
