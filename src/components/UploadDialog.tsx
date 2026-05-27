@@ -269,7 +269,7 @@ export function UploadDialog({
       );
       const incomingBytes = files.reduce((s, f) => s + f.file.size, 0);
       if (usedBytes + incomingBytes > storCap) {
-        toast.error("Elérted a tárhelylimitet. Válts magasabb csomagra a folytatáshoz.", {
+        toast.error("Nincs elegendő tárhelyed. Válts magasabb csomagra a folytatáshoz.", {
           action: {
             label: "Csomagváltás",
             onClick: () => { window.location.href = "/subscription"; },
