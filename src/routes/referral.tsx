@@ -43,7 +43,7 @@ function ReferralPage() {
         return;
       }
       setUserId(userRes.user.id);
-      const { data, error } = await supabase.rpc("my_referrals");
+      const { data, error } = await (supabase.rpc as any)("get_referrals");
       if (cancelled) return;
       if (error) {
         toast.error("Nem sikerült betölteni az ajánlásokat");
