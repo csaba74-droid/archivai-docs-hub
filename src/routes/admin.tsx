@@ -101,11 +101,18 @@ function AdminPage() {
   }, [load, navigate]);
 
   const toggleLifetime = async (userId: string, enable: boolean) => {
+    console.log("[admin] toggleLifetime userId:", userId, "enable:", enable);
+    if (!userId) {
+      toast.error("Hiányzó user id.");
+      return;
+    }
     setBusyId(userId);
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from("profiles")
       .update({ partner_type: enable ? "accountant_lifetime" : null })
-      .eq("id", userId);
+      .eq("id", userId)
+      .select("id, partner_type");
+    console.log("[admin] update result:", { data, error });
     setBusyId(null);
     if (error) {
       toast.error("Hiba: " + error.message);
