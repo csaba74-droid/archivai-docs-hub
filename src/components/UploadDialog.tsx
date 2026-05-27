@@ -248,7 +248,7 @@ export function UploadDialog({
         .gte("created_at", startOfMonth.toISOString());
       const remaining = docCap - (monthly ?? 0);
       if (remaining <= 0 || files.length > remaining) {
-        toast.error("Elérted a havi dokumentum limitet. Válts magasabb csomagra a folytatáshoz.", {
+        toast.error("Elérted a havi dokumentum feltöltési limitedet. Válts magasabb csomagra a folytatáshoz.", {
           action: {
             label: "Csomagváltás",
             onClick: () => { window.location.href = "/subscription"; },
@@ -269,7 +269,7 @@ export function UploadDialog({
       );
       const incomingBytes = files.reduce((s, f) => s + f.file.size, 0);
       if (usedBytes + incomingBytes > storCap) {
-        toast.error("Elérted a tárhelylimitet. Válts magasabb csomagra a folytatáshoz.", {
+        toast.error("Nincs elegendő tárhelyed. Válts magasabb csomagra a folytatáshoz.", {
           action: {
             label: "Csomagváltás",
             onClick: () => { window.location.href = "/subscription"; },

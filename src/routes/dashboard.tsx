@@ -5,6 +5,8 @@ import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline, type Category } from "@/lib/categories";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
+import { documentCap, storageCap } from "@/lib/entitlements";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +49,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const { customRows, all: allCats, remove: removeCustomCat } = useCategories();
   const { getCategory, isStrict, getRetentionDeadline } = useCategoryHelpers();
-  const { subscription, active, trialExpired, reload: reloadSubscription } = useSubscription();
+  const { subscription, active, trialExpired, isTrialing, reload: reloadSubscription } = useSubscription();
   useEffect(() => { void reloadSubscription(); }, [reloadSubscription]);
 
   const [docs, setDocs] = useState<DocumentRow[]>([]);
@@ -595,7 +597,45 @@ function Dashboard() {
             </div>
           )}
 
-          {/* Mobile home overview — only when no filter/search */}
+          {/* Plan usage — monthly docs & storage */}
+          {!activeCat && !search.trim() && (() => {
+            const plan = subscription?.plan ?? null;
+            const docCap = documentCap(plan, isTrialing);
+            const storCap = storageCap(plan, isTrialing);
+            const now = new Date();
+            const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            const monthlyCount = docs.filter((d) => new Date(d.created_at).getTime() >= startMonth).length;
+            const usedBytes = docs.reduce((s, d) => s + (Number(d.size_bytes) || 0), 0);
+            const fmtBytes = (b: number) => {
+              if (b < 1024) return `${b} B`;
+              if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+              if (b < 1024 * 1024 * 1024) return `${(b / 1024 / 1024).toFixed(1)} MB`;
+              return `${(b / 1024 / 1024 / 1024).toFixed(2)} GB`;
+            };
+            const fmtCap = (b: number | null) => (b === null ? "∞" : b >= 1024 * 1024 * 1024 ? `${Math.round(b / 1024 / 1024 / 1024)} GB` : `${Math.round(b / 1024 / 1024)} MB`);
+            const docPct = docCap === null ? 0 : Math.min(100, (monthlyCount / docCap) * 100);
+            const storPct = storCap === null ? 0 : Math.min(100, (usedBytes / storCap) * 100);
+            return (
+              <div className="rounded-xl border bg-card p-4 md:p-5 grid gap-4 md:grid-cols-2">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-medium">Havi dokumentumok</span>
+                    <span className="text-muted-foreground">{monthlyCount} / {docCap ?? "∞"} feltöltve</span>
+                  </div>
+                  <Progress value={docPct} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-medium">Tárhely</span>
+                    <span className="text-muted-foreground">{fmtBytes(usedBytes)} / {fmtCap(storCap)} használva</span>
+                  </div>
+                  <Progress value={storPct} />
+                </div>
+              </div>
+            );
+          })()}
+
+
           {!activeCat && !search.trim() && (
             <MobileHome
               docs={docs}
