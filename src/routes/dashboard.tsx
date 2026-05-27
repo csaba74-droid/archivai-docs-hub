@@ -62,6 +62,8 @@ function Dashboard() {
   const [archivaiEmailCopied, setArchivaiEmailCopied] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
+  const [referrals, setReferrals] = useState<Array<{ user_id: string; full_name: string | null; email: string; created_at: string; subscribed: boolean }>>([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
