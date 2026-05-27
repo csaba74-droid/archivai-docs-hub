@@ -14,7 +14,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, Users, Camera,
+  Home, Gift, Copy, Check, Users, Camera, BookOpen,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
