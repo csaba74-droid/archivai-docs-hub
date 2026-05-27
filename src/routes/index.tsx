@@ -42,6 +42,26 @@ function LandingPage() {
   const [checking, setChecking] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [refParam, setRefParam] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(window.location.search).get("ref");
+      if (ref && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+        setRefParam(ref);
+        sessionStorage.setItem("archivai_ref", ref);
+      } else {
+        const stored = sessionStorage.getItem("archivai_ref");
+        if (stored) setRefParam(stored);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const goRegister = () =>
+    navigate({ to: "/register", search: refParam ? { ref: refParam } : undefined });
+
 
   useEffect(() => {
     let cancelled = false;
