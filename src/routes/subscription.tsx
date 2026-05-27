@@ -169,40 +169,72 @@ function SubscriptionPage() {
 
 
 
-        {/* Interval toggle */}
-        <div className="flex justify-center">
-          <div className="inline-flex rounded-lg border p-1 bg-card">
-            <button
-              onClick={() => setInterval("monthly")}
-              className={`px-4 py-1.5 text-sm rounded-md transition-colors ${interval === "monthly" ? "bg-brand text-white" : "text-muted-foreground"}`}
-            >
-              Havi
-            </button>
-            <button
-              onClick={() => setInterval("yearly")}
-              className={`px-4 py-1.5 text-sm rounded-md transition-colors ${interval === "yearly" ? "bg-brand text-white" : "text-muted-foreground"}`}
-            >
-              Éves <span className="text-xs opacity-80 ml-1">−15%</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Plan picker */}
+        {/* Plan picker — annual emphasized */}
         <div className="grid md:grid-cols-3 gap-4">
           {(["alap", "pro", "vallalati"] as const).map((plan) => {
             const info = PLAN_INFO[plan];
             const isCurrent = subscription?.plan === plan && active && !isTrialing;
-            const amount = PRICES[plan][interval];
-            const priceLabel = interval === "monthly" ? `${formatHuf(amount)} / hó` : `${formatHuf(amount)} / év`;
+            const monthlyAmount = PRICES[plan].monthly;
+            const yearlyAmount = PRICES[plan].yearly;
+            const yearlyAsMonthly = Math.round(yearlyAmount / 12);
+            const isSelectedMonthly = interval === "monthly";
+            const isSelectedYearly = interval === "yearly";
             return (
               <Card key={plan} className={`p-5 flex flex-col ${plan === "pro" ? "border-brand ring-2 ring-brand/20" : ""}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold">{info.label}</h3>
                   {plan === "pro" && <Sparkles className="h-4 w-4 text-brand" />}
                 </div>
-                <p className="text-2xl font-bold mt-2">{priceLabel}</p>
                 <p className="text-sm text-muted-foreground mt-1">{info.description}</p>
-                <ul className="mt-4 space-y-2 text-sm flex-1">
+
+                {/* Pricing options */}
+                <div className="mt-4 space-y-2">
+                  {/* Annual — featured */}
+                  <button
+                    type="button"
+                    onClick={() => setInterval("yearly")}
+                    className={`relative w-full text-left rounded-lg border-2 p-4 transition-all ${
+                      isSelectedYearly
+                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 shadow-md"
+                        : "border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/10 hover:border-emerald-400"
+                    }`}
+                  >
+                    <span className="absolute -top-2.5 right-3 inline-flex items-center rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                      🎁 2 hónap grátisz!
+                    </span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                        Éves
+                      </span>
+                      {isSelectedYearly && <Check className="h-4 w-4 text-emerald-600" />}
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{formatHuf(yearlyAsMonthly)}<span className="text-sm font-normal text-muted-foreground"> / hó</span></p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatHuf(yearlyAmount)} évente egy összegben
+                    </p>
+                  </button>
+
+                  {/* Monthly — secondary */}
+                  <button
+                    type="button"
+                    onClick={() => setInterval("monthly")}
+                    className={`w-full text-left rounded-lg border p-3 transition-colors ${
+                      isSelectedMonthly
+                        ? "border-foreground/60 bg-muted/50"
+                        : "border-border hover:border-foreground/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Havi
+                      </span>
+                      {isSelectedMonthly && <Check className="h-3.5 w-3.5 text-foreground" />}
+                    </div>
+                    <p className="text-base font-semibold mt-0.5">{formatHuf(monthlyAmount)}<span className="text-xs font-normal text-muted-foreground"> / hó</span></p>
+                  </button>
+                </div>
+
+                <ul className="mt-5 space-y-2 text-sm flex-1">
                   {PLAN_FEATURES[plan].map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-brand shrink-0 mt-0.5" />
@@ -218,12 +250,13 @@ function SubscriptionPage() {
                 >
                   {redirecting === `${plan}_${interval === "monthly" ? "monthly" : "yearly"}` ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Átirányítás…</>
-                  ) : isCurrent ? "Jelenlegi csomag" : "Csomag kiválasztása"}
+                  ) : isCurrent ? "Jelenlegi csomag" : interval === "yearly" ? "Éves csomag kiválasztása" : "Havi csomag kiválasztása"}
                 </Button>
               </Card>
             );
           })}
         </div>
+
 
         <p className="text-center text-xs text-muted-foreground">
           A 14 napos ingyenes próba kártyaadat nélkül indul a regisztrációkor. A fizetés csak akkor történik, ha a próba végén csomagot választasz.
