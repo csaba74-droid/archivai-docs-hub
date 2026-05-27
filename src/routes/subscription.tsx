@@ -67,7 +67,7 @@ const formatHuf = (n: number) => `${n.toLocaleString("hu-HU")} Ft`;
 function SubscriptionPage() {
   const { subscription, active, isTrialing, trialDaysLeft, trialExpired } = useSubscription();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [interval, setInterval] = useState<Interval>("monthly");
+  const [interval, setInterval] = useState<Interval>("yearly");
   const [redirecting, setRedirecting] = useState<string | null>(null);
   const [email, setEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
