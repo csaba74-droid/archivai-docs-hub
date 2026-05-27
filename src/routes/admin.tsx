@@ -74,18 +74,21 @@ function AdminPage() {
       setRows([]);
     } else {
       setRows(
-        ((data ?? []) as AdminOverviewRow[]).map((r) => ({
-          id: r.id ?? r.user_id,
-          user_id: r.user_id ?? r.id,
-          email: r.email,
-          created_at: r.created_at,
-          plan: r.plan,
-          status: r.status,
-          trial_end: r.trial_end,
-          partner_type: r.partner_type,
+        ((data ?? []) as AdminOverviewRow[]).map((r) => {
+          const userId = r.user_id ?? r.id ?? "";
+          return {
+          id: userId,
+          user_id: userId,
+          email: r.email ?? null,
+          created_at: r.created_at ?? "",
+          plan: r.plan ?? null,
+          status: r.status ?? null,
+          trial_end: r.trial_end ?? null,
+          partner_type: r.partner_type ?? null,
           document_count: Number(r.document_count ?? 0),
           storage_bytes: Number(r.storage_bytes ?? 0),
-        })),
+          };
+        }),
       );
     }
     setLoading(false);
