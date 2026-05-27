@@ -37,20 +37,15 @@ type AdminOverviewRow = Partial<UserRow> & {
   storage_bytes?: number | string | null;
 };
 
-type ReferralStatRow = {
+type ReferralRow = {
   referrer_id: string;
   referrer_email: string;
-  referred_count: number;
-  subscribed_count: number;
+  referred_id: string;
+  referred_email: string;
+  registered_at: string;
+  subscribed: boolean;
 };
 
-function rewardLevel(n: number): { label: string; tone: string } {
-  if (n >= 20) return { label: "Lifetime Vállalati", tone: "bg-purple-100 text-purple-800" };
-  if (n >= 10) return { label: "Lifetime Pro", tone: "bg-amber-100 text-amber-800" };
-  if (n >= 5) return { label: "1 év Pro", tone: "bg-emerald-100 text-emerald-800" };
-  if (n >= 1) return { label: "Havi jóváírás", tone: "bg-sky-100 text-sky-800" };
-  return { label: "—", tone: "bg-muted text-muted-foreground" };
-}
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
