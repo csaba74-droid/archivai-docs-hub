@@ -120,17 +120,19 @@ function AdminPage() {
       return;
     }
     setBusyId(userId);
-    const { error, data } = await supabase
-      .from("profiles")
-      .update({ partner_type: enable ? "accountant_lifetime" : null })
-      .eq("id", userId)
-      .select("id, partner_type");
-    console.log("[admin] update result:", { data, error });
-    setBusyId(null);
-    if (error) {
-      toast.error("Hiba: " + error.message);
+    try {
+      const result = await setPartnerType({
+        data: { userId, partnerType: enable ? "accountant_lifetime" : null },
+      });
+      console.log("[admin] setPartnerType result:", result);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[admin] setPartnerType error:", e);
+      setBusyId(null);
+      toast.error("Hiba: " + msg);
       return;
     }
+    setBusyId(null);
     toast.success(
       enable ? "Élethosszig hozzáférés bekapcsolva." : "Élethosszig hozzáférés kikapcsolva.",
     );
