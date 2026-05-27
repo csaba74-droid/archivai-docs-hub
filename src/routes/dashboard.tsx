@@ -598,6 +598,9 @@ function Dashboard() {
                         Dedikált Archivai e-mail cím
                       </h3>
                       <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                        Egyedi e-mail címére érkező dokumentumok automatikusan bekerülnek az Archivai rendszerbe és elérhetők a Beérkezett mappában — ahol könnyedén rendszerezheti őket.
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-2">
                         Ez a funkció Pro csomagtól érhető el.
                       </p>
                       <div className="mt-3">
