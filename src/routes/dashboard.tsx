@@ -49,7 +49,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const { customRows, all: allCats, remove: removeCustomCat } = useCategories();
   const { getCategory, isStrict, getRetentionDeadline } = useCategoryHelpers();
-  const { subscription, active, trialExpired, reload: reloadSubscription } = useSubscription();
+  const { subscription, active, trialExpired, isTrialing, reload: reloadSubscription } = useSubscription();
   useEffect(() => { void reloadSubscription(); }, [reloadSubscription]);
 
   const [docs, setDocs] = useState<DocumentRow[]>([]);
