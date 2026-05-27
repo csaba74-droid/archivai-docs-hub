@@ -29,6 +29,7 @@ export type Category = {
 };
 
 export const BUILT_IN_CATEGORIES: Category[] = [
+  { id: "beerkezett", label: "Beérkezett", icon: Inbox, mode: "normal", retentionYears: null, retentionLabel: "Beérkezett dokumentumok", color: "#3b82f6" },
   { id: "szamlak", label: "Számlák", icon: Receipt, mode: "strict", retentionYears: 10, retentionLabel: "10 év kötelező megőrzés" },
   { id: "szerzodesek", label: "Szerződések", icon: FileSignature, mode: "strict", retentionYears: 10, retentionLabel: "10 év kötelező megőrzés" },
   { id: "szallitolevek", label: "Szállítólevelek", icon: Truck, mode: "strict", retentionYears: 10, retentionLabel: "10 év kötelező megőrzés" },
