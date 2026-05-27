@@ -248,7 +248,7 @@ export function UploadDialog({
         .gte("created_at", startOfMonth.toISOString());
       const remaining = docCap - (monthly ?? 0);
       if (remaining <= 0 || files.length > remaining) {
-        toast.error("Elérted a havi dokumentum limitet. Válts magasabb csomagra a folytatáshoz.", {
+        toast.error("Elérted a havi dokumentum feltöltési limitedet. Válts magasabb csomagra a folytatáshoz.", {
           action: {
             label: "Csomagváltás",
             onClick: () => { window.location.href = "/subscription"; },
