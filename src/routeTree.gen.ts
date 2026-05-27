@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SugoRouteImport } from './routes/sugo'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SharingRouteImport } from './routes/sharing'
 import { Route as ScanGuideRouteImport } from './routes/scan-guide'
@@ -24,6 +25,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
+const SugoRoute = SugoRouteImport.update({
+  id: '/sugo',
+  path: '/sugo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubscriptionRoute = SubscriptionRouteImport.update({
   id: '/subscription',
   path: '/subscription',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
+  '/sugo': typeof SugoRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
+  '/sugo': typeof SugoRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
+  '/sugo': typeof SugoRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
+    | '/sugo'
     | '/admin/referrals'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
+    | '/sugo'
     | '/admin/referrals'
     | '/api/public/payments/webhook'
   id:
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
+    | '/sugo'
     | '/admin/referrals'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -209,12 +221,20 @@ export interface RootRouteChildren {
   ScanGuideRoute: typeof ScanGuideRoute
   SharingRoute: typeof SharingRoute
   SubscriptionRoute: typeof SubscriptionRoute
+  SugoRoute: typeof SugoRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sugo': {
+      id: '/sugo'
+      path: '/sugo'
+      fullPath: '/sugo'
+      preLoaderRoute: typeof SugoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subscription': {
       id: '/subscription'
       path: '/subscription'
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanGuideRoute: ScanGuideRoute,
   SharingRoute: SharingRoute,
   SubscriptionRoute: SubscriptionRoute,
+  SugoRoute: SugoRoute,
   AdminReferralsRoute: AdminReferralsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
