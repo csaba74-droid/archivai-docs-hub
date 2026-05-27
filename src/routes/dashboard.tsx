@@ -368,6 +368,12 @@ function Dashboard() {
         <Gift className="h-4 w-4 text-brand" /> Ajánld az Archivai-t
       </button>
       <Link
+        to="/subscription"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <CreditCard className="h-4 w-4" /> Csomagok és árak
+      </Link>
+      <Link
         to="/audit"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
