@@ -992,6 +992,7 @@ const MOBILE_CAT_COLORS: Record<string, string> = {
 };
 
 const BUILTIN_ORDER = [
+  "beerkezett",
   "szamlak", "szerzodesek", "szallitolevek", "munkaugyi", "adobevallasok",
   "kozuzemi", "banki", "muszaki", "belso", "egyeb",
 ];
