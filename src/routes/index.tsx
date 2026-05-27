@@ -492,6 +492,9 @@ function LandingPage() {
               <Link to="/adatkezeles" className="hover:text-brand">
                 Adatkezelési tájékoztató
               </Link>
+              <a href="/archivai-utmutato.html" className="hover:text-brand">
+                Súgó
+              </a>
               <a href="mailto:kapcsolat@archivai.hu" className="hover:text-brand">
                 kapcsolat@archivai.hu
               </a>
