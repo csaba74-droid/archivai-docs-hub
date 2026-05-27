@@ -56,6 +56,10 @@ export type Database = {
         Args: { _days: number; _user: string }
         Returns: undefined
       }
+      admin_set_partner_type: {
+        Args: { _type: string; _user: string }
+        Returns: undefined
+      }
       admin_users_overview: {
         Args: never
         Returns: {
