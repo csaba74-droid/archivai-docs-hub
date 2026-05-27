@@ -302,7 +302,7 @@ function AdminPage() {
         </Card>
 
         <div className="mt-10 mb-4">
-          <h2 className="text-2xl font-bold tracking-tight text-brand">Ajánlói program</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-brand">Ajánlói program statisztika</h2>
           <p className="text-muted-foreground mt-1">
             Minden ajánlott felhasználó és előfizetési állapota.
           </p>
