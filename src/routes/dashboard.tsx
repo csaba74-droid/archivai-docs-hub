@@ -211,7 +211,10 @@ function Dashboard() {
       const { error } = await supabase.from("documents").delete().eq("id", doc.id);
       if (error) throw error;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
-      void logAudit("delete", doc.id, {
+      // document_id must be null because the row has just been deleted;
+      // keep the original id in metadata for traceability.
+      void logAudit("delete", null, {
+        document_id: doc.id,
         filename: doc.filename,
         expired: !!expired,
         ...(inGrace ? { within_grace: true, note: GRACE_AUDIT_NOTE } : {}),
