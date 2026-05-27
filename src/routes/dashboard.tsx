@@ -5,6 +5,8 @@ import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline, type Category } from "@/lib/categories";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
+import { documentCap, storageCap } from "@/lib/entitlements";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
