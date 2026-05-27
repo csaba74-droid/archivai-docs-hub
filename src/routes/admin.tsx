@@ -19,6 +19,7 @@ import { Loader2, Crown } from "lucide-react";
 const ADMIN_EMAIL = "lenard.csaba74@gmail.com";
 
 type UserRow = {
+  id: string;
   user_id: string;
   email: string | null;
   created_at: string;
@@ -28,6 +29,11 @@ type UserRow = {
   partner_type: string | null;
   document_count: number;
   storage_bytes: number;
+};
+
+type AdminOverviewRow = Partial<UserRow> & {
+  document_count?: number | string | null;
+  storage_bytes?: number | string | null;
 };
 
 function fmtDate(iso: string | null) {
@@ -68,17 +74,21 @@ function AdminPage() {
       setRows([]);
     } else {
       setRows(
-        ((data ?? []) as any[]).map((r) => ({
-          user_id: r.user_id,
-          email: r.email,
-          created_at: r.created_at,
-          plan: r.plan,
-          status: r.status,
-          trial_end: r.trial_end,
-          partner_type: r.partner_type,
-          document_count: Number(r.document_count ?? 0),
-          storage_bytes: Number(r.storage_bytes ?? 0),
-        })),
+        ((data ?? []) as AdminOverviewRow[]).map((r) => {
+          const userId = r.user_id ?? r.id ?? "";
+          return {
+            id: userId,
+            user_id: userId,
+            email: r.email ?? null,
+            created_at: r.created_at ?? "",
+            plan: r.plan ?? null,
+            status: r.status ?? null,
+            trial_end: r.trial_end ?? null,
+            partner_type: r.partner_type ?? null,
+            document_count: Number(r.document_count ?? 0),
+            storage_bytes: Number(r.storage_bytes ?? 0),
+          };
+        }),
       );
     }
     setLoading(false);
@@ -118,7 +128,9 @@ function AdminPage() {
       toast.error("Hiba: " + error.message);
       return;
     }
-    toast.success(enable ? "Élethosszig hozzáférés bekapcsolva." : "Élethosszig hozzáférés kikapcsolva.");
+    toast.success(
+      enable ? "Élethosszig hozzáférés bekapcsolva." : "Élethosszig hozzáférés kikapcsolva.",
+    );
     await load();
   };
 
@@ -185,9 +197,10 @@ function AdminPage() {
               </TableHeader>
               <TableBody>
                 {rows.map((r) => {
+                  const rowUserId = r.user_id ?? r.id;
                   const isLifetime = r.partner_type === "accountant_lifetime";
                   return (
-                    <TableRow key={r.user_id}>
+                    <TableRow key={rowUserId}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           {r.email ?? "—"}
@@ -207,8 +220,8 @@ function AdminPage() {
                       <TableCell className="text-center">
                         <Switch
                           checked={isLifetime}
-                          disabled={busyId === r.user_id}
-                          onCheckedChange={(v) => toggleLifetime(r.user_id, v)}
+                          disabled={busyId === rowUserId}
+                          onCheckedChange={(v) => toggleLifetime(rowUserId, v)}
                         />
                       </TableCell>
                       <TableCell>
@@ -218,17 +231,17 @@ function AdminPage() {
                             min={1}
                             placeholder="napok"
                             className="w-20"
-                            value={extendDays[r.user_id] ?? ""}
+                            value={extendDays[rowUserId] ?? ""}
                             onChange={(e) =>
-                              setExtendDays((p) => ({ ...p, [r.user_id]: e.target.value }))
+                              setExtendDays((p) => ({ ...p, [rowUserId]: e.target.value }))
                             }
                           />
                           <Button
                             size="sm"
-                            disabled={busyId === r.user_id}
-                            onClick={() => extendTrial(r.user_id)}
+                            disabled={busyId === rowUserId}
+                            onClick={() => extendTrial(rowUserId)}
                           >
-                            {busyId === r.user_id ? (
+                            {busyId === rowUserId ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               "+"
