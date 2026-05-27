@@ -234,18 +234,17 @@ function Dashboard() {
       : `Biztosan törlöd?\n${doc.filename}`;
     if (!confirm(confirmMsg)) return;
     try {
-      await supabase.storage.from("documents").remove([doc.storage_path]);
-      const { error } = await supabase.from("documents").delete().eq("id", doc.id);
-      if (error) throw error;
-      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
-      // document_id must be null because the row has just been deleted;
-      // keep the original id in metadata for traceability.
-      void logAudit("delete", null, {
-        document_id: doc.id,
+      // Write the audit log BEFORE deleting so the document row (FK target)
+      // still exists when the audit_log row is inserted.
+      await logAudit("delete", doc.id, {
         filename: doc.filename,
         expired: !!expired,
         ...(inGrace ? { within_grace: true, note: GRACE_AUDIT_NOTE } : {}),
       });
+      await supabase.storage.from("documents").remove([doc.storage_path]);
+      const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+      if (error) throw error;
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       toast.success("Törölve");
     } catch (e) {
       toast.error("Törlés sikertelen", { description: e instanceof Error ? e.message : String(e) });
