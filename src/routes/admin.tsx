@@ -103,8 +103,8 @@ function AdminPage() {
   const toggleLifetime = async (userId: string, enable: boolean) => {
     setBusyId(userId);
     const { error } = await supabase.rpc("admin_set_partner_type", {
-      user_id: userId,
-      type: enable ? "accountant_lifetime" : null,
+      _user: userId,
+      _type: enable ? "accountant_lifetime" : null,
     });
     setBusyId(null);
     if (error) {
