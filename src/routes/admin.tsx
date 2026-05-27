@@ -102,10 +102,10 @@ function AdminPage() {
 
   const toggleLifetime = async (userId: string, enable: boolean) => {
     setBusyId(userId);
-    const { error } = await supabase.rpc("admin_set_partner_type", {
-      _user: userId,
-      _type: enable ? "accountant_lifetime" : null,
-    });
+    const { error } = await supabase
+      .from("profiles")
+      .update({ partner_type: enable ? "accountant_lifetime" : null })
+      .eq("id", userId);
     setBusyId(null);
     if (error) {
       toast.error("Hiba: " + error.message);
