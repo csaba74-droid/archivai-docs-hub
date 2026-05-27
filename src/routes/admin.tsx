@@ -111,22 +111,25 @@ function AdminPage() {
 
   const loadReferralStats = useCallback(async () => {
     setReferralLoading(true);
-    const { data, error } = await supabase.rpc("admin_referral_stats");
+    const { data, error } = await supabase.rpc("admin_referral_list");
     if (error) {
-      toast.error("Nem sikerült betölteni a referral statisztikát: " + error.message);
+      toast.error("Nem sikerült betölteni az ajánlói adatokat: " + error.message);
       setReferralStats([]);
     } else {
       setReferralStats(
-        ((data ?? []) as ReferralStatRow[]).map((r) => ({
+        ((data ?? []) as ReferralRow[]).map((r) => ({
           referrer_id: r.referrer_id,
           referrer_email: r.referrer_email,
-          referred_count: Number(r.referred_count ?? 0),
-          subscribed_count: Number(r.subscribed_count ?? 0),
+          referred_id: r.referred_id,
+          referred_email: r.referred_email,
+          registered_at: r.registered_at,
+          subscribed: Boolean(r.subscribed),
         })),
       );
     }
     setReferralLoading(false);
   }, []);
+
 
   useEffect(() => {
     (async () => {
