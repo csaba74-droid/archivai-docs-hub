@@ -302,6 +302,51 @@ function AdminPage() {
             </Table>
           )}
         </Card>
+
+        <div className="mt-10 mb-4">
+          <h2 className="text-2xl font-bold tracking-tight text-brand">Referral statisztika</h2>
+          <p className="text-muted-foreground mt-1">
+            Ajánlók és jutalom szintjük az ajánlott felhasználók száma alapján.
+          </p>
+        </div>
+
+        <Card className="p-4 overflow-x-auto">
+          {referralLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : referralStats.length === 0 ? (
+            <p className="py-10 text-center text-muted-foreground">Még nincs ajánló felhasználó.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ajánló e-mail</TableHead>
+                  <TableHead className="text-right">Ajánlott</TableHead>
+                  <TableHead className="text-right">Előfizetett</TableHead>
+                  <TableHead>Jutalom szint</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {referralStats.map((r) => {
+                  const reward = rewardLevel(r.referred_count);
+                  return (
+                    <TableRow key={r.referrer_id}>
+                      <TableCell className="font-medium">{r.referrer_email}</TableCell>
+                      <TableCell className="text-right">{r.referred_count}</TableCell>
+                      <TableCell className="text-right">{r.subscribed_count}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${reward.tone}`}>
+                          {reward.label}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </Card>
       </div>
     </div>
   );
