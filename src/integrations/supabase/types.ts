@@ -52,7 +52,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_extend_trial_days: {
+        Args: { _days: number; _user: string }
+        Returns: undefined
+      }
+      admin_users_overview: {
+        Args: never
+        Returns: {
+          created_at: string
+          document_count: number
+          email: string
+          partner_type: string
+          plan: string
+          status: string
+          storage_bytes: number
+          trial_end: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
