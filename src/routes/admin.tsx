@@ -114,6 +114,25 @@ function AdminPage() {
     setLoading(false);
   }, []);
 
+  const loadReferralStats = useCallback(async () => {
+    setReferralLoading(true);
+    const { data, error } = await supabase.rpc("admin_referral_stats");
+    if (error) {
+      toast.error("Nem sikerült betölteni a referral statisztikát: " + error.message);
+      setReferralStats([]);
+    } else {
+      setReferralStats(
+        ((data ?? []) as ReferralStatRow[]).map((r) => ({
+          referrer_id: r.referrer_id,
+          referrer_email: r.referrer_email,
+          referred_count: Number(r.referred_count ?? 0),
+          subscribed_count: Number(r.subscribed_count ?? 0),
+        })),
+      );
+    }
+    setReferralLoading(false);
+  }, []);
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
