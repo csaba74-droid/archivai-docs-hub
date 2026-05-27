@@ -253,6 +253,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_referrals: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          subscribed: boolean
+          user_id: string
+        }[]
+      }
       my_referrals: {
         Args: never
         Returns: {
