@@ -235,6 +235,15 @@ export type Database = {
         Args: { _days: number; _user: string }
         Returns: undefined
       }
+      admin_referral_stats: {
+        Args: never
+        Returns: {
+          referred_count: number
+          referrer_email: string
+          referrer_id: string
+          subscribed_count: number
+        }[]
+      }
       admin_set_partner_type: {
         Args: { _type: string; _user: string }
         Returns: undefined
