@@ -37,20 +37,15 @@ type AdminOverviewRow = Partial<UserRow> & {
   storage_bytes?: number | string | null;
 };
 
-type ReferralStatRow = {
+type ReferralRow = {
   referrer_id: string;
   referrer_email: string;
-  referred_count: number;
-  subscribed_count: number;
+  referred_id: string;
+  referred_email: string;
+  registered_at: string;
+  subscribed: boolean;
 };
 
-function rewardLevel(n: number): { label: string; tone: string } {
-  if (n >= 20) return { label: "Lifetime Vállalati", tone: "bg-purple-100 text-purple-800" };
-  if (n >= 10) return { label: "Lifetime Pro", tone: "bg-amber-100 text-amber-800" };
-  if (n >= 5) return { label: "1 év Pro", tone: "bg-emerald-100 text-emerald-800" };
-  if (n >= 1) return { label: "Havi jóváírás", tone: "bg-sky-100 text-sky-800" };
-  return { label: "—", tone: "bg-muted text-muted-foreground" };
-}
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
@@ -81,7 +76,7 @@ function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [extendDays, setExtendDays] = useState<Record<string, string>>({});
-  const [referralStats, setReferralStats] = useState<ReferralStatRow[]>([]);
+  const [referralStats, setReferralStats] = useState<ReferralRow[]>([]);
   const [referralLoading, setReferralLoading] = useState(true);
 
   
@@ -116,22 +111,25 @@ function AdminPage() {
 
   const loadReferralStats = useCallback(async () => {
     setReferralLoading(true);
-    const { data, error } = await supabase.rpc("admin_referral_stats");
+    const { data, error } = await supabase.rpc("admin_referral_list");
     if (error) {
-      toast.error("Nem sikerült betölteni a referral statisztikát: " + error.message);
+      toast.error("Nem sikerült betölteni az ajánlói adatokat: " + error.message);
       setReferralStats([]);
     } else {
       setReferralStats(
-        ((data ?? []) as ReferralStatRow[]).map((r) => ({
+        ((data ?? []) as ReferralRow[]).map((r) => ({
           referrer_id: r.referrer_id,
           referrer_email: r.referrer_email,
-          referred_count: Number(r.referred_count ?? 0),
-          subscribed_count: Number(r.subscribed_count ?? 0),
+          referred_id: r.referred_id,
+          referred_email: r.referred_email,
+          registered_at: r.registered_at,
+          subscribed: Boolean(r.subscribed),
         })),
       );
     }
     setReferralLoading(false);
   }, []);
+
 
   useEffect(() => {
     (async () => {
@@ -304,9 +302,9 @@ function AdminPage() {
         </Card>
 
         <div className="mt-10 mb-4">
-          <h2 className="text-2xl font-bold tracking-tight text-brand">Referral statisztika</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-brand">Ajánlói program</h2>
           <p className="text-muted-foreground mt-1">
-            Ajánlók és jutalom szintjük az ajánlott felhasználók száma alapján.
+            Minden ajánlott felhasználó és előfizetési állapota.
           </p>
         </div>
 
@@ -316,37 +314,51 @@ function AdminPage() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : referralStats.length === 0 ? (
-            <p className="py-10 text-center text-muted-foreground">Még nincs ajánló felhasználó.</p>
+            <p className="py-10 text-center text-muted-foreground">Még nincs ajánlott felhasználó.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Ajánló e-mail</TableHead>
-                  <TableHead className="text-right">Ajánlott</TableHead>
-                  <TableHead className="text-right">Előfizetett</TableHead>
-                  <TableHead>Jutalom szint</TableHead>
+                  <TableHead>Ajánlott e-mail</TableHead>
+                  <TableHead>Regisztráció dátuma</TableHead>
+                  <TableHead>Előfizetett</TableHead>
+                  <TableHead>Jutalom jár</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {referralStats.map((r) => {
-                  const reward = rewardLevel(r.referred_count);
-                  return (
-                    <TableRow key={r.referrer_id}>
-                      <TableCell className="font-medium">{r.referrer_email}</TableCell>
-                      <TableCell className="text-right">{r.referred_count}</TableCell>
-                      <TableCell className="text-right">{r.subscribed_count}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${reward.tone}`}>
-                          {reward.label}
+                {referralStats.map((r) => (
+                  <TableRow key={r.referred_id}>
+                    <TableCell className="font-medium">{r.referrer_email}</TableCell>
+                    <TableCell>{r.referred_email}</TableCell>
+                    <TableCell>{fmtDate(r.registered_at)}</TableCell>
+                    <TableCell>
+                      {r.subscribed ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
+                          Igen
                         </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                      ) : (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
+                          Nem
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {r.subscribed ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
+                          1 hónap mindkét félnek
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
         </Card>
+
       </div>
     </div>
   );
