@@ -20,6 +20,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AszfRouteImport } from './routes/aszf'
 import { Route as ArchivaiUtmutatoDothtmlRouteImport } from './routes/archivai-utmutato[.]html'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AdatkezelesRouteImport } from './routes/adatkezeles'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as IndexRouteImport } from './routes/index'
@@ -81,6 +82,11 @@ const ArchivaiUtmutatoDothtmlRoute = ArchivaiUtmutatoDothtmlRouteImport.update({
   path: '/archivai-utmutato.html',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdatkezelesRoute = AdatkezelesRouteImport.update({
   id: '/adatkezeles',
   path: '/adatkezeles',
@@ -97,9 +103,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminReferralsRoute = AdminReferralsRouteImport.update({
-  id: '/admin/referrals',
-  path: '/admin/referrals',
-  getParentRoute: () => rootRouteImport,
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/adatkezeles': typeof AdatkezelesRoute
+  '/admin': typeof AdminRouteWithChildren
   '/archivai-utmutato.html': typeof ArchivaiUtmutatoDothtmlRoute
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/adatkezeles': typeof AdatkezelesRoute
+  '/admin': typeof AdminRouteWithChildren
   '/archivai-utmutato.html': typeof ArchivaiUtmutatoDothtmlRoute
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/adatkezeles': typeof AdatkezelesRoute
+  '/admin': typeof AdminRouteWithChildren
   '/archivai-utmutato.html': typeof ArchivaiUtmutatoDothtmlRoute
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/adatkezeles'
+    | '/admin'
     | '/archivai-utmutato.html'
     | '/aszf'
     | '/audit'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/adatkezeles'
+    | '/admin'
     | '/archivai-utmutato.html'
     | '/aszf'
     | '/audit'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/adatkezeles'
+    | '/admin'
     | '/archivai-utmutato.html'
     | '/aszf'
     | '/audit'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptInvitationRoute: typeof AcceptInvitationRoute
   AdatkezelesRoute: typeof AdatkezelesRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ArchivaiUtmutatoDothtmlRoute: typeof ArchivaiUtmutatoDothtmlRoute
   AszfRoute: typeof AszfRoute
   AuditRoute: typeof AuditRoute
@@ -235,7 +248,6 @@ export interface RootRouteChildren {
   SharingRoute: typeof SharingRoute
   SubscriptionRoute: typeof SubscriptionRoute
   SugoRoute: typeof SugoRoute
-  AdminReferralsRoute: typeof AdminReferralsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -318,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArchivaiUtmutatoDothtmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/adatkezeles': {
       id: '/adatkezeles'
       path: '/adatkezeles'
@@ -341,10 +360,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/referrals': {
       id: '/admin/referrals'
-      path: '/admin/referrals'
+      path: '/referrals'
       fullPath: '/admin/referrals'
       preLoaderRoute: typeof AdminReferralsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
@@ -356,10 +375,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminReferralsRoute: typeof AdminReferralsRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminReferralsRoute: AdminReferralsRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptInvitationRoute: AcceptInvitationRoute,
   AdatkezelesRoute: AdatkezelesRoute,
+  AdminRoute: AdminRouteWithChildren,
   ArchivaiUtmutatoDothtmlRoute: ArchivaiUtmutatoDothtmlRoute,
   AszfRoute: AszfRoute,
   AuditRoute: AuditRoute,
@@ -371,7 +401,6 @@ const rootRouteChildren: RootRouteChildren = {
   SharingRoute: SharingRoute,
   SubscriptionRoute: SubscriptionRoute,
   SugoRoute: SugoRoute,
-  AdminReferralsRoute: AdminReferralsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
