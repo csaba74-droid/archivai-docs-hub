@@ -98,7 +98,7 @@ export function UploadDialog({
 }) {
   const { customRows, all: allCats } = useCategories();
   const { isStrict } = useCategoryHelpers();
-  const { subscription, isTrialing } = useSubscription();
+  const { subscription, isTrialing, active } = useSubscription();
   const plan = subscription?.plan ?? null;
   const canAi = can(plan, "ai_categorization", { isTrialing });
   const canBulk = can(plan, "bulk_upload", { isTrialing });
