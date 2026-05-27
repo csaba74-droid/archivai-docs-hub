@@ -31,6 +31,11 @@ type UserRow = {
   storage_bytes: number;
 };
 
+type AdminOverviewRow = Partial<UserRow> & {
+  document_count?: number | string | null;
+  storage_bytes?: number | string | null;
+};
+
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("hu-HU");
@@ -69,7 +74,7 @@ function AdminPage() {
       setRows([]);
     } else {
       setRows(
-        ((data ?? []) as any[]).map((r) => ({
+        ((data ?? []) as AdminOverviewRow[]).map((r) => ({
           id: r.id ?? r.user_id,
           user_id: r.user_id ?? r.id,
           email: r.email,
@@ -120,7 +125,9 @@ function AdminPage() {
       toast.error("Hiba: " + error.message);
       return;
     }
-    toast.success(enable ? "Élethosszig hozzáférés bekapcsolva." : "Élethosszig hozzáférés kikapcsolva.");
+    toast.success(
+      enable ? "Élethosszig hozzáférés bekapcsolva." : "Élethosszig hozzáférés kikapcsolva.",
+    );
     await load();
   };
 
