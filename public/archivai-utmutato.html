@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archivai – Kezelési útmutató</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #1A2B4A;
+      --brand-light: #2d4a7a;
+      --accent: #4A90D9;
+      --accent2: #7eb3e8;
+      --bg: #f8f9fb;
+      --white: #ffffff;
+      --text: #334155;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --pro: #7C3AED;
+      --vallalati: #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--brand);
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { color: #fff; font-family: 'DM Serif Display', serif; font-size: 22px; text-decoration: none; }
+    .logo span { color: var(--accent2); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 400; margin-left: 10px; }
+    .header-badge {
+      background: rgba(255,255,255,0.1);
+      color: var(--accent2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    /* LAYOUT */
+    .layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 40px;
+      padding: 40px 40px 80px;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: sticky;
+      top: 80px;
+      height: fit-content;
+    }
+    .sidebar-inner {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .sidebar-title {
+      background: var(--brand);
+      color: #fff;
+      padding: 14px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .sidebar nav { padding: 8px 0; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar nav a:hover {
+      background: #f0f6ff;
+      color: var(--brand);
+      border-left-color: var(--accent);
+    }
+    .sidebar nav a .num {
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* CONTENT */
+    .content { min-width: 0; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+      border-radius: 16px;
+      padding: 48px 48px 40px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '🗄';
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 100px;
+      opacity: 0.1;
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      color: #fff;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .hero p { color: var(--accent2); font-size: 16px; max-width: 500px; }
+    .hero-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .hero-meta span {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* SECTIONS */
+    .section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .section-header {
+      background: var(--brand);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-num {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-header h2 {
+      font-family: 'DM Serif Display', serif;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 400;
+    }
+    .section-body { padding: 32px; }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand);
+      margin: 24px 0 10px;
+      padding-left: 12px;
+      border-left: 3px solid var(--accent);
+    }
+    h3:first-child { margin-top: 0; }
+    p { margin-bottom: 12px; color: var(--text); }
+
+    /* LISTS */
+    ul, ol { margin: 8px 0 16px 20px; color: var(--text); }
+    ul li, ol li { margin-bottom: 6px; padding-left: 4px; }
+
+    /* STEPS */
+    .steps { counter-reset: step; list-style: none; margin-left: 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding: 0;
+    }
+    .steps li::before {
+      content: counter(step);
+      background: var(--brand);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* INFO BOX */
+    .info-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #1e40af;
+    }
+    .info-box strong { color: #1e40af; }
+
+    .warning-box {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #92400e;
+    }
+
+    .success-box {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #166534;
+    }
+
+    /* PLAN BADGES */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-alap { background: #e0f2fe; color: #0369a1; }
+    .badge-pro { background: #ede9fe; color: var(--pro); }
+    .badge-vallalati { background: #dcfce7; color: var(--vallalati); }
+
+    /* PLAN TABLE */
+    .plan-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    .plan-table th { background: var(--brand); color: #fff; padding: 12px 16px; text-align: left; font-weight: 600; }
+    .plan-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+    .plan-table tr:last-child td { border-bottom: none; }
+    .plan-table tr:nth-child(even) td { background: var(--bg); }
+
+    /* SHORTCUT */
+    kbd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--brand);
+      font-weight: 600;
+    }
+
+    /* EMAIL EXAMPLE */
+    .email-example {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: monospace;
+      font-size: 14px;
+      color: var(--brand);
+      font-weight: 600;
+      margin: 12px 0;
+      letter-spacing: 0.5px;
+    }
+
+    /* ACCOUNTANT SECTION */
+    .accountant-card {
+      background: linear-gradient(135deg, #1A2B4A 0%, #2d4a7a 100%);
+      border-radius: 12px;
+      padding: 28px;
+      color: #fff;
+      margin: 16px 0;
+    }
+    .accountant-card h4 { font-size: 16px; margin-bottom: 8px; color: var(--accent2); }
+    .accountant-card p { color: rgba(255,255,255,0.8); margin-bottom: 0; }
+
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; padding: 20px; }
+      .sidebar { position: static; }
+      .hero { padding: 32px 24px; }
+      .hero h1 { font-size: 26px; }
+      .section-body { padding: 24px; }
+      .header-inner { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="https://archivai.hu">Archivai <span>/ Kezelési útmutató</span></a>
+    <span class="header-badge">2026. május</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-title">Tartalomjegyzék</div>
+      <nav>
+        <a href="#bevezetes"><span class="num">1</span> Bevezetés</a>
+        <a href="#elso-lepesek"><span class="num">2</span> Első lépések</a>
+        <a href="#dashboard"><span class="num">3</span> Dashboard</a>
+        <a href="#dokumentumok"><span class="num">4</span> Dokumentumok</a>
+        <a href="#email-cim"><span class="num">5</span> Archivai e-mail cím</a>
+        <a href="#kereses"><span class="num">6</span> Keresés</a>
+        <a href="#megosztás"><span class="num">7</span> Hozzáférés megosztása</a>
+        <a href="#audit"><span class="num">8</span> Audit napló</a>
+        <a href="#csomagok"><span class="num">9</span> Csomagok és fizetés</a>
+        <a href="#biztonsag"><span class="num">10</span> Adatbiztonság</a>
+        <a href="#gdpr"><span class="num">11</span> GDPR export</a>
+        <a href="#konyveloknek"><span class="num">12</span> Könyvelőknek</a>
+        <a href="#nav"><span class="num">13</span> NAV API integráció</a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <h1>Archivai kezelési útmutató</h1>
+      <p>Teljes körű útmutató az Archivai digitális dokumentumarchiváló rendszer használatához — végfelhasználóknak és könyvelőknek egyaránt.</p>
+      <div class="hero-meta">
+        <span>🔒 ITM rendelet szerinti archiválás</span>
+        <span>🤖 AI kategorizálás</span>
+        <span>🇪🇺 EU-s szervereken</span>
+      </div>
+    </div>
+
+    <!-- 1. BEVEZETÉS -->
+    <div class="section" id="bevezetes">
+      <div class="section-header">
+        <span class="section-num">1</span>
+        <h2>Bevezetés</h2>
+      </div>
+      <div class="section-body">
+        <h3>Mi az Archivai?</h3>
+        <p>Az Archivai egy felhőalapú digitális dokumentumarchiváló rendszer, amely lehetővé teszi vállalkozások és magánszemélyek számára dokumentumaik biztonságos, törvényileg megfelelő tárolását és kezelését.</p>
+        <p>A rendszer automatikusan felismeri és kategorizálja a feltöltött dokumentumokat mesterséges intelligencia segítségével, nyilvántartja a törvényi megőrzési időket, és biztosítja az 1/2018. (VI. 29.) ITM rendelet szerinti digitális archiválást.</p>
+
+        <h3>Kinek szól?</h3>
+        <ul>
+          <li><strong>Vállalkozásoknak</strong> — számlák, szerződések, munkaügyi iratok rendezett tárolása</li>
+          <li><strong>Egyéni vállalkozóknak</strong> — törvényi megfelelőség egyszerűen</li>
+          <li><strong>Könyvelőknek</strong> — ügyfelek dokumentumainak kezelése, automatikus beérkezés</li>
+          <li><strong>Magánszemélyeknek</strong> — fontos iratok biztonságos megőrzése</li>
+        </ul>
+
+        <h3>Törvényi háttér</h3>
+        <div class="info-box">
+          Az Archivai az <strong>1/2018. (VI. 29.) ITM rendelet</strong> előírásainak megfelelően működik, amely a digitális archiválás szabályait rögzíti. A rendszer biztosítja a dokumentumok törlés, megsemmisítés, utólagos módosítás és sérülés elleni védelmét.
+        </div>
+        <p>A törvényi megőrzési idők automatikusan be vannak állítva a dokumentum típusától függően:</p>
+        <ul>
+          <li>Számlák, szerződések — <strong>10 év</strong></li>
+          <li>Adóbevallások — <strong>6 év</strong></li>
+          <li>Közüzemi számlák, banki dokumentumok — <strong>5 év</strong></li>
+          <li>Munkaügyi iratok — <strong>határozatlan</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 2. ELSŐ LÉPÉSEK -->
+    <div class="section" id="elso-lepesek">
+      <div class="section-header">
+        <span class="section-num">2</span>
+        <h2>Első lépések</h2>
+      </div>
+      <div class="section-body">
+        <h3>Regisztráció</h3>
+        <ol class="steps">
+          <li>Menjen az <strong>archivai.hu</strong> weboldalra és kattintson a <strong>"Kipróbálom ingyen"</strong> gombra</li>
+          <li>Adja meg nevét, e-mail címét és válasszon jelszót</li>
+          <li>Fogadja el az Általános Szerződési Feltételeket</li>
+          <li>Kattintson a <strong>"Regisztráció"</strong> gombra</li>
+          <li>Erősítse meg az e-mail címét a beérkező megerősítő levélből</li>
+        </ol>
+
+        <h3>14 napos ingyenes próbaidőszak</h3>
+        <div class="success-box">
+          Regisztráció után azonnal elindul a <strong>14 napos ingyenes próbaidőszak</strong> — bankkártya megadása nélkül, korlátozás nélküli hozzáféréssel. A feltöltött dokumentumok megmaradnak, ha a próbaidőszak után előfizet.
+        </div>
+        <p>A próbaidőszak lejárta előtt e-mail értesítést küldünk. Ha nem fizet elő, a fiókja csak olvasható módba kerül — adatai nem törlődnek azonnal.</p>
+
+        <h3>Bejelentkezés</h3>
+        <ol class="steps">
+          <li>Látogasson el az <strong>archivai.hu</strong> weboldalra</li>
+          <li>Kattintson a <strong>"Belépés"</strong> gombra</li>
+          <li>Adja meg e-mail címét és jelszavát</li>
+          <li>Kattintson a <strong>"Belépés"</strong> gombra</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- 3. DASHBOARD -->
+    <div class="section" id="dashboard">
+      <div class="section-header">
+        <span class="section-num">3</span>
+        <h2>Dashboard</h2>
+      </div>
+      <div class="section-body">
+        <h3>Főoldal áttekintése</h3>
+        <p>A dashboard a belépés után megjelenő főoldal, ahol áttekintheti dokumentumait és elvégezheti a legfontosabb műveleteket.</p>
+
+        <h3>Kategória kártyák</h3>
+        <p>A főoldalon kategória kártyák jelennek meg, amelyek megmutatják az egyes kategóriákban tárolt dokumentumok számát:</p>
+        <ul>
+          <li><strong>Számlák</strong> — 10 éves megőrzési kötelezettség</li>
+          <li><strong>Szerződések</strong> — 10 éves megőrzési kötelezettség</li>
+          <li><strong>Szállítólevelek</strong> — 10 éves megőrzési kötelezettség</li>
+          <li><strong>Munkaügyi iratok</strong> — határozatlan megőrzési kötelezettség</li>
+          <li><strong>Adóbevallások</strong> — 6 éves megőrzési kötelezettség</li>
+          <li><strong>Közüzemi számlák</strong> — 5 éves megőrzési kötelezettség</li>
+          <li><strong>Banki dokumentumok</strong> — 5 éves megőrzési kötelezettség</li>
+          <li><strong>Műszaki dokumentumok</strong> — korlátlan megőrzés</li>
+          <li><strong>Belső iratok</strong> — korlátlan megőrzés</li>
+          <li><strong>Egyéb</strong> — korlátlan megőrzés</li>
+          <li><strong>Egyéni kategóriák</strong> — saját maga hozhatja létre</li>
+        </ul>
+
+        <h3>Archivai e-mail cím</h3>
+        <p>A dashboardon látható az Ön egyedi Archivai e-mail címe, amelyre dokumentumokat küldhet. <span class="badge badge-pro">Pro</span> <span class="badge badge-vallalati">Vállalati</span></p>
+
+        <h3>Mobil nézet</h3>
+        <p>Az Archivai teljes mértékben mobilon is használható — a dashboard alján lévő navigációs sávon keresztül érheti el a főbb funkciókat.</p>
+      </div>
+    </div>
+
+    <!-- 4. DOKUMENTUMOK -->
+    <div class="section" id="dokumentumok">
+      <div class="section-header">
+        <span class="section-num">4</span>
+        <h2>Dokumentumok kezelése</h2>
+      </div>
+      <div class="section-body">
+        <h3>Dokumentum feltöltése</h3>
+        <p>Dokumentumot feltölteni kétféleképpen lehet:</p>
+        <ul>
+          <li><strong>Drag & drop</strong> — húzza a fájlt a feltöltő zónára a dashboard főoldalán</li>
+          <li><strong>Kattintással</strong> — kattintson a feltöltő zónára és válassza ki a fájlt</li>
+        </ul>
+        <p>Támogatott fájlformátumok: PDF, DOCX, XLSX, JPG, PNG és más gyakori dokumentumformátumok.</p>
+
+        <h3>AI kategorizálás</h3>
+        <p>Feltöltés után a rendszer mesterséges intelligencia segítségével automatikusan elemzi és kategorizálja a dokumentumot. Az AI meghatározza:</p>
+        <ul>
+          <li>A dokumentum típusát (számla, szerződés, stb.)</li>
+          <li>A dokumentum dátumát</li>
+          <li>A megbízhatósági szintet (konfidencia)</li>
+        </ul>
+        <div class="info-box">
+          Ha az AI 85%-nál kevésbé biztos a kategóriában, megerősítést kér Öntől — így elkerülhető a téves kategorizálás.
+        </div>
+
+        <h3>10 perces visszavonási ablak</h3>
+        <div class="warning-box">
+          Feltöltés után <strong>10 percig</strong> lehetősége van a dokumentumot áthelyezni vagy törölni, még akkor is, ha törvényileg védett kategóriába került. 10 perc után a dokumentum véglegesen zárolódik. A visszaszámlálót a dokumentum kártyáján látja.
+        </div>
+
+        <h3>Dokumentum előnézet</h3>
+        <p>A dokumentum kártyájára kattintva megnyílik az előnézeti ablak, ahol megtekintheti a fájl tartalmát letöltés nélkül.</p>
+
+        <h3>Átnevezés</h3>
+        <p>A dokumentum neve módosítható a három pontos menüből (⋯) → <strong>"Átnevezés"</strong>.</p>
+
+        <h3>Áthelyezés</h3>
+        <p>Nem zárolt dokumentumok áthelyezhetők másik kategóriába a három pontos menüből (⋯) → <strong>"Áthelyezés"</strong>. Törvényileg védett kategóriában lévő dokumentumok csak a 10 perces visszavonási ablakon belül helyezhetők át.</p>
+
+        <h3>Törlés</h3>
+        <p>Dokumentum törölhető a három pontos menüből (⋯) → <strong>"Törlés"</strong>. Törvényileg zárolt dokumentumok nem törölhetők — ez szándékos, a törvényi megfelelőség érdekében.</p>
+
+        <h3>Egyéni kategóriák létrehozása</h3>
+        <p>Saját kategóriákat hozhat létre feltöltéskor vagy a dashboard menüjéből. Az egyéni kategóriák csak akkor törölhetők, ha üresek.</p>
+      </div>
+    </div>
+
+    <!-- 5. EMAIL CÍM -->
+    <div class="section" id="email-cim">
+      <div class="section-header">
+        <span class="section-num">5</span>
+        <h2>Archivai e-mail cím <span class="badge badge-pro" style="font-size:11px;vertical-align:middle;">Pro</span></h2>
+      </div>
+      <div class="section-body">
+        <h3>Mi ez és mire jó?</h3>
+        <p>Pro és Vállalati csomagban minden felhasználó kap egy egyedi Archivai e-mail címet. Ez lehetővé teszi, hogy bárki közvetlenül erre a címre küldjön dokumentumokat — amelyek automatikusan bekerülnek az Archivai rendszerbe.</p>
+
+        <h3>Az Ön egyedi e-mail címe</h3>
+        <p>Az e-mail cím az Ön regisztrált e-mail fiókjának neve alapján generálódik:</p>
+        <div class="email-example">felhasznalonev@inbox.archivai.hu</div>
+        <p>A pontos e-mail cím a dashboard főoldalán látható és egy gombbal másolható.</p>
+
+        <h3>Hogyan tudnak Önnek dokumentumot küldeni</h3>
+        <ol class="steps">
+          <li>Adja meg könyvelőjének, szállítóinak az Archivai e-mail címét</li>
+          <li>Ők e-mailben küldik a dokumentumokat (számlákat, szállítóleveleket) mellékletként erre a címre</li>
+          <li>A rendszer automatikusan fogadja és feldolgozza a mellékletet</li>
+          <li>Az AI kategorizálja a dokumentumot és a megfelelő mappába helyezi</li>
+          <li>Ön azonnali értesítő e-mailt kap a beérkezésről</li>
+        </ol>
+
+        <h3>Értesítők</h3>
+        <p>Minden beérkező dokumentumról automatikus e-mail értesítést kap, amely tartalmazza:</p>
+        <ul>
+          <li>A beérkező fájl nevét</li>
+          <li>Az AI által meghatározott kategóriát</li>
+          <li>A feladó e-mail címét</li>
+          <li>Az e-mail tárgyát</li>
+          <li>Közvetlen linket a dokumentumhoz</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 6. KERESÉS -->
+    <div class="section" id="kereses">
+      <div class="section-header">
+        <span class="section-num">6</span>
+        <h2>Keresés</h2>
+      </div>
+      <div class="section-body">
+        <h3>Teljes szöveges keresés</h3>
+        <p>Az Archivai a feltöltött dokumentumok szövegében is keres — nem csak a fájlnévben. Így megtalálhatja például azt a számlát, amelyen szerepel egy adott szállító neve vagy összeg.</p>
+
+        <h3>Gyorsbillentyű</h3>
+        <p>A keresőt bármikor megnyithatja a <kbd>Ctrl</kbd> + <kbd>K</kbd> billentyűkombinációval (Mac-en <kbd>⌘</kbd> + <kbd>K</kbd>).</p>
+
+        <h3>Szűrők</h3>
+        <p>A keresési találatokat szűrheti:</p>
+        <ul>
+          <li><strong>Kategória szerint</strong> — csak egy adott típusú dokumentumok megjelenítése</li>
+          <li><strong>Dátum szerint</strong> — dátumtartomány megadásával</li>
+        </ul>
+
+        <h3>Keresési előzmények</h3>
+        <p>A rendszer megjegyzi a legutóbbi keresési kifejezéseket, így gyorsan visszatérhet korábbi kereséseihez.</p>
+      </div>
+    </div>
+
+    <!-- 7. MEGOSZTÁS -->
+    <div class="section" id="megosztás">
+      <div class="section-header">
+        <span class="section-num">7</span>
+        <h2>Hozzáférés megosztása</h2>
+      </div>
+      <div class="section-body">
+        <h3>Meghívó küldése</h3>
+        <ol class="steps">
+          <li>Menjen a <strong>"Hozzáférés megosztása"</strong> menüpontra</li>
+          <li>Adja meg a meghívott e-mail címét</li>
+          <li>Válassza ki, mely kategóriákhoz kapjon hozzáférést</li>
+          <li>Kattintson a <strong>"Meghívó küldése"</strong> gombra</li>
+          <li>A meghívott e-mailben kap egy linket, amellyel elfogadhatja a meghívást</li>
+        </ol>
+
+        <h3>Kategória szintű jogosultság</h3>
+        <p>Pontosan meghatározhatja, hogy a meghívott személy mely kategóriákhoz férhet hozzá. Például megoszthatja csak a számlákat a könyvelőjével, míg a szerződések bizalmasak maradnak.</p>
+
+        <h3>Meghívott korlátai</h3>
+        <div class="info-box">
+          A meghívott felhasználók <strong>csak olvashatnak</strong> — nem tölthetnek fel, nem törölhetnek és nem módosíthatnak dokumentumokat. Ez biztosítja az adatok integritását.
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. AUDIT NAPLÓ -->
+    <div class="section" id="audit">
+      <div class="section-header">
+        <span class="section-num">8</span>
+        <h2>Audit napló</h2>
+      </div>
+      <div class="section-body">
+        <h3>Mit rögzít az audit napló?</h3>
+        <p>Az Archivai minden műveletet automatikusan rögzít a hamisítás ellen védett audit naplóban:</p>
+        <ul>
+          <li>Dokumentum feltöltés</li>
+          <li>Dokumentum megtekintés</li>
+          <li>Dokumentum letöltés</li>
+          <li>Dokumentum törlés</li>
+          <li>Kategória módosítás</li>
+          <li>Keresések</li>
+          <li>Megosztások és hozzáférések</li>
+          <li>E-mailből érkező dokumentumok</li>
+        </ul>
+        <div class="info-box">
+          Az audit napló <strong>visszamenőleg nem módosítható</strong> — ez garantálja a törvényi megfelelőséget és a bizonyíthatóságot.
+        </div>
+
+        <h3>CSV export</h3>
+        <p>Az audit napló bármikor exportálható CSV formátumban magyar kategória nevekkel — ez hasznos könyvvizsgálatnál vagy hatósági ellenőrzésnél.</p>
+        <p>Az export elérhető: <strong>Audit napló oldal → "CSV exportálás"</strong> gomb.</p>
+      </div>
+    </div>
+
+    <!-- 9. CSOMAGOK -->
+    <div class="section" id="csomagok">
+      <div class="section-header">
+        <span class="section-num">9</span>
+        <h2>Csomagok és fizetés</h2>
+      </div>
+      <div class="section-body">
+        <h3>Elérhető csomagok</h3>
+        <table class="plan-table">
+          <thead>
+            <tr><th>Csomag</th><th>Havi díj</th><th>Éves díj</th><th>Tárhely</th><th>Dok./hó</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Alap</strong></td><td>2 990 Ft</td><td>30 490 Ft</td><td>5 GB</td><td>200</td></tr>
+            <tr><td><strong>Pro</strong></td><td>4 990 Ft</td><td>50 890 Ft</td><td>25 GB</td><td>500</td></tr>
+            <tr><td><strong>Vállalati</strong></td><td>9 990 Ft</td><td>101 890 Ft</td><td>100 GB</td><td>Korlátlan</td></tr>
+          </tbody>
+        </table>
+        <p>Az árak forintban értendők és ÁFA-t nem tartalmaznak (alanyi ÁFA-mentes szolgáltató).</p>
+
+        <h3>Csomag kiválasztása és fizetés</h3>
+        <ol class="steps">
+          <li>Menjen a <strong>Profil & Beállítások → Előfizetés → "Csomagok megtekintése"</strong> oldalra</li>
+          <li>Válassza ki a kívánt csomagot és az időszakot (havi/éves)</li>
+          <li>Kattintson a <strong>"Csomag kiválasztása"</strong> gombra</li>
+          <li>A biztonságos Stripe fizetési felületen adja meg bankkártya adatait</li>
+          <li>Fizetés után azonnal aktiválódik az előfizetés</li>
+        </ol>
+
+        <h3>Csomag váltása</h3>
+        <p>Bármikor válthat másik csomagra a <strong>Profil & Beállítások → Csomag váltása</strong> gombbal. Az időarányos elszámolás automatikusan történik — csak a különbözetet számolja fel vagy írja jóvá a rendszer.</p>
+
+        <h3>Előfizetés felmondása</h3>
+        <p>Az előfizetés bármikor felmondható a <strong>Profil & Beállítások → "Előfizetés felmondása"</strong> gombbal. A felmondás az aktuális előfizetési időszak végén lép hatályba — adatai addig elérhetők maradnak.</p>
+      </div>
+    </div>
+
+    <!-- 10. ADATBIZTONSÁG -->
+    <div class="section" id="biztonsag">
+      <div class="section-header">
+        <span class="section-num">10</span>
+        <h2>Adatbiztonság</h2>
+      </div>
+      <div class="section-body">
+        <h3>Kettős EU-s adattárolás</h3>
+        <p>Dokumentumai két egymástól független, európai uniós adatközpontban tárolódnak:</p>
+        <ul>
+          <li>🇩🇪 <strong>Frankfurt, Németország</strong> (AWS eu-central-1) — elsődleges szerver</li>
+          <li>🇮🇪 <strong>Dublin, Írország</strong> (AWS eu-west-1) — redundáns szerver</li>
+        </ul>
+        <div class="info-box">
+          Ha az egyik szerver meghibásodik, az adatok a másikról azonnal elérhetők. Az adatok soha nem hagyják el az Európai Uniót.
+        </div>
+
+        <h3>SHA-256 integritásvédelem</h3>
+        <p>Minden feltöltött dokumentumhoz egyedi SHA-256 kriptográfiai ujjlenyomat generálódik. Ez lehetővé teszi annak ellenőrzését, hogy a dokumentum nem változott-e meg a feltöltés óta — így bizonyítható az eredeti tartalom.</p>
+
+        <h3>Titkosítás</h3>
+        <ul>
+          <li><strong>AES-256 titkosítás</strong> — tárolt adatok védelme</li>
+          <li><strong>TLS 1.2+</strong> — adatátvitel védelme</li>
+        </ul>
+
+        <h3>ITM rendelet megfelelőség</h3>
+        <p>A rendszer az 1/2018. (VI. 29.) ITM rendelet előírásainak teljes mértékben megfelel — a dokumentumok módosítás, törlés és sérülés ellen védve vannak.</p>
+      </div>
+    </div>
+
+    <!-- 11. GDPR -->
+    <div class="section" id="gdpr">
+      <div class="section-header">
+        <span class="section-num">11</span>
+        <h2>GDPR export</h2>
+      </div>
+      <div class="section-body">
+        <h3>Adatai exportálása</h3>
+        <p>Bármikor letöltheti az összes dokumentumát és adatát a GDPR előírásainak megfelelően.</p>
+        <ol class="steps">
+          <li>Menjen a <strong>Profil & Beállítások</strong> oldalra</li>
+          <li>Görgessen az <strong>"Adataim exportálása"</strong> szekcióhoz</li>
+          <li>Kattintson az <strong>"Adataim exportálása (GDPR)"</strong> gombra</li>
+          <li>A rendszer ZIP fájlban csomagolja össze dokumentumait, CSV exportot és az audit naplót</li>
+          <li>Letöltés — a feldolgozás néhány percet vehet igénybe</li>
+        </ol>
+        <div class="info-box">
+          A GDPR export tartalmazza: összes dokumentumot, metaadatokat CSV-ben, és a teljes audit naplót. Ezt a funkciót a fiók törlésekor is javasoljuk elvégezni.
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. KÖNYVELŐKNEK -->
+    <div class="section" id="konyveloknek">
+      <div class="section-header">
+        <span class="section-num">12</span>
+        <h2>Könyvelőknek</h2>
+      </div>
+      <div class="section-body">
+        <h3>Ajánlói program</h3>
+        <p>Könyvelőként egyedi ajánlói linket kap, amellyel ügyfeleit regisztrálhatja az Archivai-ba. Ha valaki az ajánlói linken keresztül előfizet:</p>
+        <ul>
+          <li>Az ügyfél 1 hónap előfizetési díj jóváírást kap</li>
+          <li>Ön is 1 hónap jóváírást kap</li>
+        </ul>
+
+        <div class="accountant-card">
+          <h4>🎁 Könyvelői partner program</h4>
+          <p>Azon könyvelők, akik rendszeresen hoznak be ügyfeleket az Archivai-ba, <strong>lifetime ingyenes hozzáférést</strong> kaphatnak a rendszerhez. Vegye fel a kapcsolatot velünk a kapcsolat@archivai.hu e-mail címen.</p>
+        </div>
+
+        <h3>Ügyfél dokumentumok automatikus beérkezése</h3>
+        <p>Pro csomaggal az ügyfelei közvetlenül az Archivai e-mail címükre küldhetik a dokumentumokat — amelyek automatikusan bekerülnek a rendszerbe és értesítést kapnak. Ez ideális a számlák, szállítólevelek könyveléshez való továbbításához.</p>
+
+        <h3>Megosztott hozzáférés</h3>
+        <p>Az ügyfelek megoszthatják Önnel fiókjuk egyes kategóriáit (pl. csak a Számlákat). Ön olvasási hozzáféréssel megtekintheti és letöltheti a szükséges dokumentumokat anélkül, hogy az ügyfélnek manuálisan kellene küldenie azokat.</p>
+      </div>
+    </div>
+
+    <!-- 13. NAV API -->
+    <div class="section" id="nav">
+      <div class="section-header">
+        <span class="section-num">13</span>
+        <h2>NAV API integráció <span class="badge badge-vallalati" style="font-size:11px;vertical-align:middle;">Vállalati</span></h2>
+      </div>
+      <div class="section-body">
+        <div class="info-box">
+          Ez a funkció kizárólag <strong>Vállalati csomag</strong> előfizetőknek érhető el.
+        </div>
+
+        <h3>Mi ez és mire jó?</h3>
+        <p>A NAV API integráció lehetővé teszi, hogy az Archivai automatikusan letöltse a NAV Online Számla rendszerből az Ön nevére kiállított számlákat — emberi beavatkozás nélkül.</p>
+
+        <h3>Beállítás lépései</h3>
+        <ol class="steps">
+          <li>Lépjen be a <strong>NAV Online Számla</strong> rendszerbe (<strong>onlineszamla.nav.gov.hu</strong>)</li>
+          <li>Hozzon létre egy <strong>technikai felhasználót</strong> (Beállítások → Technikai felhasználók → Új)</li>
+          <li>Mentse el a kapott adatokat: technikai felhasználónév, aláírási kulcs (signatureKey), titkosítási kulcs (exchangeKey)</li>
+          <li>Az Archivai-ban menjen a <strong>Beállítások → NAV API integráció</strong> menüpontra</li>
+          <li>Adja meg adószámát és a NAV technikai felhasználó adatait</li>
+          <li>Kattintson a <strong>"Kapcsolat tesztelése"</strong> gombra</li>
+          <li>Sikeres kapcsolat után az Archivai automatikusan elkezdi letölteni a számlákat</li>
+        </ol>
+
+        <div class="warning-box">
+          <strong>Fontos:</strong> A NAV technikai felhasználó adatait biztonságosan, titkosítva tárolja a rendszer. Ezeket soha ne ossza meg harmadik féllel.
+        </div>
+
+        <h3>Automatikus szinkronizálás</h3>
+        <p>Beállítás után a rendszer rendszeres időközönként automatikusan lekérdezi az új számlákat a NAV rendszeréből és behelyezi azokat a <strong>Számlák</strong> kategóriába. Minden beérkező számláról értesítést kap.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>Archivai</strong> — Digitális dokumentumarchiváló rendszer</p>
+      <p style="margin-top:8px;">Lénárd Csaba egyéni vállalkozó · kapcsolat@archivai.hu · archivai.hu</p>
+      <p style="margin-top:8px; font-size:12px;">Útmutató verziója: 2026. május 27.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Smooth scroll + active sidebar
+  document.querySelectorAll('.sidebar nav a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
+</body>
+</html>
