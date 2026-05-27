@@ -42,6 +42,26 @@ function LandingPage() {
   const [checking, setChecking] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [refParam, setRefParam] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(window.location.search).get("ref");
+      if (ref && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+        setRefParam(ref);
+        sessionStorage.setItem("archivai_ref", ref);
+      } else {
+        const stored = sessionStorage.getItem("archivai_ref");
+        if (stored) setRefParam(stored);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const goRegister = () =>
+    navigate({ to: "/register", search: refParam ? { ref: refParam } : undefined });
+
 
   useEffect(() => {
     let cancelled = false;
@@ -113,7 +133,7 @@ function LandingPage() {
               Belépés
             </Button>
             <Button
-              onClick={() => navigate({ to: "/register" })}
+              onClick={() => goRegister()}
               className="bg-brand text-brand-foreground hover:bg-brand-hover"
             >
               Kipróbálom ingyen
@@ -151,7 +171,7 @@ function LandingPage() {
                   Belépés
                 </Button>
                 <Button
-                  onClick={() => navigate({ to: "/register" })}
+                  onClick={() => goRegister()}
                   className="bg-brand text-brand-foreground"
                 >
                   Kipróbálom ingyen
@@ -180,7 +200,7 @@ function LandingPage() {
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button
                 size="lg"
-                onClick={() => navigate({ to: "/register" })}
+                onClick={() => goRegister()}
                 className="bg-brand text-brand-foreground hover:bg-brand-hover"
               >
                 Kipróbálom ingyen <ArrowRight className="h-4 w-4" />
@@ -415,7 +435,7 @@ function LandingPage() {
                   ))}
                 </ul>
                 <Button
-                  onClick={() => navigate({ to: "/register" })}
+                  onClick={() => goRegister()}
                   className={`mt-7 w-full ${
                     p.highlight
                       ? "bg-brand text-brand-foreground hover:bg-brand-hover"
@@ -442,7 +462,7 @@ function LandingPage() {
           </p>
           <Button
             size="lg"
-            onClick={() => navigate({ to: "/register" })}
+            onClick={() => goRegister()}
             className="mt-8 bg-brand-foreground text-brand hover:bg-brand-foreground/90"
           >
             Kipróbálom ingyen <ArrowRight className="h-4 w-4" />
