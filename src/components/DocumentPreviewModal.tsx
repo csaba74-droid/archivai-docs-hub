@@ -59,6 +59,8 @@ export function DocumentPreviewModal({
     }
     setNameValue(doc.filename);
     setEditingName(false);
+    setNotesValue(doc.notes ?? "");
+    setEditingNotes(false);
 
     void logAudit("view", doc.id);
     getSignedUrl(doc.storage_path, 600).then((u) => {
