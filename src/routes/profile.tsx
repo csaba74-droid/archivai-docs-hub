@@ -61,8 +61,25 @@ function ProfilePage() {
       return;
     }
     setNavSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) {
+      setNavSaving(false);
+      toast.error("Nincs bejelentkezve");
+      return;
+    }
+    const { error } = await supabase.from("nav_settings").upsert({
+      user_id: u.user.id,
+      adoszam: navTaxNumber,
+      technical_username: navUsername,
+      signature_key: navSignatureKey,
+      exchange_key: navExchangeKey,
+    });
     setNavSaving(false);
+    if (error) {
+      console.error(error);
+      toast.error("Mentési hiba", { description: error.message });
+      return;
+    }
     toast.success("NAV beállítások mentve");
   };
 
@@ -72,6 +89,24 @@ function ProfilePage() {
     setNavTesting(false);
     toast.success("Kapcsolat sikeres");
   };
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase
+        .from("nav_settings")
+        .select("*")
+        .eq("user_id", u.user.id)
+        .maybeSingle();
+      if (data) {
+        setNavTaxNumber(data.adoszam ?? "");
+        setNavUsername(data.technical_username ?? "");
+        setNavSignatureKey(data.signature_key ?? "");
+        setNavExchangeKey(data.exchange_key ?? "");
+      }
+    })();
+  }, []);
 
   const canCancel = subscription?.status !== "canceled";
   const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
