@@ -57,7 +57,7 @@ function ProfilePage() {
       toast.error("Érvénytelen adószám", { description: "Formátum: 12345678-1-23" });
       return;
     }
-    if (!navUsername || !navSignatureKey || !navExchangeKey) {
+    if (!navUsername || !navPassword || !navSignatureKey || !navExchangeKey) {
       toast.error("Hiányzó mezők", { description: "Töltsön ki minden mezőt." });
       return;
     }
