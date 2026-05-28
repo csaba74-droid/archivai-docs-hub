@@ -218,23 +218,15 @@ export function DocumentPreviewModal({
           <div className="space-y-3 overflow-y-auto text-sm pr-2">
             <Field label="Eredeti fájlnév" value={doc.original_filename} />
             <Field label="Feltöltve" value={new Date(doc.created_at).toLocaleString("hu-HU")} />
-
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Dokumentum dátuma
-              </div>
-              <div className="mt-0.5">
-                <span>{doc.document_date ? new Date(doc.document_date).toLocaleDateString("hu-HU") : "—"}</span>
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center justify-between">
-                <span>Megjegyzés</span>
-                {!editingNotes && (
+            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700/60 p-3 shadow-sm">
+              <div className="text-[11px] uppercase tracking-wider text-amber-800 dark:text-amber-300 font-bold flex items-center justify-between mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Pencil className="h-3.5 w-3.5" /> Megjegyzés
+                </span>
+                {!editingNotes && doc.notes && doc.notes.trim() && (
                   <button
                     onClick={() => setEditingNotes(true)}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
                     aria-label="Megjegyzés szerkesztése"
                     title="Megjegyzés szerkesztése"
                   >
@@ -243,12 +235,13 @@ export function DocumentPreviewModal({
                 )}
               </div>
               {editingNotes ? (
-                <div className="mt-1 space-y-2">
+                <div className="space-y-2">
                   <Input
                     value={notesValue}
                     onChange={(e) => setNotesValue(e.target.value)}
                     placeholder="pl. 2026.Q1"
                     autoFocus
+                    className="bg-white dark:bg-background border-amber-300 dark:border-amber-700"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") saveNotes();
                       if (e.key === "Escape") { setEditingNotes(false); setNotesValue(doc.notes ?? ""); }
@@ -263,10 +256,18 @@ export function DocumentPreviewModal({
                     </Button>
                   </div>
                 </div>
+              ) : doc.notes && doc.notes.trim() ? (
+                <span className="inline-block bg-amber-200 dark:bg-amber-800/70 text-amber-950 dark:text-amber-50 px-2.5 py-1 rounded-md text-sm font-medium break-words max-w-full">
+                  {doc.notes}
+                </span>
               ) : (
-                <div className="mt-0.5 whitespace-pre-wrap break-words">
-                  {doc.notes && doc.notes.trim() ? doc.notes : <span className="text-muted-foreground">—</span>}
-                </div>
+                <button
+                  onClick={() => setEditingNotes(true)}
+                  className="w-full text-left text-sm text-amber-700/80 dark:text-amber-300/80 italic hover:text-amber-900 dark:hover:text-amber-100 flex items-center gap-1.5"
+                >
+                  <Pencil className="h-3.5 w-3.5 shrink-0" />
+                  Kattintson a megjegyzés hozzáadásához...
+                </button>
               )}
             </div>
 
