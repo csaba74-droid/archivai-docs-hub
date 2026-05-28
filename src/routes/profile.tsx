@@ -134,6 +134,7 @@ function ProfilePage() {
       if (data) {
         setNavTaxNumber(data.adoszam ?? "");
         setNavUsername(data.technical_username ?? "");
+        setNavPassword((data as { password?: string }).password ?? "");
         setNavSignatureKey(data.signature_key ?? "");
         setNavExchangeKey(data.exchange_key ?? "");
       }
