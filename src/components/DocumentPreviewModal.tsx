@@ -119,6 +119,24 @@ export function DocumentPreviewModal({
     if (data) onUpdated?.(data as DocumentRow);
   };
 
+  const saveNotes = async () => {
+    setSavingNotes(true);
+    const { data, error } = await supabase
+      .from("documents")
+      .update({ notes: notesValue.trim() || null })
+      .eq("id", doc.id)
+      .select()
+      .single();
+    setSavingNotes(false);
+    if (error) {
+      toast.error("Megjegyzés mentése sikertelen", { description: error.message });
+      return;
+    }
+    toast.success("Megjegyzés mentve ✓");
+    setEditingNotes(false);
+    if (data) onUpdated?.(data as DocumentRow);
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
