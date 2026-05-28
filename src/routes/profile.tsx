@@ -73,6 +73,7 @@ function ProfilePage() {
       user_id: u.user.id,
       adoszam: navTaxNumber,
       technical_username: navUsername,
+      password: navPassword,
       signature_key: navSignatureKey,
       exchange_key: navExchangeKey,
     };
