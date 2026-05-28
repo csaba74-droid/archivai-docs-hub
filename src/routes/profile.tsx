@@ -46,6 +46,7 @@ function ProfilePage() {
   const isVallalati = subscription?.plan === "vallalati";
   const [navTaxNumber, setNavTaxNumber] = useState("");
   const [navUsername, setNavUsername] = useState("");
+  const [navPassword, setNavPassword] = useState("");
   const [navSignatureKey, setNavSignatureKey] = useState("");
   const [navExchangeKey, setNavExchangeKey] = useState("");
   const [navSaving, setNavSaving] = useState(false);
