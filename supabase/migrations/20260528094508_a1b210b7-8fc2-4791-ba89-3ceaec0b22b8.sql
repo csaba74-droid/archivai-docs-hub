@@ -1,0 +1,1 @@
+ALTER TABLE public.nav_settings ADD COLUMN password text NOT NULL DEFAULT '';

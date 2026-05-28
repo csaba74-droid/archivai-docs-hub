@@ -138,6 +138,7 @@ export type Database = {
           adoszam: string
           created_at: string
           exchange_key: string
+          password: string
           signature_key: string
           technical_username: string
           updated_at: string
@@ -147,6 +148,7 @@ export type Database = {
           adoszam: string
           created_at?: string
           exchange_key: string
+          password?: string
           signature_key: string
           technical_username: string
           updated_at?: string
@@ -156,6 +158,7 @@ export type Database = {
           adoszam?: string
           created_at?: string
           exchange_key?: string
+          password?: string
           signature_key?: string
           technical_username?: string
           updated_at?: string

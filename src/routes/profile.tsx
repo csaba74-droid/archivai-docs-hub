@@ -46,6 +46,7 @@ function ProfilePage() {
   const isVallalati = subscription?.plan === "vallalati";
   const [navTaxNumber, setNavTaxNumber] = useState("");
   const [navUsername, setNavUsername] = useState("");
+  const [navPassword, setNavPassword] = useState("");
   const [navSignatureKey, setNavSignatureKey] = useState("");
   const [navExchangeKey, setNavExchangeKey] = useState("");
   const [navSaving, setNavSaving] = useState(false);
@@ -56,7 +57,7 @@ function ProfilePage() {
       toast.error("Érvénytelen adószám", { description: "Formátum: 12345678-1-23" });
       return;
     }
-    if (!navUsername || !navSignatureKey || !navExchangeKey) {
+    if (!navUsername || !navPassword || !navSignatureKey || !navExchangeKey) {
       toast.error("Hiányzó mezők", { description: "Töltsön ki minden mezőt." });
       return;
     }
@@ -72,6 +73,7 @@ function ProfilePage() {
       user_id: u.user.id,
       adoszam: navTaxNumber,
       technical_username: navUsername,
+      password: navPassword,
       signature_key: navSignatureKey,
       exchange_key: navExchangeKey,
     };
@@ -132,6 +134,7 @@ function ProfilePage() {
       if (data) {
         setNavTaxNumber(data.adoszam ?? "");
         setNavUsername(data.technical_username ?? "");
+        setNavPassword((data as { password?: string }).password ?? "");
         setNavSignatureKey(data.signature_key ?? "");
         setNavExchangeKey(data.exchange_key ?? "");
       }
@@ -389,6 +392,17 @@ function ProfilePage() {
                   value={navUsername}
                   onChange={(e) => setNavUsername(e.target.value)}
                   placeholder="pl. abc123xyz"
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="navPassword">NAV jelszó</Label>
+                <Input
+                  id="navPassword"
+                  type="password"
+                  value={navPassword}
+                  onChange={(e) => setNavPassword(e.target.value)}
                   autoComplete="off"
                   className="mt-1"
                 />
