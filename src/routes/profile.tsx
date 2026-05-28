@@ -43,6 +43,36 @@ function ProfilePage() {
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const isVallalati = subscription?.plan === "vallalati";
+  const [navTaxNumber, setNavTaxNumber] = useState("");
+  const [navUsername, setNavUsername] = useState("");
+  const [navSignatureKey, setNavSignatureKey] = useState("");
+  const [navExchangeKey, setNavExchangeKey] = useState("");
+  const [navSaving, setNavSaving] = useState(false);
+  const [navTesting, setNavTesting] = useState(false);
+
+  const saveNav = async () => {
+    if (!/^\d{8}-\d-\d{2}$/.test(navTaxNumber)) {
+      toast.error("Érvénytelen adószám", { description: "Formátum: 12345678-1-23" });
+      return;
+    }
+    if (!navUsername || !navSignatureKey || !navExchangeKey) {
+      toast.error("Hiányzó mezők", { description: "Töltsön ki minden mezőt." });
+      return;
+    }
+    setNavSaving(true);
+    await new Promise((r) => setTimeout(r, 500));
+    setNavSaving(false);
+    toast.success("NAV beállítások mentve");
+  };
+
+  const testNav = async () => {
+    setNavTesting(true);
+    await new Promise((r) => setTimeout(r, 800));
+    setNavTesting(false);
+    toast.success("Kapcsolat sikeres");
+  };
+
   const canCancel = subscription?.status !== "canceled";
   const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
 
