@@ -134,6 +134,7 @@ export function useDocumentSearch(docs: DocumentRow[], allCats: Category[]) {
         _filename: normalize(d.filename ?? ""),
         _original: normalize(d.original_filename ?? ""),
         _content: normalize(d.content_text ?? ""),
+        _notes: normalize(d.notes ?? ""),
         _category: normalize(cat.label),
         _date: d.document_date ?? d.created_at ?? "",
       };
