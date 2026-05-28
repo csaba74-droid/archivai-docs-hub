@@ -214,6 +214,7 @@ export function useDocumentSearch(docs: DocumentRow[], allCats: Category[]) {
         matchedField = key.replace(/^_/, "");
         const sourceField =
           key === "_content" ? item.doc.content_text :
+          key === "_notes" ? item.doc.notes :
           key === "_original" ? item.doc.original_filename :
           key === "_category" ? item.category.label :
           item.doc.filename;
