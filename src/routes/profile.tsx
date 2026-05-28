@@ -397,6 +397,17 @@ function ProfilePage() {
                 />
               </div>
               <div>
+                <Label htmlFor="navPassword">NAV jelszó</Label>
+                <Input
+                  id="navPassword"
+                  type="password"
+                  value={navPassword}
+                  onChange={(e) => setNavPassword(e.target.value)}
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div>
                 <Label htmlFor="navSignatureKey">Aláírási kulcs (signatureKey)</Label>
                 <Input
                   id="navSignatureKey"
