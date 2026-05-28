@@ -133,6 +133,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nav_settings: {
+        Row: {
+          adoszam: string
+          created_at: string
+          exchange_key: string
+          signature_key: string
+          technical_username: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adoszam: string
+          created_at?: string
+          exchange_key: string
+          signature_key: string
+          technical_username: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adoszam?: string
+          created_at?: string
+          exchange_key?: string
+          signature_key?: string
+          technical_username?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           archivai_email: string | null
