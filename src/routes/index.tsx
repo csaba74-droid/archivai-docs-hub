@@ -200,7 +200,7 @@ function LandingPage() {
               Törvényi előírás szerint archiválva
             </span>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-brand sm:text-5xl lg:text-6xl">
-              A dokumentumai végre nem csak megvannak — meg is találja őket.
+              A dokumentumai megvannak — de találja is meg őket.
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
               Az Archivai automatikusan kategorizálja és biztonságosan archiválja
@@ -742,7 +742,7 @@ function AudienceSection() {
             Kinek szól?
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-brand sm:text-4xl">
-            Ugyanaz a káosz — az Ön szakmájára szabva.
+            Rendszer a dokumentumaiban, biztonság a működésében.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Bármilyen vállalkozást vezet, a dokumentumkezelés időt és energiát visz el.
