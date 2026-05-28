@@ -25,6 +25,7 @@ export type DocumentRow = {
   content_text: string | null;
   ai_confidence: number | null;
   document_date: string | null;
+  notes: string | null;
   created_at: string;
 };
 
