@@ -143,12 +143,13 @@ export function useDocumentSearch(docs: DocumentRow[], allCats: Category[]) {
 
   const fuse = useMemo(
     () =>
-      new Fuse(indexed, {
         keys: [
-          { name: "_filename", weight: 0.4 },
-          { name: "_original", weight: 0.25 },
-          { name: "_category", weight: 0.2 },
-          { name: "_content", weight: 0.15 },
+          { name: "_filename", weight: 0.35 },
+          { name: "_original", weight: 0.2 },
+          { name: "_category", weight: 0.15 },
+          { name: "_notes", weight: 0.2 },
+          { name: "_content", weight: 0.1 },
+        ],
         ],
         threshold: 0.4,
         ignoreLocation: true,
