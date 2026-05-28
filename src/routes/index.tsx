@@ -533,3 +533,273 @@ function LandingPage() {
     </div>
   );
 }
+
+type AudienceCard = {
+  icon: typeof Calculator;
+  title: string;
+  pain: string;
+  checks: string[];
+  tag: string;
+  accent: string; // tailwind classes for tinted accent bg/text
+  tagClass: string;
+  preview: React.ReactNode;
+};
+
+function MiniRow({
+  icon: Icon,
+  label,
+  meta,
+  badge,
+  badgeClass,
+}: {
+  icon: typeof FileText;
+  label: string;
+  meta?: string;
+  badge?: string;
+  badgeClass?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border/60 bg-background px-2.5 py-1.5 text-[11px]">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-brand/70" />
+      <span className="truncate font-medium text-foreground">{label}</span>
+      {meta && <span className="ml-auto shrink-0 text-muted-foreground">{meta}</span>}
+      {badge && (
+        <span
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+            badgeClass ?? "bg-brand-soft text-brand"
+          }`}
+        >
+          {badge}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function AudienceSection() {
+  const cards: AudienceCard[] = [
+    {
+      icon: Calculator,
+      title: "Könyvelőirodák",
+      pain: "Több ügyfél, rengeteg dokumentum egyszerre",
+      checks: [
+        "Ügyfelek dokumentumai szétválasztva",
+        "E-mailben küldhetnek be iratokat",
+        "Bevallási időszak megjegyzéssel jelölhető",
+      ],
+      tag: "Partneri program könyvelőknek",
+      accent: "bg-blue-50 text-blue-700 ring-blue-200",
+      tagClass: "bg-blue-100 text-blue-800",
+      preview: (
+        <div className="space-y-1.5">
+          <MiniRow icon={Folder} label="Kovács Kft." meta="247 dok" />
+          <MiniRow icon={Folder} label="Szabó Bt." meta="182 dok" />
+          <MiniRow icon={Folder} label="Nagy és Társa Kft." meta="311 dok" />
+        </div>
+      ),
+    },
+    {
+      icon: Store,
+      title: "Kisvállalkozások",
+      pain: "Számlák, szerződések szétszórva — megtalálni lehetetlen",
+      checks: [
+        "Minden irat egy helyen, kereshető",
+        "AI automatikusan kategorizál",
+        "NAV ellenőrzésnél azonnal megtalál mindent",
+      ],
+      tag: "14 nap ingyen, kártya nélkül",
+      accent: "bg-teal-50 text-teal-700 ring-teal-200",
+      tagClass: "bg-teal-100 text-teal-800",
+      preview: (
+        <div className="space-y-1.5">
+          <MiniRow icon={Folder} label="Számlák" meta="48 dok" badge="10 év" />
+          <MiniRow icon={Folder} label="Szerződések" meta="12 dok" badge="10 év" />
+          <MiniRow icon={Folder} label="Közüzemi" meta="23 dok" badge="5 év" />
+        </div>
+      ),
+    },
+    {
+      icon: Wrench,
+      title: "Kivitelezők",
+      pain: "Helyszíni fotók, szállítólevelek, szerződések mindenfelé",
+      checks: [
+        "Projektenként rendezett dokumentumok",
+        "Fotók, PDF-ek, szállítólevelek egy helyen",
+        "Alvállalkozói iratok is kezelhetők",
+      ],
+      tag: "Projektalapú rendszerezés",
+      accent: "bg-amber-50 text-amber-800 ring-amber-200",
+      tagClass: "bg-amber-100 text-amber-900",
+      preview: (
+        <div className="space-y-1.5">
+          <MiniRow icon={FileText} label="Vállalkozási szerződés.pdf" />
+          <MiniRow icon={FileText} label="Teljesítésigazolás.pdf" />
+          <MiniRow icon={ImageIcon} label="Helyszíni fotók" meta="12 db" />
+          <MiniRow icon={FileText} label="Szállítólevél_042.pdf" />
+        </div>
+      ),
+    },
+    {
+      icon: Home,
+      title: "Ingatlanközvetítők",
+      pain: "Adásvételek, bérleti szerződések — papírhegyek ügyfelenként",
+      checks: [
+        "Ügyfelenként rendezett szerződések",
+        "10 éves megőrzési kötelezettség automatikusan",
+        "Biztonságos megosztás ügyvéddel, vevővel",
+      ],
+      tag: "Szerződések biztonságban",
+      accent: "bg-purple-50 text-purple-700 ring-purple-200",
+      tagClass: "bg-purple-100 text-purple-800",
+      preview: (
+        <div className="space-y-1.5">
+          <MiniRow
+            icon={FileText}
+            label="Adásvételi szerz. Bp.II."
+            badge="Archivált"
+            badgeClass="bg-emerald-100 text-emerald-700"
+          />
+          <MiniRow
+            icon={FileText}
+            label="Bérleti szerz. Miskolc"
+            badge="Archivált"
+            badgeClass="bg-emerald-100 text-emerald-700"
+          />
+          <MiniRow
+            icon={FileText}
+            label="Előszerződés Győr"
+            badge="Folyamatban"
+            badgeClass="bg-amber-100 text-amber-800"
+          />
+        </div>
+      ),
+    },
+    {
+      icon: Briefcase,
+      title: "Ügyvédi irodák",
+      pain: "Ügyiratokat keresni — az idő pénz, és mindkettő fogy",
+      checks: [
+        "Ügyenként rendezett, azonnal kereshető iratok",
+        "Hamisításbiztos audit napló",
+        "Ügyfeleknek megosztható olvasási hozzáférés",
+      ],
+      tag: "Bizonyítható hitelesség",
+      accent: "bg-rose-50 text-rose-700 ring-rose-200",
+      tagClass: "bg-rose-100 text-rose-800",
+      preview: (
+        <div className="space-y-1.5">
+          <MiniRow icon={Folder} label="Polgári ügy — Kovács J." meta="34 dok" />
+          <MiniRow icon={Folder} label="Cégeljárás — ABC Kft." meta="18 dok" />
+          <MiniRow icon={Folder} label="Ingatlan — Bp.XIV" meta="27 dok" />
+        </div>
+      ),
+    },
+    {
+      icon: User,
+      title: "Egyéni vállalkozók",
+      pain: "Mindent egyedül — és a NAV sem vár",
+      checks: [
+        "Egyszerű feltöltés, automatikus rendszerezés",
+        "NAV integráció — számlák automatikusan érkeznek",
+        "Könyvelőnek egy kattintással megosztható",
+      ],
+      tag: "Alap csomag: 2 990 Ft/hó",
+      accent: "bg-slate-100 text-slate-700 ring-slate-200",
+      tagClass: "bg-slate-200 text-slate-800",
+      preview: (
+        <div className="space-y-1.5">
+          <div className="rounded-md border border-border/60 bg-background px-2.5 py-1.5">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">Havi keret</span>
+              <span className="font-semibold text-foreground">34 / 200</span>
+            </div>
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+              <div className="h-full w-[17%] bg-brand" />
+            </div>
+          </div>
+          <MiniRow
+            icon={FileText}
+            label="NAV_2026_04_szamla.xml"
+            badge="NAV"
+            badgeClass="bg-blue-100 text-blue-700"
+          />
+          <MiniRow icon={FileText} label="Megbízási szerződés.pdf" />
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <section id="kinek-szol" className="scroll-mt-20 bg-secondary/60 py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center rounded-full border border-brand/15 bg-brand-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand">
+            Kinek szól?
+          </span>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight text-brand sm:text-4xl">
+            Ugyanaz a káosz — az Ön szakmájára szabva.
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            Bármilyen vállalkozást vezet, a dokumentumkezelés időt és energiát visz el.
+            Az Archivai rendet teremt.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((c) => {
+            const Icon = c.icon;
+            return (
+              <div
+                key={c.title}
+                className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${c.accent}`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <h3 className="text-lg font-semibold text-brand">{c.title}</h3>
+                  </div>
+                  <p className="mt-4 text-sm italic leading-relaxed text-muted-foreground">
+                    „{c.pain}"
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm">
+                    {c.checks.map((t) => (
+                      <li key={t} className="flex items-start gap-2 text-foreground/85">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                        <span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-5">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${c.tagClass}`}
+                    >
+                      {c.tag}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-dashed border-border bg-secondary/50 p-4">
+                  <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-sm bg-brand text-brand-foreground">
+                        <Archive className="h-2.5 w-2.5" />
+                      </span>
+                      Archivai
+                    </span>
+                    <span>Előnézet</span>
+                  </div>
+                  {c.preview}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
