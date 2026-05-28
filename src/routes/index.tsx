@@ -355,6 +355,11 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* AUDIENCE */}
+      <AudienceSection />
+
+
+
       {/* PRICING */}
       <section id="arazas" className="bg-secondary/60 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
