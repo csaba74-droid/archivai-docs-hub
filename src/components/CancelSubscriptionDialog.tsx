@@ -24,7 +24,35 @@ export function CancelSubscriptionDialog({
   currentPlan?: "alap" | "pro" | "vallalati" | null;
 }) {
   const [strictCount, setStrictCount] = useState<number | null>(null);
-  const { openPortal, loading } = useBillingPortal();
+  const [loading, setLoading] = useState(false);
+
+  const openPortal = async () => {
+    setLoading(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        toast.error("Bejelentkezés szükséges");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(
+        "create-portal-session",
+        {
+          body: {
+            userId: u.user.id,
+            returnUrl: window.location.origin + "/profile",
+          },
+        },
+      );
+      if (error) throw new Error(error.message);
+      if (!data?.url) throw new Error(data?.error || "Üres válasz a szervertől");
+      window.open(data.url, "_blank", "noopener");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error("Nem sikerült megnyitni", { description: msg });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
