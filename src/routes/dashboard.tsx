@@ -1093,7 +1093,7 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
             <div className="flex-1 min-w-0">
               <div className={`font-bold truncate ${hasInboxDocs ? "text-lg" : "text-sm"}`}>{inbox.label}</div>
               <div className={`truncate ${hasInboxDocs ? "text-xs text-white/90" : "text-[11px] text-amber-800/80"}`}>
-                Osztályozásra váró dokumentumok
+                Rendszerezésre váró dokumentumok
               </div>
             </div>
             {hasInboxDocs ? (
@@ -1241,7 +1241,7 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
               {inbox.label}
             </div>
             <div className={`truncate ${hasInboxDocs ? "text-sm text-white/90 mt-0.5" : "text-xs text-amber-800/80 mt-0.5"}`}>
-              Osztályozásra váró dokumentumok
+              Rendszerezésre váró dokumentumok
             </div>
           </div>
           {hasInboxDocs ? (
