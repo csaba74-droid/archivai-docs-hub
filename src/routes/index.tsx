@@ -364,6 +364,7 @@ function LandingPage() {
               {
                 name: "ALAP",
                 price: "2 990",
+                yearly: "30 490",
                 features: [
                   "5 GB tárhely",
                   "200 dokumentum/hó",
@@ -378,6 +379,7 @@ function LandingPage() {
               {
                 name: "PRO",
                 price: "4 990",
+                yearly: "50 890",
                 features: [
                   "25 GB tárhely",
                   "500 dokumentum/hó",
@@ -394,6 +396,7 @@ function LandingPage() {
               {
                 name: "VÁLLALATI",
                 price: "9 990",
+                yearly: "101 890",
                 features: [
                   "100 GB tárhely",
                   "Korlátlan dokumentum",
@@ -426,6 +429,14 @@ function LandingPage() {
                   <span className="text-4xl font-bold text-brand">{p.price}</span>
                   <span className="text-sm text-muted-foreground">Ft/hó</span>
                 </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Éves: <span className="font-semibold text-foreground">{p.yearly} Ft / év</span>
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                    2 hónap grátisz!
+                  </span>
+                </div>
                 <ul className="mt-6 flex-1 space-y-3 text-sm">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-foreground/80">
@@ -457,8 +468,7 @@ function LandingPage() {
             Kezdje el még ma
           </h2>
           <p className="mt-4 text-base leading-relaxed text-brand-foreground/80">
-            14 napos ingyenes próba — csak akkor fizet ha elégedett. A feltöltött
-            dokumentumok megmaradnak előfizetés esetén.
+            Próbálja ki 14 napig ingyen. Amit feltölt, az nem vész el — előfizetés után ugyanott folytatja.
           </p>
           <Button
             size="lg"
