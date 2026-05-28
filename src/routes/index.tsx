@@ -387,7 +387,6 @@ function LandingPage() {
                   "10 egyéni kategória",
                   "AI kategorizálás",
                   "Audit napló",
-                  "NAV integráció",
                   "Archivai postafiók",
                 ],
                 cta: "Kipróbálom ingyen",
