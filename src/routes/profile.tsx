@@ -61,22 +61,29 @@ function ProfilePage() {
       return;
     }
     setNavSaving(true);
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u, error: userErr } = await supabase.auth.getUser();
+    console.log("[NAV save] auth.getUser:", { user: u?.user?.id, userErr });
     if (!u.user) {
       setNavSaving(false);
       toast.error("Nincs bejelentkezve");
       return;
     }
-    const { error } = await supabase.from("nav_settings").upsert({
+    const payload = {
       user_id: u.user.id,
       adoszam: navTaxNumber,
       technical_username: navUsername,
       signature_key: navSignatureKey,
       exchange_key: navExchangeKey,
-    });
+    };
+    console.log("[NAV save] upserting payload:", payload);
+    const { data: upsertData, error } = await supabase
+      .from("nav_settings")
+      .upsert(payload, { onConflict: "user_id" })
+      .select();
+    console.log("[NAV save] upsert result:", { upsertData, error });
     setNavSaving(false);
     if (error) {
-      console.error(error);
+      console.error("[NAV save] error:", error);
       toast.error("Mentési hiba", { description: error.message });
       return;
     }
