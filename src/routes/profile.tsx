@@ -279,7 +279,92 @@ function ProfilePage() {
             </Button>
           </div>
         </Card>
+
+        {/* NAV API integráció */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-5 w-5 text-brand" />
+            <h2 className="text-base font-semibold">NAV API integráció</h2>
+            {!isVallalati && (
+              <Badge variant="secondary" className="ml-auto gap-1">
+                <Lock className="h-3 w-3" /> Vállalati
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Adja meg NAV Online Számla rendszer technikai felhasználójának adatait az automatikus számla letöltéshez. Az adatok titkosítva kerülnek tárolásra.
+          </p>
+
+          {!isVallalati ? (
+            <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center space-y-3">
+              <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
+              <div className="text-sm">
+                A NAV API integráció csak <strong>Vállalati</strong> csomaggal érhető el.
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/subscription">Csomag frissítése</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="navTaxNumber">Adószám</Label>
+                <Input
+                  id="navTaxNumber"
+                  value={navTaxNumber}
+                  onChange={(e) => setNavTaxNumber(e.target.value)}
+                  placeholder="12345678-1-23"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="navUsername">NAV technikai felhasználónév</Label>
+                <Input
+                  id="navUsername"
+                  value={navUsername}
+                  onChange={(e) => setNavUsername(e.target.value)}
+                  placeholder="pl. abc123xyz"
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="navSignatureKey">Aláírási kulcs (signatureKey)</Label>
+                <Input
+                  id="navSignatureKey"
+                  type="password"
+                  value={navSignatureKey}
+                  onChange={(e) => setNavSignatureKey(e.target.value)}
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="navExchangeKey">Titkosítási kulcs (exchangeKey)</Label>
+                <Input
+                  id="navExchangeKey"
+                  type="password"
+                  value={navExchangeKey}
+                  onChange={(e) => setNavExchangeKey(e.target.value)}
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button onClick={saveNav} disabled={navSaving}>
+                  {navSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Mentés
+                </Button>
+                <Button variant="outline" onClick={testNav} disabled={navTesting}>
+                  {navTesting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Kapcsolat tesztelése
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
       </main>
+
 
       <CancelSubscriptionDialog
         open={cancelOpen}
