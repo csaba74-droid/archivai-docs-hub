@@ -44,6 +44,7 @@ type Indexed = {
   _filename: string;
   _original: string;
   _content: string;
+  _notes: string;
   _category: string;
   _date: string;
 };
@@ -133,6 +134,7 @@ export function useDocumentSearch(docs: DocumentRow[], allCats: Category[]) {
         _filename: normalize(d.filename ?? ""),
         _original: normalize(d.original_filename ?? ""),
         _content: normalize(d.content_text ?? ""),
+        _notes: normalize(d.notes ?? ""),
         _category: normalize(cat.label),
         _date: d.document_date ?? d.created_at ?? "",
       };
@@ -143,10 +145,11 @@ export function useDocumentSearch(docs: DocumentRow[], allCats: Category[]) {
     () =>
       new Fuse(indexed, {
         keys: [
-          { name: "_filename", weight: 0.4 },
-          { name: "_original", weight: 0.25 },
-          { name: "_category", weight: 0.2 },
-          { name: "_content", weight: 0.15 },
+          { name: "_filename", weight: 0.35 },
+          { name: "_original", weight: 0.2 },
+          { name: "_category", weight: 0.15 },
+          { name: "_notes", weight: 0.2 },
+          { name: "_content", weight: 0.1 },
         ],
         threshold: 0.4,
         ignoreLocation: true,
@@ -211,6 +214,7 @@ export function useDocumentSearch(docs: DocumentRow[], allCats: Category[]) {
         matchedField = key.replace(/^_/, "");
         const sourceField =
           key === "_content" ? item.doc.content_text :
+          key === "_notes" ? item.doc.notes :
           key === "_original" ? item.doc.original_filename :
           key === "_category" ? item.category.label :
           item.doc.filename;

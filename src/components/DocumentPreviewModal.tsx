@@ -46,6 +46,9 @@ export function DocumentPreviewModal({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
 
 
   useEffect(() => {
@@ -56,6 +59,8 @@ export function DocumentPreviewModal({
     }
     setNameValue(doc.filename);
     setEditingName(false);
+    setNotesValue(doc.notes ?? "");
+    setEditingNotes(false);
 
     void logAudit("view", doc.id);
     getSignedUrl(doc.storage_path, 600).then((u) => {
@@ -111,6 +116,24 @@ export function DocumentPreviewModal({
     toast.success("Fájlnév módosítva ✓");
     setNameValue(finalName);
     setEditingName(false);
+    if (data) onUpdated?.(data as DocumentRow);
+  };
+
+  const saveNotes = async () => {
+    setSavingNotes(true);
+    const { data, error } = await supabase
+      .from("documents")
+      .update({ notes: notesValue.trim() || null })
+      .eq("id", doc.id)
+      .select()
+      .single();
+    setSavingNotes(false);
+    if (error) {
+      toast.error("Megjegyzés mentése sikertelen", { description: error.message });
+      return;
+    }
+    toast.success("Megjegyzés mentve ✓");
+    setEditingNotes(false);
     if (data) onUpdated?.(data as DocumentRow);
   };
 
@@ -204,6 +227,49 @@ export function DocumentPreviewModal({
                 <span>{doc.document_date ? new Date(doc.document_date).toLocaleDateString("hu-HU") : "—"}</span>
               </div>
             </div>
+
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center justify-between">
+                <span>Megjegyzés</span>
+                {!editingNotes && (
+                  <button
+                    onClick={() => setEditingNotes(true)}
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label="Megjegyzés szerkesztése"
+                    title="Megjegyzés szerkesztése"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              {editingNotes ? (
+                <div className="mt-1 space-y-2">
+                  <Input
+                    value={notesValue}
+                    onChange={(e) => setNotesValue(e.target.value)}
+                    placeholder="pl. 2026.Q1"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveNotes();
+                      if (e.key === "Escape") { setEditingNotes(false); setNotesValue(doc.notes ?? ""); }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={saveNotes} disabled={savingNotes} className="bg-green-600 hover:bg-green-700 text-white">
+                      <Check className="h-4 w-4 mr-1" /> Mentés
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => { setEditingNotes(false); setNotesValue(doc.notes ?? ""); }} disabled={savingNotes}>
+                      <X className="h-4 w-4 mr-1" /> Mégse
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-0.5 whitespace-pre-wrap break-words">
+                  {doc.notes && doc.notes.trim() ? doc.notes : <span className="text-muted-foreground">—</span>}
+                </div>
+              )}
+            </div>
+
 
 
             <Field label="Kategória" value={cat.label} />

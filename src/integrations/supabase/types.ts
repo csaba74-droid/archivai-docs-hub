@@ -93,6 +93,7 @@ export type Database = {
           id: string
           itm_compliant: boolean
           mime_type: string | null
+          notes: string | null
           original_filename: string | null
           sha256: string | null
           size_bytes: number | null
@@ -109,6 +110,7 @@ export type Database = {
           id?: string
           itm_compliant?: boolean
           mime_type?: string | null
+          notes?: string | null
           original_filename?: string | null
           sha256?: string | null
           size_bytes?: number | null
@@ -125,6 +127,7 @@ export type Database = {
           id?: string
           itm_compliant?: boolean
           mime_type?: string | null
+          notes?: string | null
           original_filename?: string | null
           sha256?: string | null
           size_bytes?: number | null
