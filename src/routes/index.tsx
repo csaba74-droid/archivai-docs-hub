@@ -254,12 +254,13 @@ function LandingPage() {
       </section>
 
       {/* FEATURES */}
-      <section id="funkciok" className="bg-secondary/60 py-20">
+      {/* FEATURES */}
+      <section id="funkciok" className="bg-secondary/60 py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-brand sm:text-4xl">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-brand sm:text-3xl">
             Iratkezelés és törvényi iratmegőrzés — egy helyen
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
               {
                 icon: FolderCheck,
@@ -279,13 +280,13 @@ function LandingPage() {
             ].map(({ icon: Icon, title, text }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-background p-7 shadow-sm transition-shadow hover:shadow-md"
+                className="rounded-xl border border-border bg-background p-5 shadow-sm transition-shadow hover:shadow-md"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand">
-                  <Icon className="h-5 w-5" />
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
+                  <Icon className="h-4 w-4" />
                 </span>
-                <h3 className="mt-5 text-lg font-semibold text-brand">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
+                <h3 className="mt-3 text-base font-semibold text-brand">{title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{text}</p>
               </div>
             ))}
           </div>
@@ -293,39 +294,42 @@ function LandingPage() {
       </section>
 
       {/* SECURITY */}
-      <section className="bg-brand py-20 text-brand-foreground">
-        <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Kettős szerveres biztonság
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-brand-foreground/80">
-            Adatai egyidejűleg két független EU-s adatközpontban tárolódnak —
-            folyamatos elérhetőség és maximális biztonság garantálva.
-          </p>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {[
-              { icon: Lock, text: "SHA-256 integritás védelem" },
-              { icon: ShieldCheck, text: "EU-s adatközpontok (Frankfurt + Ireland)" },
-              { icon: ClipboardList, text: "Teljes audit napló minden műveletről" },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex flex-col items-center gap-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-foreground/10">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <p className="text-sm text-brand-foreground/90">{text}</p>
-              </div>
-            ))}
+      <section className="bg-brand py-8 text-brand-foreground">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center gap-4 text-center md:flex-row md:items-center md:justify-between md:text-left">
+            <div className="md:max-w-sm">
+              <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
+                Kettős szerveres biztonság
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-brand-foreground/80">
+                Két független EU-s adatközpont — folyamatos elérhetőség és maximális biztonság.
+              </p>
+            </div>
+            <div className="grid w-full gap-3 sm:grid-cols-3 md:w-auto md:flex-1 md:max-w-2xl">
+              {[
+                { icon: Lock, text: "SHA-256 integritás" },
+                { icon: ShieldCheck, text: "EU adatközpontok (Frankfurt + Ireland)" },
+                { icon: ClipboardList, text: "Teljes audit napló" },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-2 justify-center md:justify-start">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-foreground/10">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <p className="text-xs text-brand-foreground/90">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="hogyan" className="py-20">
+      <section id="hogyan" className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-brand sm:text-4xl">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-brand sm:text-3xl">
             Három lépés és kész
           </h2>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
               {
                 n: "01",
@@ -343,17 +347,18 @@ function LandingPage() {
                 text: "Szabadszavas kereséssel másodpercek alatt visszakereshető bármely irat — törvényileg védve, biztonságosan tárolva.",
               },
             ].map((s) => (
-              <div key={s.n} className="relative rounded-2xl border border-border bg-background p-7">
-                <span className="text-sm font-semibold tracking-widest text-brand/50">
+              <div key={s.n} className="relative rounded-xl border border-border bg-background p-5">
+                <span className="text-xs font-semibold tracking-widest text-brand/50">
                   {s.n}
                 </span>
-                <h3 className="mt-2 text-xl font-semibold text-brand">{s.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+                <h3 className="mt-1 text-base font-semibold text-brand">{s.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{s.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* AUDIENCE */}
       <AudienceSection />
