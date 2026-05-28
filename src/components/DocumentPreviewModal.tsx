@@ -271,15 +271,6 @@ export function DocumentPreviewModal({
               )}
             </div>
 
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-0.5 whitespace-pre-wrap break-words">
-                  {doc.notes && doc.notes.trim() ? doc.notes : <span className="text-muted-foreground">—</span>}
-                </div>
-              )}
-            </div>
-
 
 
             <Field label="Kategória" value={cat.label} />
