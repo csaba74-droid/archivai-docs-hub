@@ -44,6 +44,7 @@ type Indexed = {
   _filename: string;
   _original: string;
   _content: string;
+  _notes: string;
   _category: string;
   _date: string;
 };
