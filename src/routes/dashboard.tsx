@@ -16,7 +16,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield,
+  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield, Plug,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -367,6 +367,15 @@ function Dashboard() {
       >
         <CreditCard className="h-4 w-4" /> Csomagok és árak
       </Link>
+      {subscription?.plan === "vallalati" && (
+        <Link
+          to="/profile"
+          hash="nav"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+        >
+          <Plug className="h-4 w-4" /> NAV integráció
+        </Link>
+      )}
       <Link
         to="/audit"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"

@@ -281,7 +281,7 @@ function ProfilePage() {
         </Card>
 
         {/* NAV API integráció */}
-        <Card className="p-6">
+        <Card id="nav" className="p-6 scroll-mt-20">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-5 w-5 text-brand" />
             <h2 className="text-base font-semibold">NAV API integráció</h2>
