@@ -92,9 +92,32 @@ function ProfilePage() {
 
   const testNav = async () => {
     setNavTesting(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setNavTesting(false);
-    toast.success("Kapcsolat sikeres");
+    try {
+      const { data: u, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !u.user) {
+        toast.error("Nincs bejelentkezve");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("nav-sync", {
+        body: { userId: u.user.id },
+      });
+      if (error) {
+        toast.error("Kapcsolódási hiba", {
+          description: error.message,
+          className: "text-destructive",
+        });
+        return;
+      }
+      const count = (data as { count?: number } | null)?.count ?? 0;
+      toast.success(`Kapcsolat sikeres! ${count} számla található az elmúlt 30 napban.`);
+    } catch (e) {
+      toast.error("Kapcsolódási hiba", {
+        description: e instanceof Error ? e.message : String(e),
+        className: "text-destructive",
+      });
+    } finally {
+      setNavTesting(false);
+    }
   };
 
   useEffect(() => {
