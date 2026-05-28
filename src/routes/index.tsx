@@ -13,6 +13,15 @@ import {
   ArrowRight,
   Menu,
   X,
+  Calculator,
+  Store,
+  Wrench,
+  Home,
+  Briefcase,
+  User,
+  FileText,
+  Image as ImageIcon,
+  Folder,
 } from "lucide-react";
 import heroImage from "@/assets/hero-archivai.png";
 import { CookieConsent } from "@/components/CookieConsent";
