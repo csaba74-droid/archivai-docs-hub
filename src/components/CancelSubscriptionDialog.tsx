@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, ExternalLink, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { GdprExportButton } from "./GdprExportButton";
-import { useBillingPortal } from "@/hooks/use-billing-portal";
+import { toast } from "sonner";
 
 /**
  * Cancel/downgrade is routed through the Stripe Customer Portal. We no
