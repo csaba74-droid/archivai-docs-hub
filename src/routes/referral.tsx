@@ -15,6 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Check, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/use-subscription";
+
 
 export const Route = createFileRoute("/referral")({
   head: () => ({
