@@ -69,6 +69,8 @@ function Dashboard() {
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [view, setView] = useState<"home" | "referral">("home");
+
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
