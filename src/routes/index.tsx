@@ -606,7 +606,7 @@ function AudienceSection() {
     {
       icon: Store,
       title: "Kisvállalkozások",
-      pain: "Számlák, szerződések szétszórva — megtalálni lehetetlen",
+      pain: "Számlák, szerződések szétszórva — lehetetlen megtalálni",
       checks: [
         "Minden irat egy helyen, kereshető",
         "AI automatikusan kategorizál",
