@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +26,14 @@ export const Route = createFileRoute("/referral")({
       },
     ],
   }),
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
+  },
   component: ReferralPage,
 });
+
 
 type Referral = {
   user_id: string;
@@ -40,30 +46,15 @@ type Referral = {
 function ReferralPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let resolved = false;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!resolved || session) {
-        resolved = true;
-        setUserId(session?.user?.id ?? null);
-        setLoading(false);
-      }
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setUserId(data.session?.user?.id ?? null);
     });
-
-    const timeout = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        setLoading(false);
-      }
-    }, 2000);
-
     return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
+      cancelled = true;
     };
   }, []);
 
@@ -108,13 +99,15 @@ function ReferralPage() {
   );
   const freeMonths = subscribedCount;
 
-  if (loading || !userId) {
+  if (!userId) {
     return (
       <div className="container mx-auto max-w-3xl py-20 px-4 flex justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
       </div>
     );
   }
+
+
 
 
   const steps = [
@@ -214,21 +207,20 @@ function ReferralPage() {
             value={freeMonths}
           />
         </div>
-        {!loading && (
-          <p className="text-sm text-center text-muted-foreground">
-            Eddig ajánlottál{" "}
-            <span className="font-semibold text-foreground">
-              {referrals.length}
-            </span>{" "}
-            ismerőst, ebből{" "}
-            <span className="font-semibold text-foreground">
-              {subscribedCount}
-            </span>{" "}
-            fő fizetett elő — ez{" "}
-            <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
-            hónap ingyenes előfizetést jelent számodra 🎉
-          </p>
-        )}
+        <p className="text-sm text-center text-muted-foreground">
+          Eddig ajánlottál{" "}
+          <span className="font-semibold text-foreground">
+            {referrals.length}
+          </span>{" "}
+          ismerőst, ebből{" "}
+          <span className="font-semibold text-foreground">
+            {subscribedCount}
+          </span>{" "}
+          fő fizetett elő — ez{" "}
+          <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
+          hónap ingyenes előfizetést jelent számodra 🎉
+        </p>
+
       </section>
 
       {/* SECTION 5 — Referred users list */}
@@ -237,14 +229,11 @@ function ReferralPage() {
           <CardTitle className="text-base">Ajánlott felhasználók</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-sm text-muted-foreground py-6 text-center">
-              Betöltés…
-            </div>
-          ) : referrals.length === 0 ? (
+          {referrals.length === 0 ? (
             <div className="text-sm text-muted-foreground py-6 text-center">
               Még nincs ajánlott felhasználód. Oszd meg a linkedet!
             </div>
+
           ) : (
             <Table>
               <TableHeader>
