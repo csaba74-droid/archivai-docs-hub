@@ -102,7 +102,7 @@ function ReferralPage() {
   const steps = [
     "Másold ki az egyedi linkedet lentebb",
     "Küldd el akinek szerinted hasznos lenne az Archivai",
-    "Ők is 14 napos ingyenes próbával ismerkedhetnek meg a rendszersel",
+    "Ők is 14 napos ingyenes próbával ismerkedhetnek meg a rendszerrel",
     "Ha előfizetnek — az első hónapjuk ingyenes, te pedig automatikusan kapsz egy hónap jóváírást",
   ];
 
