@@ -457,6 +457,9 @@ function Dashboard() {
               />
             )}
           </div>
+          <Button onClick={() => searchRef.current?.focus()} variant="default" size="sm">
+            <Search className="h-4 w-4 mr-1" /> Keresés
+          </Button>
           {search.trim() && (
             <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
               <X className="h-4 w-4 mr-1" /> Bezár
