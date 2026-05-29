@@ -46,30 +46,15 @@ type Referral = {
 function ReferralPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let resolved = false;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!resolved || session) {
-        resolved = true;
-        setUserId(session?.user?.id ?? null);
-        setLoading(false);
-      }
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setUserId(data.session?.user?.id ?? null);
     });
-
-    const timeout = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        setLoading(false);
-      }
-    }, 2000);
-
     return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
+      cancelled = true;
     };
   }, []);
 
@@ -114,13 +99,15 @@ function ReferralPage() {
   );
   const freeMonths = subscribedCount;
 
-  if (loading || !userId) {
+  if (!userId) {
     return (
       <div className="container mx-auto max-w-3xl py-20 px-4 flex justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
       </div>
     );
   }
+
+
 
 
   const steps = [
