@@ -685,7 +685,7 @@ function AudienceSection() {
       pain: "Ügyiratokat keresni — az idő pénz, és mindkettő fogy",
       checks: [
         "Ügyenként rendezett, azonnal kereshető iratok",
-        "Hamisításbiztos audit napló",
+        "Jogszabálynak megfelelő audit napló",
         "Ügyfeleknek megosztható olvasási hozzáférés",
       ],
       tag: "Bizonyítható hitelesség",
