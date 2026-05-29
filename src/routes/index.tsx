@@ -421,7 +421,7 @@ function LandingPage() {
                   "Korlátlan meghívott felhasználó",
                   "Korlátlan egyéni kategória",
                   "Minden Pro funkció",
-                  "NAV API integráció",
+                  "NAV számlaadatok importálása",
                   "Prioritás support",
                 ],
                 cta: "Kipróbálom ingyen",
@@ -705,7 +705,7 @@ function AudienceSection() {
       pain: "Kevesebb adminisztráció, több szabadidő.",
       checks: [
         "Egyszerű feltöltés, automatikus rendszerezés",
-        "NAV integráció — számlák automatikusan érkeznek",
+        "NAV számlaadatok importálása — automatikusan érkeznek",
         "Könyvelőnek egy kattintással megosztható",
       ],
       tag: "Hatósági ellenőrzésre mindig készen",

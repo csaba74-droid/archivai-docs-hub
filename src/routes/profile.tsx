@@ -352,7 +352,7 @@ function ProfilePage() {
         <Card id="nav" className="p-6 scroll-mt-20">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-5 w-5 text-brand" />
-            <h2 className="text-base font-semibold">NAV API integráció</h2>
+            <h2 className="text-base font-semibold">NAV számlaadatok importálása</h2>
             {!isVallalati && (
               <Badge variant="secondary" className="ml-auto gap-1">
                 <Lock className="h-3 w-3" /> Vállalati
@@ -367,7 +367,7 @@ function ProfilePage() {
             <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center space-y-3">
               <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
               <div className="text-sm">
-                A NAV API integráció csak <strong>Vállalati</strong> csomaggal érhető el.
+                A NAV számlaadatok importálása csak <strong>Vállalati</strong> csomaggal érhető el.
               </div>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/subscription">Csomag frissítése</Link>
