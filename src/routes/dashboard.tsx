@@ -60,10 +60,6 @@ function Dashboard() {
   const [userId, setUserId] = useState("");
   const [archivaiEmail, setArchivaiEmail] = useState<string>("");
   const [archivaiEmailCopied, setArchivaiEmailCopied] = useState(false);
-  const [referralOpen, setReferralOpen] = useState(false);
-  const [referralCopied, setReferralCopied] = useState(false);
-  const [referrals, setReferrals] = useState<Array<{ user_id: string; full_name: string | null; email: string; created_at: string; subscribed: boolean }>>([]);
-  const [referralsLoading, setReferralsLoading] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
@@ -148,36 +144,12 @@ function Dashboard() {
     if (!referralLink) return;
     try {
       await navigator.clipboard.writeText(referralLink);
-      setReferralCopied(true);
       toast.success("Link kimásolva");
-      setTimeout(() => setReferralCopied(false), 2000);
     } catch {
       toast.error("Másolás sikertelen");
     }
   }, [referralLink]);
 
-  useEffect(() => {
-    if (!referralOpen) return;
-    let cancelled = false;
-    setReferralsLoading(true);
-    (async () => {
-      const { data, error } = await supabase.rpc("my_referrals");
-      if (cancelled) return;
-      if (error) {
-        toast.error("Nem sikerült betölteni az ajánlásokat");
-        setReferrals([]);
-      } else {
-        setReferrals((data ?? []) as typeof referrals);
-      }
-      setReferralsLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [referralOpen]);
-
-  const referralStats = useMemo(() => {
-    const subscribed = referrals.filter((r) => r.subscribed).length;
-    return { total: referrals.length, subscribed, credits: subscribed };
-  }, [referrals]);
 
   const searchState = useDocumentSearch(docs, allCats);
   const { rawQuery, setRawQuery, query: searchQuery, isActive: searchActive } = searchState;
@@ -355,12 +327,12 @@ function Dashboard() {
       >
         <Users className="h-4 w-4" /> Hozzáférés megosztása
       </Link>
-      <button
-        onClick={() => setReferralOpen(true)}
+      <Link
+        to="/referral"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
         <Gift className="h-4 w-4 text-brand" /> Partneri program
-      </button>
+      </Link>
       <Link
         to="/subscription"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
@@ -871,73 +843,6 @@ function Dashboard() {
       />
       <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
 
-      <Dialog open={referralOpen} onOpenChange={setReferralOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5 text-brand" /> Ajánld az Archivai-t
-            </DialogTitle>
-            <DialogDescription>
-              Ha a linked segítségével valaki előfizet, 1 hónap előfizetési díjat jóváírunk mindkét fél számláján.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Egyedi ajánló linked</label>
-            <div className="flex gap-2">
-              <Input value={referralLink} readOnly onFocus={(e) => e.currentTarget.select()} className="font-mono text-xs" />
-              <Button type="button" onClick={copyReferral} variant="secondary">
-                {referralCopied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                {referralCopied ? "Másolva" : "Másol"}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 pt-2">
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
-              <div className="text-2xl font-semibold">{referralStats.total}</div>
-              <div className="text-[11px] text-muted-foreground">Ajánlott felhasználó</div>
-            </div>
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
-              <div className="text-2xl font-semibold">{referralStats.subscribed}</div>
-              <div className="text-[11px] text-muted-foreground">Előfizetett</div>
-            </div>
-            <div className="rounded-lg border bg-brand-soft/40 p-3 text-center">
-              <div className="text-2xl font-semibold text-brand">{referralStats.credits}</div>
-              <div className="text-[11px] text-muted-foreground">Hónap jóváírás</div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Ajánlott felhasználók</label>
-            <div className="max-h-56 overflow-y-auto rounded-lg border divide-y">
-              {referralsLoading ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">Betöltés…</div>
-              ) : referrals.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">Még nincs ajánlott felhasználód.</div>
-              ) : (
-                referrals.map((r) => (
-                  <div key={r.user_id} className="flex items-center justify-between gap-2 p-3 text-sm">
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">{r.full_name || r.email}</div>
-                      <div className="truncate text-xs text-muted-foreground">{r.email}</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(r.created_at).toLocaleDateString("hu-HU")}
-                      </span>
-                      {r.subscribed ? (
-                        <span className="rounded-full bg-brand/10 text-brand px-2 py-0.5 text-[10px] font-medium">Előfizetett</span>
-                      ) : (
-                        <span className="rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[10px]">Próbaidőszak</span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
       </div>
     </div>
 
