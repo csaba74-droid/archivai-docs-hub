@@ -43,16 +43,13 @@ function ReferralPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
+  const { subscription, loading: subLoading } = useSubscription();
+  const userId = subscription?.user_id ?? null;
+
   useEffect(() => {
-    supabase.auth.getSession().then((res) => {
-      console.log("[referral] getSession result:", res);
-      setUserId(res.data.session?.user?.id ?? null);
-      setLoading(false);
-    });
-    supabase.auth.getUser().then((res) => {
-      console.log("[referral] getUser result:", res);
-    });
-  }, []);
+    if (!subLoading) setLoading(false);
+  }, [subLoading]);
+
 
 
   useEffect(() => {
