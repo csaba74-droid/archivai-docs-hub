@@ -367,7 +367,7 @@ function ProfilePage() {
             <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center space-y-3">
               <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
               <div className="text-sm">
-                A NAV API integráció csak <strong>Vállalati</strong> csomaggal érhető el.
+                A NAV számlaadatok importálása csak <strong>Vállalati</strong> csomaggal érhető el.
               </div>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/subscription">Csomag frissítése</Link>
