@@ -322,6 +322,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      log_audit: {
+        Args: { _action: string; _document_id?: string; _metadata?: Json }
+        Returns: undefined
+      }
       my_referrals: {
         Args: never
         Returns: {
