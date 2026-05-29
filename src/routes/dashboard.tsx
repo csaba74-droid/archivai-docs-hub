@@ -462,9 +462,6 @@ function Dashboard() {
               <X className="h-4 w-4 mr-1" /> Bezár
             </Button>
           )}
-          <Button onClick={() => openUploadWith(null)} disabled={!canUpload} className="ml-auto">
-            <Upload className="h-4 w-4 mr-2" /> Feltöltés
-          </Button>
         </header>
 
 
