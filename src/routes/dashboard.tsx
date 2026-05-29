@@ -550,15 +550,9 @@ function Dashboard() {
                   {filtered.length} találat — "{search}"
                 </p>
               </div>
-            ) : (
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Kategóriák</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Válassz egy kategóriát a dokumentumok megtekintéséhez
-                </p>
-              </div>
-            )}
+            ) : null}
           </div>
+
 
           {/* Dedicated Archivai inbox email — Pro/Vállalati only (trialing users get preview) */}
           {!activeCat && !search.trim() && (() => {
