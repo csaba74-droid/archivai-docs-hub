@@ -327,12 +327,12 @@ function Dashboard() {
       >
         <Users className="h-4 w-4" /> Hozzáférés megosztása
       </Link>
-      <button
-        onClick={() => setReferralOpen(true)}
+      <Link
+        to="/referral"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
         <Gift className="h-4 w-4 text-brand" /> Partneri program
-      </button>
+      </Link>
       <Link
         to="/subscription"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
