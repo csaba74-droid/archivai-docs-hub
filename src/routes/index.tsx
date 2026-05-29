@@ -200,10 +200,10 @@ function LandingPage() {
               Törvényi előírás szerint archiválva
             </span>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-brand sm:text-5xl lg:text-6xl">
-              A dokumentumai megvannak — de találja is meg őket.
+              Dokumentumkezelés és archiválás egyszerűen, átláthatóan
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              Az Archivai automatikusan kategorizálja és biztonságosan archiválja
+              Az Archivai kategorizálja és biztonságosan archiválja
               céges dokumentumait a hatályos megőrzési szabályok szerint.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -606,7 +606,7 @@ function AudienceSection() {
     {
       icon: Store,
       title: "Kisvállalkozások",
-      pain: "Számlák, szerződések szétszórva — megtalálni lehetetlen",
+      pain: "Számlák, szerződések szétszórva — lehetetlen megtalálni",
       checks: [
         "Minden irat egy helyen, kereshető",
         "AI automatikusan kategorizál",
@@ -685,7 +685,7 @@ function AudienceSection() {
       pain: "Ügyiratokat keresni — az idő pénz, és mindkettő fogy",
       checks: [
         "Ügyenként rendezett, azonnal kereshető iratok",
-        "Hamisításbiztos audit napló",
+        "Jogszabálynak megfelelő audit napló",
         "Ügyfeleknek megosztható olvasási hozzáférés",
       ],
       tag: "Bizonyítható hitelesség",
@@ -708,7 +708,7 @@ function AudienceSection() {
         "NAV integráció — számlák automatikusan érkeznek",
         "Könyvelőnek egy kattintással megosztható",
       ],
-      tag: "Alap csomag: 2 990 Ft/hó",
+      tag: "14 nap ingyen, kártya nélkül",
       accent: "bg-slate-100 text-slate-700 ring-slate-200",
       tagClass: "bg-slate-200 text-slate-800",
       preview: (
