@@ -45,14 +45,8 @@ function ReferralPage() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data: userRes } = await supabase.auth.getUser();
-      if (cancelled) return;
-      if (!userRes.user) {
-        setLoading(false);
-        return;
-      }
-      setUserId(userRes.user.id);
+
+    const loadReferrals = async (uid: string) => {
       const { data, error } = await (supabase.rpc as any)("get_referrals");
       if (cancelled) return;
       if (error) {
@@ -62,9 +56,34 @@ function ReferralPage() {
         setReferrals((data ?? []) as Referral[]);
       }
       setLoading(false);
-    })();
+    };
+
+    const applySession = (uid: string | null) => {
+      if (cancelled) return;
+      setUserId(uid);
+      if (uid) {
+        void loadReferrals(uid);
+      } else {
+        setReferrals([]);
+        setLoading(false);
+      }
+    };
+
+    // Subscribe first so we don't miss the initial restore event.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session?.user?.id ?? null);
+    });
+
+    // Kick off an initial session read (resolves once storage is hydrated).
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      applySession(session?.user?.id ?? null);
+    });
+
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
     };
   }, []);
 
