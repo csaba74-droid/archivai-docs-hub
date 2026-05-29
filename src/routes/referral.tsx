@@ -44,11 +44,27 @@ function ReferralPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    let resolved = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-      setLoading(false);
+      if (!resolved || session) {
+        resolved = true;
+        setUserId(session?.user?.id ?? null);
+        setLoading(false);
+      }
     });
-    return () => subscription.unsubscribe();
+
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        setLoading(false);
+      }
+    }, 2000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   useEffect(() => {
