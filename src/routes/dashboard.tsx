@@ -144,36 +144,12 @@ function Dashboard() {
     if (!referralLink) return;
     try {
       await navigator.clipboard.writeText(referralLink);
-      setReferralCopied(true);
       toast.success("Link kimásolva");
-      setTimeout(() => setReferralCopied(false), 2000);
     } catch {
       toast.error("Másolás sikertelen");
     }
   }, [referralLink]);
 
-  useEffect(() => {
-    if (!referralOpen) return;
-    let cancelled = false;
-    setReferralsLoading(true);
-    (async () => {
-      const { data, error } = await supabase.rpc("my_referrals");
-      if (cancelled) return;
-      if (error) {
-        toast.error("Nem sikerült betölteni az ajánlásokat");
-        setReferrals([]);
-      } else {
-        setReferrals((data ?? []) as typeof referrals);
-      }
-      setReferralsLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [referralOpen]);
-
-  const referralStats = useMemo(() => {
-    const subscribed = referrals.filter((r) => r.subscribed).length;
-    return { total: referrals.length, subscribed, credits: subscribed };
-  }, [referrals]);
 
   const searchState = useDocumentSearch(docs, allCats);
   const { rawQuery, setRawQuery, query: searchQuery, isActive: searchActive } = searchState;
