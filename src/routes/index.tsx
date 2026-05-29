@@ -708,7 +708,7 @@ function AudienceSection() {
         "NAV integráció — számlák automatikusan érkeznek",
         "Könyvelőnek egy kattintással megosztható",
       ],
-      tag: "Alap csomag: 2 990 Ft/hó",
+      tag: "14 nap ingyen, kártya nélkül",
       accent: "bg-slate-100 text-slate-700 ring-slate-200",
       tagClass: "bg-slate-200 text-slate-800",
       preview: (
