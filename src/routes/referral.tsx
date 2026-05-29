@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,14 +26,8 @@ export const Route = createFileRoute("/referral")({
       },
     ],
   }),
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
-  },
   component: ReferralPage,
 });
-
 
 type Referral = {
   user_id: string;
@@ -46,22 +40,19 @@ type Referral = {
 function ReferralPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled) setUserId(data.session?.user?.id ?? null);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
     (async () => {
+      const { data: userRes } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!userRes.user) {
+        setLoading(false);
+        return;
+      }
+      setUserId(userRes.user.id);
       const { data, error } = await (supabase.rpc as any)("get_referrals");
       if (cancelled) return;
       if (error) {
@@ -70,11 +61,12 @@ function ReferralPage() {
       } else {
         setReferrals((data ?? []) as Referral[]);
       }
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, []);
 
   const referralLink = useMemo(
     () => (userId ? `https://archivai.hu/register?ref=${userId}` : ""),
@@ -99,16 +91,22 @@ function ReferralPage() {
   );
   const freeMonths = subscribedCount;
 
-  if (!userId) {
+  if (!loading && !userId) {
     return (
-      <div className="container mx-auto max-w-3xl py-20 px-4 flex justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+      <div className="container mx-auto max-w-3xl py-10 px-4">
+        <Card>
+          <CardContent className="py-10 text-center space-y-4">
+            <p className="text-muted-foreground">
+              Az ajánlási oldal megtekintéséhez jelentkezz be.
+            </p>
+            <Button asChild>
+              <Link to="/login">Bejelentkezés</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-
-
-
 
   const steps = [
     "Másold ki az egyedi linkedet lentebb",
@@ -207,20 +205,21 @@ function ReferralPage() {
             value={freeMonths}
           />
         </div>
-        <p className="text-sm text-center text-muted-foreground">
-          Eddig ajánlottál{" "}
-          <span className="font-semibold text-foreground">
-            {referrals.length}
-          </span>{" "}
-          ismerőst, ebből{" "}
-          <span className="font-semibold text-foreground">
-            {subscribedCount}
-          </span>{" "}
-          fő fizetett elő — ez{" "}
-          <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
-          hónap ingyenes előfizetést jelent számodra 🎉
-        </p>
-
+        {!loading && (
+          <p className="text-sm text-center text-muted-foreground">
+            Eddig ajánlottál{" "}
+            <span className="font-semibold text-foreground">
+              {referrals.length}
+            </span>{" "}
+            ismerőst, ebből{" "}
+            <span className="font-semibold text-foreground">
+              {subscribedCount}
+            </span>{" "}
+            fő fizetett elő — ez{" "}
+            <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
+            hónap ingyenes előfizetést jelent számodra 🎉
+          </p>
+        )}
       </section>
 
       {/* SECTION 5 — Referred users list */}
@@ -229,11 +228,14 @@ function ReferralPage() {
           <CardTitle className="text-base">Ajánlott felhasználók</CardTitle>
         </CardHeader>
         <CardContent>
-          {referrals.length === 0 ? (
+          {loading ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              Betöltés…
+            </div>
+          ) : referrals.length === 0 ? (
             <div className="text-sm text-muted-foreground py-6 text-center">
               Még nincs ajánlott felhasználód. Oszd meg a linkedet!
             </div>
-
           ) : (
             <Table>
               <TableHeader>

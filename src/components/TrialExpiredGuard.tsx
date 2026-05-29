@@ -16,7 +16,6 @@ const ALLOWED_PREFIXES = [
   "/adatkezeles",
   "/accept-invitation",
   "/admin",
-  "/referral",
 ];
 
 export function TrialExpiredGuard() {
