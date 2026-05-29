@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Check, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
+import { Check, ChevronLeft, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/use-subscription";
 
@@ -105,6 +105,14 @@ function ReferralPage() {
 
   return (
     <div className="container mx-auto max-w-4xl py-10 px-4 space-y-12">
+      <Link
+        to="/dashboard"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Vissza
+      </Link>
+
       {/* SECTION 1 — Hero */}
       <section className="space-y-3">
         <div className="inline-flex items-center gap-2 text-brand">
