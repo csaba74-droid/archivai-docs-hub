@@ -302,11 +302,12 @@ function Dashboard() {
   const desktopSidebarNav = (
     <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
       <button
-        onClick={() => { setActiveCat(null); setSearch(""); }}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null && !search.trim() ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
+        onClick={() => { setActiveCat(null); setSearch(""); setView("home"); }}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${view === "home" && activeCat === null && !search.trim() ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
       >
         <Home className="h-4 w-4" /> Kezdőlap
       </button>
+
       <Link
         to="/profile"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
