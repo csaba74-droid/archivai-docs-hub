@@ -513,7 +513,10 @@ function Dashboard() {
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8 space-y-6">
-          {searchActive ? (
+          {view === "referral" ? (
+            <ReferralView userId={userId} />
+          ) : searchActive ? (
+
             <SearchPanel
               query={searchState.query}
               isSearching={searchState.isSearching}
