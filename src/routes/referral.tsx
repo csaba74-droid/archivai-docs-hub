@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Check, Copy, Gift } from "lucide-react";
+import { Check, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/referral")({
   head: () => ({
     meta: [
-      { title: "Ajánlások — Archivai" },
-      { name: "description", content: "Ajánld az Archivai-t és kövesd nyomon az ajánlott felhasználókat." },
+      { title: "Partneri program — Archivai" },
+      { name: "description", content: "Ajánld az Archivai-t és szerezz ingyenes hónapokat." },
     ],
   }),
   component: ReferralPage,
@@ -76,6 +76,7 @@ function ReferralPage() {
   }, [referralLink]);
 
   const subscribedCount = useMemo(() => referrals.filter((r) => r.subscribed).length, [referrals]);
+  const freeMonths = subscribedCount;
 
   if (!loading && !userId) {
     return (
@@ -92,32 +93,53 @@ function ReferralPage() {
     );
   }
 
+  const steps = [
+    "Másold ki az egyedi linkedet lentebb",
+    "Küldd el akinek szerinted hasznos lenne az Archivai",
+    "Ők is 14 napos ingyenes próbával ismerkedhetnek meg a rendszerrel",
+    "Ha előfizetnek — az első hónapjuk ingyenes, te pedig automatikusan kapsz egy hónap jóváírást",
+  ];
+
   return (
-    <div className="container mx-auto max-w-3xl py-10 px-4 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <Gift className="h-6 w-6 text-brand" /> Partneri program
+    <div className="container mx-auto max-w-4xl py-10 px-4 space-y-10">
+      {/* HEADER */}
+      <div className="space-y-3">
+        <div className="inline-flex items-center gap-2 text-brand">
+          <Gift className="h-6 w-6" />
+          <span className="text-sm font-medium uppercase tracking-wide">Partneri program</span>
+        </div>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+          Ajánld az Archivai-t — mindketten járjatok jól
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Ajánlja az Archivai-t ismerőseinek és könyvelő ügyfeleinek — és jutalmat kap minden előfizető után:
+        <p className="text-muted-foreground text-base md:text-lg max-w-3xl">
+          Oszd meg az egyedi ajánló linkedet ismerőseiddel vagy ügyfeleiddel. Ha valaki a linked
+          segítségével fizet elő, mindketten megkapjátok a következő hónapot ingyen — és ez minden
+          egyes ajánlott után jár neked.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Program szintek</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <ul className="space-y-2">
-            <li><span className="mr-1">🥉</span><span className="text-foreground font-medium">1–4 előfizető:</span> <span className="text-muted-foreground">1 hónap jóváírás mindkét félnek</span></li>
-            <li><span className="mr-1">🥈</span><span className="text-foreground font-medium">5–9 előfizető:</span> <span className="text-muted-foreground">1 év Pro csomag ingyen</span></li>
-            <li><span className="mr-1">🥇</span><span className="text-foreground font-medium">10–19 előfizető:</span> <span className="text-muted-foreground">Örökös Pro csomag ingyen</span></li>
-            <li><span className="mr-1">👑</span><span className="text-foreground font-medium">20+ előfizető:</span> <span className="text-muted-foreground">Örökös Vállalati csomag ingyen</span></li>
-          </ul>
-        </CardContent>
-      </Card>
+      {/* HOW IT WORKS */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Hogyan működik?</h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          {steps.map((s, i) => (
+            <Card key={i} className="shadow-none">
+              <CardContent className="flex gap-3 p-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand font-semibold text-sm">
+                  {i + 1}
+                </div>
+                <p className="text-sm leading-relaxed">{s}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <p className="text-sm italic text-muted-foreground">
+          Nincs limit — minél többet ajánlasz, annál több ingyenes hónapot gyűjtesz. A jóváírás
+          minden sikeres előfizetés után automatikusan aktiválódik.
+        </p>
+      </section>
 
-
+      {/* REFERRAL LINK */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Ajánlási linked</CardTitle>
@@ -138,16 +160,40 @@ function ReferralPage() {
         </CardContent>
       </Card>
 
+      {/* STATS */}
+      <section className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatBox
+            icon={<Users className="h-5 w-5" />}
+            label="Ajánlott felhasználók száma"
+            value={referrals.length}
+          />
+          <StatBox
+            icon={<CreditCard className="h-5 w-5" />}
+            label="Ebből előfizetett"
+            value={subscribedCount}
+          />
+          <StatBox
+            icon={<Sparkles className="h-5 w-5" />}
+            label="Megszerzett ingyenes hónapok"
+            value={freeMonths}
+          />
+        </div>
+        {!loading && (
+          <p className="text-sm text-center text-muted-foreground">
+            Eddig ajánlottál <span className="font-semibold text-foreground">{referrals.length}</span>{" "}
+            ismerőst, ebből{" "}
+            <span className="font-semibold text-foreground">{subscribedCount}</span> fő fizetett elő —
+            ez <span className="font-semibold text-foreground">{freeMonths}</span> hónap ingyenes
+            előfizetést jelent számodra 🎉
+          </p>
+        )}
+      </section>
+
+      {/* REFERRED USERS LIST */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Ajánlott felhasználók</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {loading
-              ? "Betöltés…"
-              : `${referrals.length} embert ajánlottál eddig.${
-                  subscribedCount > 0 ? ` Ebből ${subscribedCount} előfizetett.` : ""
-                }`}
-          </p>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -192,5 +238,25 @@ function ReferralPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function StatBox({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-5 space-y-2">
+        <div className="flex items-center gap-2 text-brand">{icon}</div>
+        <div className="text-3xl font-semibold tracking-tight">{value}</div>
+        <div className="text-sm text-muted-foreground">{label}</div>
+      </CardContent>
+    </Card>
   );
 }
