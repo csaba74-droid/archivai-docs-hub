@@ -421,7 +421,7 @@ function LandingPage() {
                   "Korlátlan meghívott felhasználó",
                   "Korlátlan egyéni kategória",
                   "Minden Pro funkció",
-                  "NAV API integráció",
+                  "NAV számlaadatok importálása",
                   "Prioritás support",
                 ],
                 cta: "Kipróbálom ingyen",
