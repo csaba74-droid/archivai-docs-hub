@@ -44,9 +44,17 @@ function ReferralPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+      setLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-    const loadReferrals = async (uid: string) => {
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
       const { data, error } = await (supabase.rpc as any)("get_referrals");
       if (cancelled) return;
       if (error) {
@@ -55,37 +63,11 @@ function ReferralPage() {
       } else {
         setReferrals((data ?? []) as Referral[]);
       }
-      setLoading(false);
-    };
-
-    const applySession = (uid: string | null) => {
-      if (cancelled) return;
-      setUserId(uid);
-      if (uid) {
-        void loadReferrals(uid);
-      } else {
-        setReferrals([]);
-        setLoading(false);
-      }
-    };
-
-    // Subscribe first so we don't miss the initial restore event.
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session?.user?.id ?? null);
-    });
-
-    // Kick off an initial session read (resolves once storage is hydrated).
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session?.user?.id ?? null);
-    });
-
+    })();
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
     };
-  }, []);
+  }, [userId]);
 
   const referralLink = useMemo(
     () => (userId ? `https://archivai.hu/register?ref=${userId}` : ""),
