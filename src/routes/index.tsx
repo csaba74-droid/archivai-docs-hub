@@ -200,10 +200,10 @@ function LandingPage() {
               Törvényi előírás szerint archiválva
             </span>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-brand sm:text-5xl lg:text-6xl">
-              A dokumentumai megvannak — de találja is meg őket.
+              Dokumentumkezelés és archiválás egyszerűen, átláthatóan
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              Az Archivai automatikusan kategorizálja és biztonságosan archiválja
+              Az Archivai kategorizálja és biztonságosan archiválja
               céges dokumentumait a hatályos megőrzési szabályok szerint.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
