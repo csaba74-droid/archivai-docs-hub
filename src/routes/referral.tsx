@@ -207,21 +207,20 @@ function ReferralPage() {
             value={freeMonths}
           />
         </div>
-        {!loading && (
-          <p className="text-sm text-center text-muted-foreground">
-            Eddig ajánlottál{" "}
-            <span className="font-semibold text-foreground">
-              {referrals.length}
-            </span>{" "}
-            ismerőst, ebből{" "}
-            <span className="font-semibold text-foreground">
-              {subscribedCount}
-            </span>{" "}
-            fő fizetett elő — ez{" "}
-            <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
-            hónap ingyenes előfizetést jelent számodra 🎉
-          </p>
-        )}
+        <p className="text-sm text-center text-muted-foreground">
+          Eddig ajánlottál{" "}
+          <span className="font-semibold text-foreground">
+            {referrals.length}
+          </span>{" "}
+          ismerőst, ebből{" "}
+          <span className="font-semibold text-foreground">
+            {subscribedCount}
+          </span>{" "}
+          fő fizetett elő — ez{" "}
+          <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
+          hónap ingyenes előfizetést jelent számodra 🎉
+        </p>
+
       </section>
 
       {/* SECTION 5 — Referred users list */}
