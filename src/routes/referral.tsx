@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Check, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
+import { Check, ChevronLeft, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/use-subscription";
 
