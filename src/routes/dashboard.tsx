@@ -34,6 +34,8 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useDocumentSearch } from "@/hooks/use-document-search";
 import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 import { TrialBanner } from "@/components/TrialBanner";
+import { ReferralView } from "@/components/ReferralView";
+
 
 
 export const Route = createFileRoute("/dashboard")({
