@@ -44,35 +44,29 @@ function ReferralPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data: sessionRes } = await supabase.auth.getSession();
-      if (cancelled) return;
-      const uid = sessionRes.session?.user?.id ?? null;
-      setUserId(uid);
-      if (!uid) {
-        setLoading(false);
-        return;
-      }
-      const { data, error } = await (supabase.rpc as any)("get_referrals");
-      if (cancelled) return;
-      if (error) {
-        toast.error("Nem sikerült betölteni az ajánlásokat");
-        setReferrals([]);
-      } else {
-        setReferrals((data ?? []) as Referral[]);
-      }
-      setLoading(false);
-    })();
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (cancelled) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user?.id ?? null);
+      setLoading(false);
     });
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
   }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      setReferrals([]);
+      return;
+    }
+    (supabase.rpc as any)("get_referrals").then(
+      ({ data, error }: { data: Referral[] | null; error: unknown }) => {
+        if (error) {
+          toast.error("Nem sikerült betölteni az ajánlásokat");
+          setReferrals([]);
+        } else {
+          setReferrals((data ?? []) as Referral[]);
+        }
+      },
+    );
+  }, [userId]);
+
 
 
   const referralLink = useMemo(
