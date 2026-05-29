@@ -373,7 +373,7 @@ function Dashboard() {
           hash="nav"
           className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
         >
-          <Plug className="h-4 w-4" /> NAV integráció
+          <Plug className="h-4 w-4" /> NAV számlaadatok importálása
         </Link>
       )}
       <Link
