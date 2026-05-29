@@ -40,7 +40,6 @@ type Referral = {
 };
 
 function ReferralPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
