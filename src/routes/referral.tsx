@@ -4,7 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Check, Copy, Gift, Users, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +20,10 @@ export const Route = createFileRoute("/referral")({
   head: () => ({
     meta: [
       { title: "Partneri program — Archivai" },
-      { name: "description", content: "Ajánld az Archivai-t és szerezz ingyenes hónapokat." },
+      {
+        name: "description",
+        content: "Ajánld az Archivai-t és szerezz ingyenes hónapokat.",
+      },
     ],
   }),
   component: ReferralPage,
@@ -59,7 +69,7 @@ function ReferralPage() {
   }, []);
 
   const referralLink = useMemo(
-    () => (userId && typeof window !== "undefined" ? `${window.location.origin}/register?ref=${userId}` : ""),
+    () => (userId ? `https://archivai.hu/register?ref=${userId}` : ""),
     [userId],
   );
 
@@ -75,7 +85,10 @@ function ReferralPage() {
     }
   }, [referralLink]);
 
-  const subscribedCount = useMemo(() => referrals.filter((r) => r.subscribed).length, [referrals]);
+  const subscribedCount = useMemo(
+    () => referrals.filter((r) => r.subscribed).length,
+    [referrals],
+  );
   const freeMonths = subscribedCount;
 
   if (!loading && !userId) {
@@ -83,7 +96,9 @@ function ReferralPage() {
       <div className="container mx-auto max-w-3xl py-10 px-4">
         <Card>
           <CardContent className="py-10 text-center space-y-4">
-            <p className="text-muted-foreground">Az ajánlási oldal megtekintéséhez jelentkezz be.</p>
+            <p className="text-muted-foreground">
+              Az ajánlási oldal megtekintéséhez jelentkezz be.
+            </p>
             <Button asChild>
               <Link to="/login">Bejelentkezés</Link>
             </Button>
@@ -96,29 +111,31 @@ function ReferralPage() {
   const steps = [
     "Másold ki az egyedi linkedet lentebb",
     "Küldd el akinek szerinted hasznos lenne az Archivai",
-    "Ők is 14 napos ingyenes próbával ismerkedhetnek meg a rendszerrel",
+    "Ők is 14 napos ingyenes próbával ismerkedhetnek meg a rendszersel",
     "Ha előfizetnek — az első hónapjuk ingyenes, te pedig automatikusan kapsz egy hónap jóváírást",
   ];
 
   return (
-    <div className="container mx-auto max-w-4xl py-10 px-4 space-y-10">
-      {/* HEADER */}
-      <div className="space-y-3">
+    <div className="container mx-auto max-w-4xl py-10 px-4 space-y-12">
+      {/* SECTION 1 — Hero */}
+      <section className="space-y-3">
         <div className="inline-flex items-center gap-2 text-brand">
           <Gift className="h-6 w-6" />
-          <span className="text-sm font-medium uppercase tracking-wide">Partneri program</span>
+          <span className="text-sm font-medium uppercase tracking-wide">
+            Partneri program
+          </span>
         </div>
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           Ajánld az Archivai-t — mindketten járjatok jól
         </h1>
         <p className="text-muted-foreground text-base md:text-lg max-w-3xl">
-          Oszd meg az egyedi ajánló linkedet ismerőseiddel vagy ügyfeleiddel. Ha valaki a linked
-          segítségével fizet elő, mindketten megkapjátok a következő hónapot ingyen — és ez minden
-          egyes ajánlott után jár neked.
+          Oszd meg az egyedi ajánló linkedet ismerőseiddel vagy ügyfeleiddel.
+          Ha valaki a linked segítségével fizet elő, mindketten megkapjátok a
+          következő hónapot ingyen — és ez minden egyes ajánlott után jár neked.
         </p>
-      </div>
+      </section>
 
-      {/* HOW IT WORKS */}
+      {/* SECTION 2 — Steps */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Hogyan működik?</h2>
         <div className="grid gap-3 md:grid-cols-2">
@@ -134,12 +151,13 @@ function ReferralPage() {
           ))}
         </div>
         <p className="text-sm italic text-muted-foreground">
-          Nincs limit — minél többet ajánlasz, annál több ingyenes hónapot gyűjtesz. A jóváírás
-          minden sikeres előfizetés után automatikusan aktiválódik.
+          Nincs limit — minél többet ajánlasz, annál több ingyenes hónapot
+          gyűjtesz. A jóváírás minden sikeres előfizetés után automatikusan
+          aktiválódik.
         </p>
       </section>
 
-      {/* REFERRAL LINK */}
+      {/* SECTION 3 — Referral link */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Ajánlási linked</CardTitle>
@@ -152,25 +170,33 @@ function ReferralPage() {
               onFocus={(e) => e.currentTarget.select()}
               className="font-mono text-xs"
             />
-            <Button onClick={copyLink} variant="secondary" disabled={!referralLink}>
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+            <Button
+              onClick={copyLink}
+              variant="secondary"
+              disabled={!referralLink}
+            >
+              {copied ? (
+                <Check className="h-4 w-4 mr-1" />
+              ) : (
+                <Copy className="h-4 w-4 mr-1" />
+              )}
               {copied ? "Másolva" : "Másol"}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* STATS */}
+      {/* SECTION 4 — Stats */}
       <section className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
           <StatBox
             icon={<Users className="h-5 w-5" />}
-            label="Ajánlott felhasználók száma"
+            label="Ajánlott felhasználók"
             value={referrals.length}
           />
           <StatBox
             icon={<CreditCard className="h-5 w-5" />}
-            label="Ebből előfizetett"
+            label="Előfizetett"
             value={subscribedCount}
           />
           <StatBox
@@ -181,23 +207,31 @@ function ReferralPage() {
         </div>
         {!loading && (
           <p className="text-sm text-center text-muted-foreground">
-            Eddig ajánlottál <span className="font-semibold text-foreground">{referrals.length}</span>{" "}
+            Eddig ajánlottál{" "}
+            <span className="font-semibold text-foreground">
+              {referrals.length}
+            </span>{" "}
             ismerőst, ebből{" "}
-            <span className="font-semibold text-foreground">{subscribedCount}</span> fő fizetett elő —
-            ez <span className="font-semibold text-foreground">{freeMonths}</span> hónap ingyenes
-            előfizetést jelent számodra 🎉
+            <span className="font-semibold text-foreground">
+              {subscribedCount}
+            </span>{" "}
+            fő fizetett elő — ez{" "}
+            <span className="font-semibold text-foreground">{freeMonths}</span>{" "}
+            hónap ingyenes előfizetést jelent számodra 🎉
           </p>
         )}
       </section>
 
-      {/* REFERRED USERS LIST */}
+      {/* SECTION 5 — Referred users list */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Ajánlott felhasználók</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-sm text-muted-foreground py-6 text-center">Betöltés…</div>
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              Betöltés…
+            </div>
           ) : referrals.length === 0 ? (
             <div className="text-sm text-muted-foreground py-6 text-center">
               Még nincs ajánlott felhasználód. Oszd meg a linkedet!
@@ -217,7 +251,9 @@ function ReferralPage() {
                     <TableCell className="font-medium">
                       {r.email}
                       {r.full_name ? (
-                        <div className="text-xs text-muted-foreground">{r.full_name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {r.full_name}
+                        </div>
                       ) : null}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
