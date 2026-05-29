@@ -46,13 +46,14 @@ function ReferralPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: sessionRes } = await supabase.auth.getSession();
       if (cancelled) return;
-      if (!userRes.user) {
+      const uid = sessionRes.session?.user?.id ?? null;
+      setUserId(uid);
+      if (!uid) {
         setLoading(false);
         return;
       }
-      setUserId(userRes.user.id);
       const { data, error } = await (supabase.rpc as any)("get_referrals");
       if (cancelled) return;
       if (error) {
@@ -63,10 +64,16 @@ function ReferralPage() {
       }
       setLoading(false);
     })();
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
+      setUserId(session?.user?.id ?? null);
+    });
     return () => {
       cancelled = true;
+      sub.subscription.unsubscribe();
     };
   }, []);
+
 
   const referralLink = useMemo(
     () => (userId ? `https://archivai.hu/register?ref=${userId}` : ""),
