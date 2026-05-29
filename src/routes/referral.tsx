@@ -229,14 +229,11 @@ function ReferralPage() {
           <CardTitle className="text-base">Ajánlott felhasználók</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-sm text-muted-foreground py-6 text-center">
-              Betöltés…
-            </div>
-          ) : referrals.length === 0 ? (
+          {referrals.length === 0 ? (
             <div className="text-sm text-muted-foreground py-6 text-center">
               Még nincs ajánlott felhasználód. Oszd meg a linkedet!
             </div>
+
           ) : (
             <Table>
               <TableHeader>
