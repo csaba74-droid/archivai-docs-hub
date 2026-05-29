@@ -108,22 +108,14 @@ function ReferralPage() {
   );
   const freeMonths = subscribedCount;
 
-  if (!loading && !userId) {
+  if (loading || !userId) {
     return (
-      <div className="container mx-auto max-w-3xl py-10 px-4">
-        <Card>
-          <CardContent className="py-10 text-center space-y-4">
-            <p className="text-muted-foreground">
-              Az ajánlási oldal megtekintéséhez jelentkezz be.
-            </p>
-            <Button asChild>
-              <Link to="/login">Bejelentkezés</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto max-w-3xl py-20 px-4 flex justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
       </div>
     );
   }
+
 
   const steps = [
     "Másold ki az egyedi linkedet lentebb",
