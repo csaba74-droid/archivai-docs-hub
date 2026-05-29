@@ -457,6 +457,9 @@ function Dashboard() {
               />
             )}
           </div>
+          <Button onClick={() => searchRef.current?.focus()} variant="default" size="sm">
+            <Search className="h-4 w-4 mr-1" /> Keresés
+          </Button>
           {search.trim() && (
             <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
               <X className="h-4 w-4 mr-1" /> Bezár
@@ -682,15 +685,22 @@ function Dashboard() {
           {/* Desktop category grid — only when no activeCat & no search */}
           {!activeCat && !search.trim() && (
             <div className="hidden md:block space-y-6">
-              <DropZone
-                variant="compact"
-                dragOver={dragOver}
-                disabled={!canUpload}
-                onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={() => canUpload && openUploadWith(null)}
-              />
+              <div className="flex items-stretch gap-3">
+                <div className="flex-1">
+                  <DropZone
+                    variant="compact"
+                    dragOver={dragOver}
+                    disabled={!canUpload}
+                    onDragOver={(e) => { e.preventDefault(); if (canUpload) setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    onClick={() => canUpload && openUploadWith(null)}
+                  />
+                </div>
+                <Button onClick={() => canUpload && openUploadWith(null)} disabled={!canUpload} size="lg">
+                  <Upload className="h-4 w-4 mr-2" /> Feltöltés
+                </Button>
+              </div>
               <div>
                 <h2 className="text-2xl font-bold tracking-tight">Kategóriák</h2>
                 <p className="text-sm text-muted-foreground mt-1">
