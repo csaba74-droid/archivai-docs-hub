@@ -332,12 +332,13 @@ function Dashboard() {
       >
         <Users className="h-4 w-4" /> Hozzáférés megosztása
       </Link>
-      <Link
-        to="/referral"
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      <button
+        onClick={() => { setView("referral"); setActiveCat(null); setSearch(""); }}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${view === "referral" ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
       >
-        <Gift className="h-4 w-4 text-brand" /> Partneri program
-      </Link>
+        <Gift className={`h-4 w-4 ${view === "referral" ? "" : "text-brand"}`} /> Partneri program
+      </button>
+
       <Link
         to="/subscription"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
