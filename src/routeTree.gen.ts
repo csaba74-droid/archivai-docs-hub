@@ -14,6 +14,7 @@ import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SharingRouteImport } from './routes/sharing'
 import { Route as ScanGuideRouteImport } from './routes/scan-guide'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -50,6 +51,11 @@ const ScanGuideRoute = ScanGuideRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralRoute = ReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/referral': typeof ReferralRoute
   '/register': typeof RegisterRoute
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/referral': typeof ReferralRoute
   '/register': typeof RegisterRoute
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/referral': typeof ReferralRoute
   '/register': typeof RegisterRoute
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/profile'
+    | '/referral'
     | '/register'
     | '/scan-guide'
     | '/sharing'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/profile'
+    | '/referral'
     | '/register'
     | '/scan-guide'
     | '/sharing'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/profile'
+    | '/referral'
     | '/register'
     | '/scan-guide'
     | '/sharing'
@@ -243,6 +255,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  ReferralRoute: typeof ReferralRoute
   RegisterRoute: typeof RegisterRoute
   ScanGuideRoute: typeof ScanGuideRoute
   SharingRoute: typeof SharingRoute
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referral': {
+      id: '/referral'
+      path: '/referral'
+      fullPath: '/referral'
+      preLoaderRoute: typeof ReferralRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -396,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  ReferralRoute: ReferralRoute,
   RegisterRoute: RegisterRoute,
   ScanGuideRoute: ScanGuideRoute,
   SharingRoute: SharingRoute,

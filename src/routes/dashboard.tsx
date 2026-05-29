@@ -34,8 +34,6 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useDocumentSearch } from "@/hooks/use-document-search";
 import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 import { TrialBanner } from "@/components/TrialBanner";
-import { ReferralView } from "@/components/ReferralView";
-
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -69,8 +67,6 @@ function Dashboard() {
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
-  const [view, setView] = useState<"home" | "referral">("home");
-
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -302,12 +298,11 @@ function Dashboard() {
   const desktopSidebarNav = (
     <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
       <button
-        onClick={() => { setActiveCat(null); setSearch(""); setView("home"); }}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${view === "home" && activeCat === null && !search.trim() ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
+        onClick={() => { setActiveCat(null); setSearch(""); }}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null && !search.trim() ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
       >
         <Home className="h-4 w-4" /> Kezdőlap
       </button>
-
       <Link
         to="/profile"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
@@ -332,13 +327,12 @@ function Dashboard() {
       >
         <Users className="h-4 w-4" /> Hozzáférés megosztása
       </Link>
-      <button
-        onClick={() => { setView("referral"); setActiveCat(null); setSearch(""); }}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${view === "referral" ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
+      <Link
+        to="/referral"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
-        <Gift className={`h-4 w-4 ${view === "referral" ? "" : "text-brand"}`} /> Partneri program
-      </button>
-
+        <Gift className="h-4 w-4 text-brand" /> Partneri program
+      </Link>
       <Link
         to="/subscription"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
@@ -513,10 +507,7 @@ function Dashboard() {
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8 space-y-6">
-          {view === "referral" ? (
-            <ReferralView userId={userId} />
-          ) : searchActive ? (
-
+          {searchActive ? (
             <SearchPanel
               query={searchState.query}
               isSearching={searchState.isSearching}
