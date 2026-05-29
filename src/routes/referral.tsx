@@ -44,11 +44,16 @@ function ReferralPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null);
+    supabase.auth.getSession().then((res) => {
+      console.log("[referral] getSession result:", res);
+      setUserId(res.data.session?.user?.id ?? null);
       setLoading(false);
     });
+    supabase.auth.getUser().then((res) => {
+      console.log("[referral] getUser result:", res);
+    });
   }, []);
+
 
   useEffect(() => {
     if (!userId) {
