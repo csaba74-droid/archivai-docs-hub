@@ -1,6 +1,6 @@
 // Supabase Edge Function: create-checkout-session
 // Creates a Stripe Checkout Session (subscription mode) and returns the URL.
-// Deploy bump: 2026-05-30 referral-debug-v2
+// Deploy bump: 2026-05-30 referral-discounts-param-v3
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -169,6 +169,7 @@ Deno.serve(async (req: Request) => {
       `${PLAN_NAMES[plan]} (${interval === "monthly" ? "havi" : "éves"})`,
     );
     if (applyReferralCoupon) {
+      // Stripe Checkout expects coupon discounts as discounts[0][coupon].
       params.append("discounts[0][coupon]", "REFERRAL_INVITEE");
     }
     params.append("metadata[userId]", body.userId);
