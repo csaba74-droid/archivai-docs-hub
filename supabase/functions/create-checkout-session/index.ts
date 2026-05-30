@@ -180,6 +180,7 @@ Deno.serve(async (req: Request) => {
     params.append("subscription_data[metadata][interval]", interval);
     params.append("subscription_data[metadata][priceId]", body.priceId);
 
+    console.log("[create-checkout-session] final stripe params:", params.toString());
 
     const sessionRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
