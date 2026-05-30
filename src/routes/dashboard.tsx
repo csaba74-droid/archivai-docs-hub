@@ -113,15 +113,14 @@ function Dashboard() {
           .eq("id", data.user.id)
           .maybeSingle();
         const row = prof as { archivai_email: string | null } | null;
-        const fallback = "u" + data.user.id.replace(/-/g, "").slice(0, 12);
-        setArchivaiEmail(row?.archivai_email ?? fallback);
+        setArchivaiEmail(row?.archivai_email ?? "");
       }
     });
     loadDocs();
   }, [loadDocs]);
 
   const archivaiFullEmail = useMemo(
-    () => (archivaiEmail ? `${archivaiEmail}@inbox.archivai.hu` : ""),
+    () => (archivaiEmail ? `${archivaiEmail}@inbox.archivai.hu` : "Generálás folyamatban..."),
     [archivaiEmail],
   );
   const copyArchivaiEmail = useCallback(async () => {
