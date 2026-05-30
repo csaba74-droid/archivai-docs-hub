@@ -141,7 +141,7 @@ function Dashboard() {
   }, [loadDocs]);
 
   const archivaiFullEmail = useMemo(
-    () => (archivaiEmail ? `${archivaiEmail}@inbox.archivai.hu` : "Generálás folyamatban..."),
+    () => archivaiEmail || "Generálás folyamatban...",
     [archivaiEmail],
   );
   const copyArchivaiEmail = useCallback(async () => {
