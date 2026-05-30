@@ -417,6 +417,18 @@ function Dashboard() {
         </div>
         {desktopSidebarNav}
         <div className="border-t">{profilePanel}</div>
+        <div className="border-t px-4 py-3 space-y-1 text-xs text-muted-foreground">
+          <a href="mailto:kapcsolat@archivai.hu" className="block hover:text-brand truncate">
+            kapcsolat@archivai.hu
+          </a>
+          <a href="tel:+36205590559" className="block hover:text-brand">
+            06 20 559-0-559
+          </a>
+          <div className="flex gap-3 pt-1">
+            <Link to="/aszf" className="hover:text-brand">ÁSZF</Link>
+            <Link to="/adatkezeles" className="hover:text-brand">Adatkezelés</Link>
+          </div>
+        </div>
       </aside>
 
       {/* Main */}
