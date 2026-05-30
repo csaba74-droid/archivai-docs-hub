@@ -113,31 +113,45 @@ Deno.serve(async (req: Request) => {
 
     // Check referral eligibility: apply REFERRAL_INVITEE coupon once
     // if the user was referred and has not yet redeemed the discount.
+    console.log("[create-checkout-session] userId received:", body.userId);
     let applyReferralCoupon = false;
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    console.log("[create-checkout-session] supabase env present:", {
+      supabaseUrl: !!supabaseUrl,
+      serviceRoleKey: !!serviceRoleKey,
+    });
     if (supabaseUrl && serviceRoleKey) {
       try {
-        const profRes = await fetch(
-          `${supabaseUrl}/rest/v1/profiles?id=eq.${body.userId}&select=referred_by,referral_discount_used`,
-          {
-            headers: {
-              apikey: serviceRoleKey,
-              Authorization: `Bearer ${serviceRoleKey}`,
-            },
+        const profUrl = `${supabaseUrl}/rest/v1/profiles?id=eq.${body.userId}&select=referred_by,referral_discount_used`;
+        console.log("[create-checkout-session] fetching profile:", profUrl);
+        const profRes = await fetch(profUrl, {
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
           },
-        );
+        });
+        console.log("[create-checkout-session] profile fetch status:", profRes.status);
         if (profRes.ok) {
           const rows = await profRes.json();
+          console.log("[create-checkout-session] profile rows:", JSON.stringify(rows));
           const profile = Array.isArray(rows) ? rows[0] : null;
+          console.log("[create-checkout-session] profile parsed:", {
+            referred_by: profile?.referred_by ?? null,
+            referral_discount_used: profile?.referral_discount_used ?? null,
+          });
           if (profile && profile.referred_by && !profile.referral_discount_used) {
             applyReferralCoupon = true;
           }
+        } else {
+          const errText = await profRes.text();
+          console.error("[create-checkout-session] profile fetch not ok:", errText);
         }
       } catch (e) {
         console.error("[create-checkout-session] referral lookup failed", e);
       }
     }
+    console.log("[create-checkout-session] applyReferralCoupon:", applyReferralCoupon);
 
     const params = new URLSearchParams();
     params.append("mode", "subscription");
