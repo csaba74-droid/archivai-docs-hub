@@ -1,6 +1,6 @@
 // Supabase Edge Function: create-checkout-session
 // Creates a Stripe Checkout Session (subscription mode) and returns the URL.
-// Deploy bump: 2026-05-30 referral-discounts-param-v3
+// Deploy bump: 2026-05-30 referral-discounts-param-v4
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
