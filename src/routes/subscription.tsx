@@ -167,9 +167,52 @@ function SubscriptionPage() {
           </div>
         </Card>
 
+        {/* Prominent billing period toggle — applies to all plans */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-sm font-medium text-muted-foreground">Válassz számlázási időszakot</p>
+          <div
+            role="radiogroup"
+            aria-label="Számlázási időszak"
+            className="inline-flex items-center rounded-lg border bg-muted/40 p-1"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={interval === "monthly"}
+              onClick={() => setInterval("monthly")}
+              className={`px-5 py-2 text-sm font-semibold rounded-md transition-all ${
+                interval === "monthly"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Havi
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={interval === "yearly"}
+              onClick={() => setInterval("yearly")}
+              className={`px-5 py-2 text-sm font-semibold rounded-md transition-all inline-flex items-center gap-2 ${
+                interval === "yearly"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Éves
+              <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-bold">
+                −2 hónap
+              </span>
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {interval === "yearly"
+              ? "Éves számlázás — 2 hónap grátisz"
+              : "Havi számlázás — bármikor lemondható"}
+          </p>
+        </div>
 
-
-        {/* Plan picker — annual emphasized */}
+        {/* Plan picker */}
         <div className="grid md:grid-cols-3 gap-4">
           {(["alap", "pro", "vallalati"] as const).map((plan) => {
             const info = PLAN_INFO[plan];
@@ -177,8 +220,7 @@ function SubscriptionPage() {
             const monthlyAmount = PRICES[plan].monthly;
             const yearlyAmount = PRICES[plan].yearly;
             const yearlyAsMonthly = Math.round(yearlyAmount / 12);
-            const isSelectedMonthly = interval === "monthly";
-            const isSelectedYearly = interval === "yearly";
+            const displayPerMonth = interval === "yearly" ? yearlyAsMonthly : monthlyAmount;
             return (
               <Card key={plan} className={`p-5 flex flex-col ${plan === "pro" ? "border-brand ring-2 ring-brand/20" : ""}`}>
                 <div className="flex items-center justify-between">
@@ -187,51 +229,17 @@ function SubscriptionPage() {
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">{info.description}</p>
 
-                {/* Pricing options */}
-                <div className="mt-4 space-y-2">
-                  {/* Annual — featured */}
-                  <button
-                    type="button"
-                    onClick={() => setInterval("yearly")}
-                    className={`relative w-full text-left rounded-lg border-2 p-4 transition-all ${
-                      isSelectedYearly
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 shadow-md"
-                        : "border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/10 hover:border-emerald-400"
-                    }`}
-                  >
-                    <span className="absolute -top-2.5 right-3 inline-flex items-center rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
-                      🎁 2 hónap grátisz!
-                    </span>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                        Éves
-                      </span>
-                      {isSelectedYearly && <Check className="h-4 w-4 text-emerald-600" />}
-                    </div>
-                    <p className="text-2xl font-bold mt-1">{formatHuf(yearlyAsMonthly)}<span className="text-sm font-normal text-muted-foreground"> / hó</span></p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatHuf(yearlyAmount)} évente egy összegben
-                    </p>
-                  </button>
-
-                  {/* Monthly — secondary */}
-                  <button
-                    type="button"
-                    onClick={() => setInterval("monthly")}
-                    className={`w-full text-left rounded-lg border p-3 transition-colors ${
-                      isSelectedMonthly
-                        ? "border-foreground/60 bg-muted/50"
-                        : "border-border hover:border-foreground/30"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Havi
-                      </span>
-                      {isSelectedMonthly && <Check className="h-3.5 w-3.5 text-foreground" />}
-                    </div>
-                    <p className="text-base font-semibold mt-0.5">{formatHuf(monthlyAmount)}<span className="text-xs font-normal text-muted-foreground"> / hó</span></p>
-                  </button>
+                {/* Price display reflects the selected interval */}
+                <div className="mt-4">
+                  <p className="text-3xl font-bold">
+                    {formatHuf(displayPerMonth)}
+                    <span className="text-sm font-normal text-muted-foreground"> / hó</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
+                    {interval === "yearly"
+                      ? <>{formatHuf(yearlyAmount)} évente egy összegben</>
+                      : <>Havi számlázás</>}
+                  </p>
                 </div>
 
                 <ul className="mt-5 space-y-2 text-sm flex-1">
@@ -242,8 +250,20 @@ function SubscriptionPage() {
                     </li>
                   ))}
                 </ul>
+
+                {/* Confirmation of selection right above CTA */}
+                <div className="mt-5 rounded-md bg-muted/50 px-3 py-2 text-xs text-center">
+                  <span className="text-muted-foreground">Választott: </span>
+                  <span className="font-semibold text-foreground">
+                    {interval === "yearly" ? "Éves" : "Havi"}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {" "}— {interval === "yearly" ? formatHuf(yearlyAmount) + " / év" : formatHuf(monthlyAmount) + " / hó"}
+                  </span>
+                </div>
+
                 <Button
-                  className="mt-5 w-full"
+                  className="mt-3 w-full"
                   variant={isCurrent ? "secondary" : plan === "pro" ? "default" : "outline"}
                   disabled={isCurrent || !userId || redirecting !== null}
                   onClick={() => void openCheckout(plan)}
@@ -256,6 +276,7 @@ function SubscriptionPage() {
             );
           })}
         </div>
+
 
 
         <p className="text-center text-xs text-muted-foreground">
