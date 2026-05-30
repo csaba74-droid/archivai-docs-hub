@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS referral_reward_sent boolean NOT NULL DEFAULT false;
