@@ -107,11 +107,32 @@ function Dashboard() {
       setUserEmail(data.user?.email ?? "");
       setUserId(data.user?.id ?? "");
       if (data.user?.id) {
-        const { data: prof } = await supabase
+        let { data: prof } = await supabase
           .from("profiles")
           .select("archivai_email")
           .eq("id", data.user.id)
           .maybeSingle();
+
+        // Self-heal: profile row missing (e.g. signup trigger failed historically).
+        // Insert an empty row so the BEFORE-INSERT trigger derives archivai_email
+        // from full_name / email local-part.
+        if (!prof) {
+          const meta = (data.user.user_metadata ?? {}) as Record<string, string>;
+          const emailLocal = (data.user.email ?? "").split("@")[0]?.replace(/[._\-+]+/g, " ").trim() ?? "";
+          const fullName = meta.full_name?.trim() || emailLocal;
+          await supabase.from("profiles").upsert({
+            id: data.user.id,
+            full_name: fullName,
+            company: meta.company ?? "",
+          });
+          const re = await supabase
+            .from("profiles")
+            .select("archivai_email")
+            .eq("id", data.user.id)
+            .maybeSingle();
+          prof = re.data;
+        }
+
         const row = prof as { archivai_email: string | null } | null;
         setArchivaiEmail(row?.archivai_email ?? "");
       }
