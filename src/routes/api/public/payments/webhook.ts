@@ -135,7 +135,8 @@ async function handleInvoicePaymentSucceeded(invoice: any, env: StripeEnv) {
     const stripe = createStripeClient(env);
     await stripe.customers.update(referrerCustomerId, {
       coupon: "REFERRAL_REWARD",
-    });
+    } as any);
+
     await supabase
       .from("profiles")
       .update({ referral_reward_sent: true })
