@@ -17,6 +17,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as KapcsolatRouteImport } from './routes/kapcsolat'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AszfRouteImport } from './routes/aszf'
@@ -66,6 +67,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KapcsolatRoute = KapcsolatRouteImport.update({
+  id: '/kapcsolat',
+  path: '/kapcsolat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
+  '/kapcsolat': typeof KapcsolatRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/referral': typeof ReferralRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
+  '/kapcsolat': typeof KapcsolatRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/referral': typeof ReferralRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/aszf': typeof AszfRoute
   '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
+  '/kapcsolat': typeof KapcsolatRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/referral': typeof ReferralRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/aszf'
     | '/audit'
     | '/dashboard'
+    | '/kapcsolat'
     | '/login'
     | '/profile'
     | '/referral'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/aszf'
     | '/audit'
     | '/dashboard'
+    | '/kapcsolat'
     | '/login'
     | '/profile'
     | '/referral'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/aszf'
     | '/audit'
     | '/dashboard'
+    | '/kapcsolat'
     | '/login'
     | '/profile'
     | '/referral'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   AszfRoute: typeof AszfRoute
   AuditRoute: typeof AuditRoute
   DashboardRoute: typeof DashboardRoute
+  KapcsolatRoute: typeof KapcsolatRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   ReferralRoute: typeof ReferralRoute
@@ -320,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kapcsolat': {
+      id: '/kapcsolat'
+      path: '/kapcsolat'
+      fullPath: '/kapcsolat'
+      preLoaderRoute: typeof KapcsolatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   AszfRoute: AszfRoute,
   AuditRoute: AuditRoute,
   DashboardRoute: DashboardRoute,
+  KapcsolatRoute: KapcsolatRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   ReferralRoute: ReferralRoute,
@@ -427,13 +448,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

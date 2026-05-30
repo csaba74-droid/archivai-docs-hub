@@ -16,7 +16,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield, Plug,
+  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield, Plug, Mail,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -354,6 +354,12 @@ function Dashboard() {
       >
         <ClipboardList className="h-4 w-4" /> Audit napló
       </Link>
+      <Link
+        to="/kapcsolat"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+      >
+        <Mail className="h-4 w-4" /> Kapcsolat
+      </Link>
       {userEmail === "lenard.csaba74@gmail.com" && (
         <Link
           to="/admin"
@@ -411,6 +417,18 @@ function Dashboard() {
         </div>
         {desktopSidebarNav}
         <div className="border-t">{profilePanel}</div>
+        <div className="border-t px-4 py-3 space-y-1 text-xs text-muted-foreground">
+          <a href="mailto:kapcsolat@archivai.hu" className="block hover:text-brand truncate">
+            kapcsolat@archivai.hu
+          </a>
+          <a href="tel:+36205590559" className="block hover:text-brand">
+            06 20 559-0-559
+          </a>
+          <div className="flex gap-3 pt-1">
+            <Link to="/aszf" className="hover:text-brand">ÁSZF</Link>
+            <Link to="/adatkezeles" className="hover:text-brand">Adatkezelés</Link>
+          </div>
+        </div>
       </aside>
 
       {/* Main */}
