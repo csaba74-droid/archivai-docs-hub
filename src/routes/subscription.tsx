@@ -168,22 +168,22 @@ function SubscriptionPage() {
         </Card>
 
         {/* Prominent billing period toggle — applies to all plans */}
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-sm font-medium text-muted-foreground">Válassz számlázási időszakot</p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-base font-semibold text-foreground">Válassz számlázási időszakot</p>
           <div
             role="radiogroup"
             aria-label="Számlázási időszak"
-            className="inline-flex items-center rounded-lg border bg-muted/40 p-1"
+            className="inline-flex items-center rounded-full border-2 border-border bg-muted p-1.5 shadow-sm"
           >
             <button
               type="button"
               role="radio"
               aria-checked={interval === "monthly"}
               onClick={() => setInterval("monthly")}
-              className={`px-5 py-2 text-sm font-semibold rounded-md transition-all ${
+              className={`px-7 py-2.5 text-base font-bold rounded-full transition-all ${
                 interval === "monthly"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-brand text-white shadow-md"
+                  : "text-foreground/70 hover:text-foreground"
               }`}
             >
               Havi
@@ -193,15 +193,21 @@ function SubscriptionPage() {
               role="radio"
               aria-checked={interval === "yearly"}
               onClick={() => setInterval("yearly")}
-              className={`px-5 py-2 text-sm font-semibold rounded-md transition-all inline-flex items-center gap-2 ${
+              className={`relative px-7 py-2.5 text-base font-bold rounded-full transition-all inline-flex items-center gap-2 ${
                 interval === "yearly"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-brand text-white shadow-md"
+                  : "text-foreground/70 hover:text-foreground"
               }`}
             >
               Éves
-              <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-bold">
-                −2 hónap
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  interval === "yearly"
+                    ? "bg-white/20 text-white"
+                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                }`}
+              >
+                2 hónap ingyen
               </span>
             </button>
           </div>
@@ -211,6 +217,7 @@ function SubscriptionPage() {
               : "Havi számlázás — bármikor lemondható"}
           </p>
         </div>
+
 
         {/* Plan picker */}
         <div className="grid md:grid-cols-3 gap-4">
