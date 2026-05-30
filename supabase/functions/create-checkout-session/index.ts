@@ -105,8 +105,7 @@ Deno.serve(async (req: Request) => {
     const amount = PRICES[plan][interval];
     const stripeInterval = interval === "monthly" ? "month" : "year";
 
-    const origin = req.headers.get("origin") || req.headers.get("referer") || "";
-    const baseUrl = origin.replace(/\/$/, "");
+    const baseUrl = "https://archivai.hu";
     const successUrl = `${baseUrl}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/subscription?checkout=canceled`;
 
