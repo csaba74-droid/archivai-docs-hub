@@ -111,6 +111,34 @@ Deno.serve(async (req: Request) => {
 
     const customerId = await findOrCreateCustomer(stripeKey, body.userId, body.email);
 
+    // Check referral eligibility: apply REFERRAL_INVITEE coupon once
+    // if the user was referred and has not yet redeemed the discount.
+    let applyReferralCoupon = false;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (supabaseUrl && serviceRoleKey) {
+      try {
+        const profRes = await fetch(
+          `${supabaseUrl}/rest/v1/profiles?id=eq.${body.userId}&select=referred_by,referral_discount_used`,
+          {
+            headers: {
+              apikey: serviceRoleKey,
+              Authorization: `Bearer ${serviceRoleKey}`,
+            },
+          },
+        );
+        if (profRes.ok) {
+          const rows = await profRes.json();
+          const profile = Array.isArray(rows) ? rows[0] : null;
+          if (profile && profile.referred_by && !profile.referral_discount_used) {
+            applyReferralCoupon = true;
+          }
+        }
+      } catch (e) {
+        console.error("[create-checkout-session] referral lookup failed", e);
+      }
+    }
+
     const params = new URLSearchParams();
     params.append("mode", "subscription");
     params.append("locale", "hu");
@@ -125,14 +153,19 @@ Deno.serve(async (req: Request) => {
       "line_items[0][price_data][product_data][name]",
       `${PLAN_NAMES[plan]} (${interval === "monthly" ? "havi" : "éves"})`,
     );
+    if (applyReferralCoupon) {
+      params.append("discounts[0][coupon]", "REFERRAL_INVITEE");
+    }
     params.append("metadata[userId]", body.userId);
     params.append("metadata[plan]", plan);
     params.append("metadata[interval]", interval);
     params.append("metadata[priceId]", body.priceId);
+    params.append("metadata[referralCoupon]", applyReferralCoupon ? "REFERRAL_INVITEE" : "");
     params.append("subscription_data[metadata][userId]", body.userId);
     params.append("subscription_data[metadata][plan]", plan);
     params.append("subscription_data[metadata][interval]", interval);
     params.append("subscription_data[metadata][priceId]", body.priceId);
+
 
     const sessionRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
