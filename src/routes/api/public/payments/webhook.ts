@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
+import { type StripeEnv, verifyWebhook, createStripeClient } from "@/lib/stripe.server";
+
 
 let _supabase: any = null;
 function getAppSupabase(): any {
@@ -89,6 +90,63 @@ async function handleSubscriptionDeleted(subscription: any) {
   if (error) console.error("[webhook] delete update error", error);
 }
 
+async function handleInvoicePaymentSucceeded(invoice: any, env: StripeEnv) {
+  // Only act on the first paid invoice for a brand-new subscription.
+  if (invoice.billing_reason !== "subscription_create") return;
+
+  const customerId = invoice.customer as string | null;
+  if (!customerId) return;
+
+  const supabase = getAppSupabase();
+
+  // Resolve the paying user from the subscriptions table by Stripe customer id.
+  const { data: subRow } = await supabase
+    .from("subscriptions")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  const userId = subRow?.user_id as string | undefined;
+  if (!userId) {
+    console.log("[webhook] invoice.payment_succeeded: no user for customer", customerId);
+    return;
+  }
+
+  // Look up referrer and reward flag.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("referred_by, referral_reward_sent")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!profile?.referred_by || profile.referral_reward_sent) return;
+
+  // Resolve the referrer's Stripe customer id.
+  const { data: referrerSub } = await supabase
+    .from("subscriptions")
+    .select("stripe_customer_id")
+    .eq("user_id", profile.referred_by)
+    .maybeSingle();
+  const referrerCustomerId = referrerSub?.stripe_customer_id as string | undefined;
+  if (!referrerCustomerId) {
+    console.log("[webhook] referrer has no stripe_customer_id", profile.referred_by);
+    return;
+  }
+
+  try {
+    const stripe = createStripeClient(env);
+    await stripe.customers.update(referrerCustomerId, {
+      coupon: "REFERRAL_REWARD",
+    } as any);
+
+    await supabase
+      .from("profiles")
+      .update({ referral_reward_sent: true })
+      .eq("id", userId);
+    console.log("[webhook] applied REFERRAL_REWARD to", referrerCustomerId, "for referred user", userId);
+  } catch (err) {
+    console.error("[webhook] failed to apply REFERRAL_REWARD", err);
+  }
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
   switch (event.type) {
@@ -99,10 +157,14 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "customer.subscription.deleted":
       await handleSubscriptionDeleted(event.data.object);
       break;
+    case "invoice.payment_succeeded":
+      await handleInvoicePaymentSucceeded(event.data.object, env);
+      break;
     default:
       console.log("[webhook] unhandled event:", event.type);
   }
 }
+
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {

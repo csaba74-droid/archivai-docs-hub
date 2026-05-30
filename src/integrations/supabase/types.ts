@@ -178,6 +178,7 @@ export type Database = {
           id: string
           partner_type: string | null
           referral_discount_used: boolean
+          referral_reward_sent: boolean
           referred_by: string | null
         }
         Insert: {
@@ -188,6 +189,7 @@ export type Database = {
           id: string
           partner_type?: string | null
           referral_discount_used?: boolean
+          referral_reward_sent?: boolean
           referred_by?: string | null
         }
         Update: {
@@ -198,6 +200,7 @@ export type Database = {
           id?: string
           partner_type?: string | null
           referral_discount_used?: boolean
+          referral_reward_sent?: boolean
           referred_by?: string | null
         }
         Relationships: []
