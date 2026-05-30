@@ -174,6 +174,7 @@ export type Database = {
           archivai_email: string | null
           company: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           partner_type: string | null
@@ -185,6 +186,7 @@ export type Database = {
           archivai_email?: string | null
           company?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           partner_type?: string | null
@@ -196,6 +198,7 @@ export type Database = {
           archivai_email?: string | null
           company?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           partner_type?: string | null
