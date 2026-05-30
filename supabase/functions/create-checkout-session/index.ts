@@ -186,10 +186,31 @@ Deno.serve(async (req: Request) => {
     }
 
     const session = await sessionRes.json();
+
+    if (applyReferralCoupon && supabaseUrl && serviceRoleKey) {
+      try {
+        await fetch(
+          `${supabaseUrl}/rest/v1/profiles?id=eq.${body.userId}`,
+          {
+            method: "PATCH",
+            headers: {
+              apikey: serviceRoleKey,
+              Authorization: `Bearer ${serviceRoleKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ referral_discount_used: true }),
+          },
+        );
+      } catch (e) {
+        console.error("[create-checkout-session] failed to mark referral_discount_used", e);
+      }
+    }
+
     return new Response(
       JSON.stringify({ url: session.url }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[create-checkout-session] failed", message);
