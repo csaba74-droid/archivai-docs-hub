@@ -29,6 +29,7 @@ import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 import { DocumentCard } from "@/components/DocumentCard";
 import { UploadDialog } from "@/components/UploadDialog";
 import { CustomCategoryDialog } from "@/components/CustomCategoryDialog";
+import { CategoryTree } from "@/components/CategoryTree";
 import { ScanButton } from "@/components/ScanButton";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useDocumentSearch } from "@/hooks/use-document-search";
