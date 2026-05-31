@@ -758,6 +758,7 @@ function Dashboard() {
                 counts={counts}
                 onOpen={(id) => setActiveCat(id)}
                 onNewCategory={() => setNewCatOpen(true)}
+                onNewSubfolder={openNewSubfolder}
                 onDeleteCustomCat={handleDeleteCustomCat}
               />
             </div>
