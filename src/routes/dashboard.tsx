@@ -877,7 +877,11 @@ function Dashboard() {
         onComplete={loadDocs}
         initialFiles={pendingFiles}
       />
-      <CustomCategoryDialog open={newCatOpen} onOpenChange={setNewCatOpen} />
+      <CustomCategoryDialog
+        open={newCatOpen}
+        onOpenChange={(v) => { setNewCatOpen(v); if (!v) setSubfolderParent(null); }}
+        parentCatId={subfolderParent}
+      />
 
       </div>
     </div>
