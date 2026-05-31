@@ -16,7 +16,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield, Plug, Mail,
+  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield, Plug, Mail, FolderPlus,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -758,6 +758,7 @@ function Dashboard() {
                 counts={counts}
                 onOpen={(id) => setActiveCat(id)}
                 onNewCategory={() => setNewCatOpen(true)}
+                onNewSubfolder={openNewSubfolder}
                 onDeleteCustomCat={handleDeleteCustomCat}
               />
             </div>
@@ -1179,10 +1180,11 @@ type CategoryGridProps = {
   counts: Record<string, number>;
   onOpen: (id: string) => void;
   onNewCategory: () => void;
+  onNewSubfolder: (parentId: string) => void;
   onDeleteCustomCat: (catId: string) => void | Promise<void>;
 };
 
-function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCat }: CategoryGridProps) {
+function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onNewSubfolder, onDeleteCustomCat }: CategoryGridProps) {
   const ordered = sortCategories(allCats);
   const inbox = ordered.find((c) => c.id === "beerkezett");
   const rest = ordered.filter((c) => c.id !== "beerkezett");
@@ -1243,11 +1245,10 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
             : "Szabad tárolás";
           const Icon = cat.icon;
           return (
-            <div key={cat.id} className="relative group">
+            <div key={cat.id} className="relative group bg-white rounded-md border border-border/40 overflow-hidden transition-all hover:shadow-md hover:border-border/70" style={{ borderLeft: `5px solid ${color}` }}>
               <button
                 onClick={() => onOpen(cat.id)}
-                style={{ borderLeft: `5px solid ${color}` }}
-                className="w-full text-left bg-white rounded-md border border-border/40 pl-4 pr-4 py-3 min-h-[90px] flex items-center gap-3 transition-all hover:shadow-md hover:border-border/70"
+                className="w-full text-left pl-4 pr-4 py-3 min-h-[90px] flex items-center gap-3"
               >
                 <div
                   className="h-10 w-10 rounded-md flex items-center justify-center shrink-0"
@@ -1269,6 +1270,16 @@ function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCa
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </button>
+              <div className="border-t border-border/40 px-3 py-1.5 flex justify-end">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onNewSubfolder(cat.id); }}
+                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/60"
+                  aria-label="Új almappa"
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                  <span>Új almappa</span>
+                </button>
+              </div>
               {cat.custom && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDeleteCustomCat(cat.id); }}
