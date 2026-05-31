@@ -57,7 +57,10 @@ export type Database = {
           is_system: boolean
           mode: string
           name: string
+          parent_builtin: string | null
+          parent_id: string | null
           retention_years: number | null
+          root_builtin: string | null
           user_id: string
         }
         Insert: {
@@ -67,7 +70,10 @@ export type Database = {
           is_system?: boolean
           mode: string
           name: string
+          parent_builtin?: string | null
+          parent_id?: string | null
           retention_years?: number | null
+          root_builtin?: string | null
           user_id: string
         }
         Update: {
@@ -77,10 +83,21 @@ export type Database = {
           is_system?: boolean
           mode?: string
           name?: string
+          parent_builtin?: string | null
+          parent_id?: string | null
           retention_years?: number | null
+          root_builtin?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "custom_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "custom_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
