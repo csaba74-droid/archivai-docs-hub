@@ -158,6 +158,26 @@ export function DocumentPreviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+        {onPrev && (
+          <button
+            type="button"
+            onClick={onPrev}
+            aria-label="Előző dokumentum"
+            className="hidden md:flex items-center justify-center fixed left-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {onNext && (
+          <button
+            type="button"
+            onClick={onNext}
+            aria-label="Következő dokumentum"
+            className="hidden md:flex items-center justify-center fixed right-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
         <DialogHeader>
           <DialogTitle className="truncate flex items-center gap-2">
             {editingName ? (
