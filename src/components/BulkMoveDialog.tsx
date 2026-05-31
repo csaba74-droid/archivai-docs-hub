@@ -25,7 +25,7 @@ export function BulkMoveDialog({
   docs: DocumentRow[];
   onMoved?: (movedIds: string[], newCategory: string) => void;
 }) {
-  const { all, getRoot, getCategory } = useCategoryHelpers();
+  const { all, getCategory } = useCategoryHelpers();
   const [saving, setSaving] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
 
