@@ -16,8 +16,9 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Plug, Mail, FolderPlus,
+  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Plug, Mail, FolderPlus, ArrowUpDown,
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -77,6 +78,7 @@ function Dashboard() {
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
+  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc" | "size_desc" | "size_asc">("created_desc");
 
   // Clear selection when leaving / changing category or activating search
   useEffect(() => {
@@ -223,11 +225,30 @@ function Dashboard() {
   const setSearch = setRawQuery;
 
   const filtered = useMemo(() => {
-    return docs.filter((d) => {
+    const list = docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
       return true;
     });
-  }, [docs, activeCat]);
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case "created_asc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "name_asc":
+          return a.filename.localeCompare(b.filename, "hu");
+        case "name_desc":
+          return b.filename.localeCompare(a.filename, "hu");
+        case "size_desc":
+          return (Number(b.size_bytes) || 0) - (Number(a.size_bytes) || 0);
+        case "size_asc":
+          return (Number(a.size_bytes) || 0) - (Number(b.size_bytes) || 0);
+        case "created_desc":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return sorted;
+  }, [docs, activeCat, sortBy]);
 
   // Global Ctrl/Cmd+K to focus search; Escape to clear
   useEffect(() => {
@@ -894,6 +915,27 @@ function Dashboard() {
                     <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
                   )}
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <ArrowUpDown className="h-4 w-4 mr-2" />
+                      {sortBy === "created_desc" && "Legújabb elöl"}
+                      {sortBy === "created_asc" && "Legrégebbi elöl"}
+                      {sortBy === "name_asc" && "Név (A-Z)"}
+                      {sortBy === "name_desc" && "Név (Z-A)"}
+                      {sortBy === "size_desc" && "Méret (legnagyobb)"}
+                      {sortBy === "size_asc" && "Méret (legkisebb)"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuCheckboxItem checked={sortBy === "created_desc"} onCheckedChange={() => setSortBy("created_desc")}>Legújabb elöl</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "created_asc"} onCheckedChange={() => setSortBy("created_asc")}>Legrégebbi elöl</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "name_asc"} onCheckedChange={() => setSortBy("name_asc")}>Név (A-Z)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "name_desc"} onCheckedChange={() => setSortBy("name_desc")}>Név (Z-A)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "size_desc"} onCheckedChange={() => setSortBy("size_desc")}>Méret (legnagyobb elöl)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "size_asc"} onCheckedChange={() => setSortBy("size_asc")}>Méret (legkisebb elöl)</DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
                 {activeCat && (
                   <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
