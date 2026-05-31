@@ -813,6 +813,11 @@ function Dashboard() {
                   <Upload className="h-4 w-4 mr-2" /> Feltöltés
                 </Button>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
+                {activeCat && (
+                  <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
+                    <FolderPlus className="h-4 w-4 mr-2" /> Új almappa
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
