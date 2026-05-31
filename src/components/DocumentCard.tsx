@@ -121,6 +121,8 @@ export function DocumentCard({
     return () => window.clearInterval(id);
   }, [doc.created_at]);
   const { all: allCategories } = useCategories();
+  const { getRoot } = useCategoryHelpers();
+  const moveRoot = getRoot(doc.category);
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
   const FileTypeIcon = fileStyle.Icon;
