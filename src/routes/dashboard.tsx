@@ -77,6 +77,7 @@ function Dashboard() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [bulkDownloading, setBulkDownloading] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc" | "size_desc" | "size_asc">("created_desc");
 
