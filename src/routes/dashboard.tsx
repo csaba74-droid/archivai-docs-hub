@@ -1062,10 +1062,61 @@ function Dashboard() {
             {selectedDocs.size} dokumentum kijelölve
           </span>
           <div className="h-5 w-px bg-border" />
-          <Button variant="ghost" size="sm" onClick={() => setSelectedDocs(new Set())}>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDocs(new Set())} disabled={bulkDownloading}>
             Kijelölés törlése
           </Button>
-          <Button size="sm" onClick={() => setBulkMoveOpen(true)}>
+          <Button size="sm" variant="outline" onClick={async () => {
+            if (bulkDownloading) return;
+            const selected = docs.filter((d) => selectedDocs.has(d.id));
+            if (selected.length === 0) return;
+            setBulkDownloading(true);
+            try {
+              const { default: JSZip } = await import("jszip");
+              const { getSignedUrl } = await import("@/lib/signed-url");
+              const zip = new JSZip();
+              const used = new Set<string>();
+              await Promise.all(selected.map(async (d) => {
+                const url = await getSignedUrl(d.storage_path, 600);
+                if (!url) return;
+                const res = await fetch(url);
+                const blob = await res.blob();
+                let name = d.original_filename || d.filename;
+                let n = name; let i = 1;
+                while (used.has(n)) {
+                  const dot = name.lastIndexOf(".");
+                  n = dot > 0 ? `${name.slice(0, dot)} (${i})${name.slice(dot)}` : `${name} (${i})`;
+                  i++;
+                }
+                used.add(n);
+                zip.file(n, blob);
+                void logAudit("download", d.id, { filename: d.filename, bulk: true });
+              }));
+              const blob = await zip.generateAsync({ type: "blob" });
+              const catLabel = activeCat ? getCategory(activeCat).label : "vegyes";
+              const safeCat = catLabel.replace(/[^a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ_-]+/g, "_");
+              const date = new Date().toISOString().slice(0, 10);
+              const a = document.createElement("a");
+              const objUrl = URL.createObjectURL(blob);
+              a.href = objUrl;
+              a.download = `Archivai_${safeCat}_${date}.zip`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(objUrl);
+              toast.success(`${selected.length} dokumentum letöltve`);
+            } catch (e: unknown) {
+              toast.error("Letöltés sikertelen", { description: e instanceof Error ? e.message : String(e) });
+            } finally {
+              setBulkDownloading(false);
+            }
+          }} disabled={bulkDownloading}>
+            {bulkDownloading ? (
+              <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Csomagolás…</>
+            ) : (
+              <><Download className="h-4 w-4 mr-1.5" /> Letöltés</>
+            )}
+          </Button>
+          <Button size="sm" onClick={() => setBulkMoveOpen(true)} disabled={bulkDownloading}>
             <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
           </Button>
         </div>
