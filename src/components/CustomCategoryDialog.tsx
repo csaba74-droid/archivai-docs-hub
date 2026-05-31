@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useCategories } from "@/hooks/use-categories";
+import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription } from "@/hooks/use-subscription";
 import { can } from "@/lib/entitlements";
 
@@ -23,19 +23,38 @@ export function CustomCategoryDialog({
   open,
   onOpenChange,
   onCreated,
+  parentCatId = null,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onCreated?: (categoryId: string) => void;
+  /** If set, creates a subfolder under this parent (built-in id or "custom:<uuid>"). */
+  parentCatId?: string | null;
 }) {
   const { create } = useCategories();
+  const { getCategory } = useCategoryHelpers();
   const { subscription, isTrialing } = useSubscription();
   const allowed = can(subscription?.plan ?? null, "custom_categories", { isTrialing });
+  const parent = parentCatId ? getCategory(parentCatId) : null;
+  const isSubfolder = !!parent;
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLOR_OPTIONS[0]);
   const [mode, setMode] = useState<"strict" | "normal">("normal");
   const [retention, setRetention] = useState<string>("none");
   const [saving, setSaving] = useState(false);
+
+  // Pre-fill defaults from parent when opening a subfolder
+  useEffect(() => {
+    if (open && parent) {
+      setColor(parent.color ?? COLOR_OPTIONS[0]);
+      setMode(parent.mode);
+      setRetention(parent.retentionYears == null ? "none" : String(parent.retentionYears));
+    } else if (open && !parent) {
+      setColor(COLOR_OPTIONS[0]);
+      setMode("normal");
+      setRetention("none");
+    }
+  }, [open, parent]);
 
   const handleSave = async () => {
     if (!allowed) {
@@ -43,19 +62,21 @@ export function CustomCategoryDialog({
       return;
     }
     if (!name.trim()) {
-
       toast.error("Adj meg egy nevet");
       return;
     }
     setSaving(true);
     try {
       const retentionYears = retention === "none" ? null : parseInt(retention, 10);
-      const newId = await create({ name: name.trim(), color, mode, retentionYears });
-      toast.success("Kategória létrehozva");
+      const newId = await create({
+        name: name.trim(),
+        color,
+        mode,
+        retentionYears,
+        parentCatId: parentCatId ?? null,
+      });
+      toast.success(isSubfolder ? "Almappa létrehozva" : "Kategória létrehozva");
       setName("");
-      setColor(COLOR_OPTIONS[0]);
-      setMode("normal");
-      setRetention("none");
       onOpenChange(false);
       onCreated?.(newId);
     } catch (e) {
@@ -72,16 +93,24 @@ export function CustomCategoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Új kategória</DialogTitle>
+          <DialogTitle>
+            {isSubfolder ? `Új almappa — ${parent?.label}` : "Új kategória"}
+          </DialogTitle>
           <DialogDescription>
-            Hozz létre egyéni kategóriát saját megőrzési szabállyal.
+            {isSubfolder
+              ? "Az almappa öröklődő tárolási és megőrzési beállításokkal jön létre, amelyeket módosíthatsz."
+              : "Hozz létre egyéni kategóriát saját megőrzési szabállyal."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div>
             <Label>Név</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="pl. Marketing anyagok" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={isSubfolder ? "pl. 2024" : "pl. Marketing anyagok"}
+            />
           </div>
 
           <div>
