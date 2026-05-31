@@ -872,6 +872,21 @@ function Dashboard() {
                   </Button>
                 )}
               </div>
+              {selectedDocs.size > 0 && (
+                <div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl border bg-primary/5 border-primary/30 p-3 shadow-sm">
+                  <span className="text-sm font-medium">
+                    {selectedDocs.size} kijelölve
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedDocs(new Set())}>
+                      Mégse
+                    </Button>
+                    <Button size="sm" onClick={() => setBulkMoveOpen(true)}>
+                      <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
@@ -880,6 +895,10 @@ function Dashboard() {
                 const deadline = getRetentionDeadline(doc.category, baseDate);
                 const expired = !!(deadline && deadline.getTime() < Date.now());
                 const canDelete = canUpload && (!strict || expired || isInGracePeriod(doc.created_at));
+                const isSelected = selectedDocs.has(doc.id);
+                const dragIds = isSelected && selectedDocs.size > 1
+                  ? Array.from(selectedDocs)
+                  : [doc.id];
                 return (
                   <DocumentHoverPreview key={doc.id} doc={doc}>
                     <DocumentCard
@@ -887,6 +906,10 @@ function Dashboard() {
                       category={cat}
                       strict={strict}
                       canDelete={canDelete}
+                      selectable
+                      selected={isSelected}
+                      onToggleSelect={() => toggleDocSelected(doc.id)}
+                      draggableIds={dragIds}
                       onOpen={() => setPreviewDoc(doc)}
                       onDelete={() => handleDelete(doc)}
                       onRenamed={(updated: DocumentRow) => {
