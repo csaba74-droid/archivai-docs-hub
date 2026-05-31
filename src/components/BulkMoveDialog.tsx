@@ -33,8 +33,34 @@ export function BulkMoveDialog({
     if (open) setSelected(null);
   }, [open]);
 
-  // Allow moving to ANY category in the tree (main category or any subfolder).
+  // Find the root category for a given category id by walking parentCatId.
+  const rootOf = useMemo(() => {
+    return (catId: string): string | null => {
+      let cur = all.find((c) => c.id === catId);
+      if (!cur) return null;
+      while (cur?.parentCatId) {
+        const parent = all.find((c) => c.id === cur!.parentCatId);
+        if (!parent) break;
+        cur = parent;
+      }
+      return cur?.id ?? null;
+    };
+  }, [all]);
+
+  // Determine the shared root category of the selected docs.
+  const sharedRoot = useMemo(() => {
+    const roots = new Set<string>();
+    for (const d of docs) {
+      const r = rootOf(d.category);
+      if (r) roots.add(r);
+    }
+    if (roots.size !== 1) return null;
+    return [...roots][0];
+  }, [docs, rootOf]);
+
+  // Only show the tree under the shared root.
   const options = useMemo(() => {
+    if (!sharedRoot) return [];
     const result: { id: string; label: string; depth: number; strict: boolean }[] = [];
     const visit = (id: string, depth: number) => {
       const c = getCategory(id);
@@ -43,9 +69,9 @@ export function BulkMoveDialog({
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    all.filter((c) => !c.parentCatId).forEach((root) => visit(root.id, 0));
+    visit(sharedRoot, 0);
     return result;
-  }, [all, getCategory]);
+  }, [all, getCategory, sharedRoot]);
 
   const handleMove = async () => {
     if (!selected || docs.length === 0) {
@@ -89,7 +115,9 @@ export function BulkMoveDialog({
             {docs.length} dokumentum áthelyezése
           </DialogTitle>
           <DialogDescription>
-            Válassz célmappát — bármely főkategória vagy almappa.
+            {sharedRoot
+              ? "Válassz célmappát ugyanazon főkategórián belül."
+              : "A kijelölt dokumentumok különböző főkategóriákban vannak — csak azonos főkategórián belül helyezhetők át."}
           </DialogDescription>
         </DialogHeader>
 
