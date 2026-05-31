@@ -91,6 +91,7 @@ export function DocumentCard({
   strict,
   canDelete,
   selectable = false,
+  selectionMode = false,
   isSelected = false,
   onSelect,
   draggableIds,
@@ -104,6 +105,8 @@ export function DocumentCard({
   strict: boolean;
   canDelete: boolean;
   selectable?: boolean;
+  /** When true, checkbox is always visible (not only on hover). */
+  selectionMode?: boolean;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   /** IDs to put into the drag payload. Defaults to [doc.id]. Pass selection set when this card is isSelected. */
@@ -235,8 +238,10 @@ export function DocumentCard({
           aria-label={isSelected ? "Kijelölés feloldása" : "Kijelölés"}
           className={`h-5 w-5 rounded border flex items-center justify-center shrink-0 transition-all ${
             isSelected
-              ? "bg-primary border-primary text-primary-foreground"
-              : "border-muted-foreground/40 bg-background"
+              ? "bg-primary border-primary text-primary-foreground opacity-100"
+              : selectionMode
+                ? "border-muted-foreground/40 bg-background opacity-100"
+                : "border-muted-foreground/40 bg-background opacity-0 group-hover:opacity-100"
           }`}
         >
           {isSelected && (
