@@ -52,7 +52,7 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const { customRows, all: allCats, remove: removeCustomCat } = useCategories();
-  const { getCategory, isStrict, getRetentionDeadline } = useCategoryHelpers();
+  const { getCategory, isStrict, getRetentionDeadline, all: allCategories } = useCategoryHelpers();
   const { subscription, active, trialExpired, isTrialing, reload: reloadSubscription } = useSubscription();
   useEffect(() => { void reloadSubscription(); }, [reloadSubscription]);
 
