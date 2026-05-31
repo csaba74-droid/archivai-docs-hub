@@ -787,6 +787,11 @@ function Dashboard() {
                   <Upload className="h-4 w-4 mr-2" /> Feltöltés
                 </Button>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
+                {activeCat && (
+                  <Button variant="outline" size="lg" onClick={() => openNewSubfolder(activeCat)}>
+                    <FolderPlus className="h-4 w-4 mr-2" /> Új almappa
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
