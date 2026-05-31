@@ -35,6 +35,9 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useDocumentSearch } from "@/hooks/use-document-search";
 import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 import { TrialBanner } from "@/components/TrialBanner";
+import { SubfolderChips } from "@/components/SubfolderChips";
+import { BulkMoveDialog } from "@/components/BulkMoveDialog";
+import { ArrowRightLeft } from "lucide-react";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -71,6 +74,44 @@ function Dashboard() {
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
+  const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+
+  // Clear selection when leaving / changing category or activating search
+  useEffect(() => {
+    setSelectedDocs(new Set());
+  }, [activeCat]);
+
+  const toggleDocSelected = useCallback((id: string) => {
+    setSelectedDocs((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const moveDocsTo = useCallback(async (targetCatId: string, docIds: string[]) => {
+    if (docIds.length === 0) return;
+    const { error } = await supabase
+      .from("documents")
+      .update({ category: targetCatId })
+      .in("id", docIds);
+    if (error) {
+      toast.error("Áthelyezés sikertelen", { description: error.message });
+      return;
+    }
+    await Promise.all(
+      docIds.map((id) => logAudit("move", id, { to: targetCatId, bulk: docIds.length > 1 })),
+    );
+    setDocs((prev) =>
+      prev.map((d) => (docIds.includes(d.id) ? { ...d, category: targetCatId } : d)),
+    );
+    setSelectedDocs(new Set());
+    toast.success(
+      docIds.length === 1 ? "Áthelyezve" : `${docIds.length} dokumentum áthelyezve`,
+    );
+  }, []);
 
 
   const canUpload = !trialExpired;
@@ -602,6 +643,18 @@ function Dashboard() {
             ) : null}
           </div>
 
+          {/* Subfolder chips — direct children of active category. Acts as drop target. */}
+          {activeCat && !search.trim() && (
+            <SubfolderChips
+              parentId={activeCat}
+              all={allCats}
+              counts={counts}
+              onOpen={(id) => setActiveCat(id)}
+              onDropDocs={(target, ids) => void moveDocsTo(target, ids)}
+            />
+          )}
+
+
 
           {/* Dedicated Archivai inbox email — Pro/Vállalati only (trialing users get preview) */}
           {!activeCat && !search.trim() && (() => {
@@ -819,6 +872,21 @@ function Dashboard() {
                   </Button>
                 )}
               </div>
+              {selectedDocs.size > 0 && (
+                <div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl border bg-primary/5 border-primary/30 p-3 shadow-sm">
+                  <span className="text-sm font-medium">
+                    {selectedDocs.size} kijelölve
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedDocs(new Set())}>
+                      Mégse
+                    </Button>
+                    <Button size="sm" onClick={() => setBulkMoveOpen(true)}>
+                      <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
@@ -827,6 +895,10 @@ function Dashboard() {
                 const deadline = getRetentionDeadline(doc.category, baseDate);
                 const expired = !!(deadline && deadline.getTime() < Date.now());
                 const canDelete = canUpload && (!strict || expired || isInGracePeriod(doc.created_at));
+                const isSelected = selectedDocs.has(doc.id);
+                const dragIds = isSelected && selectedDocs.size > 1
+                  ? Array.from(selectedDocs)
+                  : [doc.id];
                 return (
                   <DocumentHoverPreview key={doc.id} doc={doc}>
                     <DocumentCard
@@ -834,6 +906,10 @@ function Dashboard() {
                       category={cat}
                       strict={strict}
                       canDelete={canDelete}
+                      selectable
+                      selected={isSelected}
+                      onToggleSelect={() => toggleDocSelected(doc.id)}
+                      draggableIds={dragIds}
                       onOpen={() => setPreviewDoc(doc)}
                       onDelete={() => handleDelete(doc)}
                       onRenamed={(updated: DocumentRow) => {
@@ -909,6 +985,17 @@ function Dashboard() {
         open={newCatOpen}
         onOpenChange={(v) => { setNewCatOpen(v); if (!v) setSubfolderParent(null); }}
         parentCatId={subfolderParent}
+      />
+      <BulkMoveDialog
+        open={bulkMoveOpen}
+        onOpenChange={setBulkMoveOpen}
+        docs={docs.filter((d) => selectedDocs.has(d.id))}
+        onMoved={(ids, target) => {
+          setDocs((prev) =>
+            prev.map((d) => (ids.includes(d.id) ? { ...d, category: target } : d)),
+          );
+          setSelectedDocs(new Set());
+        }}
       />
 
       </div>

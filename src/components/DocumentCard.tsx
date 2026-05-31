@@ -90,6 +90,10 @@ export function DocumentCard({
   category,
   strict,
   canDelete,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
+  draggableIds,
   onOpen,
   onDelete,
   onRenamed,
@@ -99,6 +103,11 @@ export function DocumentCard({
   category: Category;
   strict: boolean;
   canDelete: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  /** IDs to put into the drag payload. Defaults to [doc.id]. Pass selection set when this card is selected. */
+  draggableIds?: string[];
   onOpen: () => void;
   onDelete: () => void;
   onRenamed: (doc: DocumentRow) => void;
@@ -197,17 +206,52 @@ export function DocumentCard({
     <Card
       role="button"
       tabIndex={0}
-      onClick={() => {
+      draggable
+      onDragStart={(e) => {
+        const ids = draggableIds && draggableIds.length > 0 ? draggableIds : [doc.id];
+        e.dataTransfer.setData("application/x-doc-ids", JSON.stringify(ids));
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      onClick={(e) => {
         if (menuOpen) return;
+        if (selectable && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+          e.preventDefault();
+          onToggleSelect?.();
+          return;
+        }
         onOpen();
       }}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict ? "border-lock/40" : ""}`}
+      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict ? "border-lock/40" : ""} ${selected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
     >
+      {/* Selection checkbox */}
+      {selectable && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect?.();
+          }}
+          aria-label={selected ? "Kijelölés feloldása" : "Kijelölés"}
+          className={`h-5 w-5 rounded border flex items-center justify-center shrink-0 transition-all ${
+            selected
+              ? "bg-primary border-primary text-primary-foreground opacity-100"
+              : "border-muted-foreground/40 bg-background opacity-0 group-hover:opacity-100"
+          }`}
+        >
+          {selected && (
+            <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M3 8l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+      )}
+
       {/* File type icon */}
       <div className={`h-9 w-9 rounded-md ${fileStyle.bg} flex items-center justify-center shrink-0`}>
         <FileTypeIcon className="h-4 w-4 text-white" />
       </div>
+
 
       {/* Middle: filename + badge + date */}
       <div className="flex-1 min-w-0 space-y-1">
