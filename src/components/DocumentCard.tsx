@@ -238,8 +238,10 @@ export function DocumentCard({
           aria-label={isSelected ? "Kijelölés feloldása" : "Kijelölés"}
           className={`h-5 w-5 rounded border flex items-center justify-center shrink-0 transition-all ${
             isSelected
-              ? "bg-primary border-primary text-primary-foreground"
-              : "border-muted-foreground/40 bg-background"
+              ? "bg-primary border-primary text-primary-foreground opacity-100"
+              : selectionMode
+                ? "border-muted-foreground/40 bg-background opacity-100"
+                : "border-muted-foreground/40 bg-background opacity-0 group-hover:opacity-100"
           }`}
         >
           {isSelected && (
