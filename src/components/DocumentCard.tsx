@@ -44,7 +44,7 @@ import type { DocumentRow } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
 import { getSignedUrl } from "@/lib/signed-url";
 import { logAudit } from "@/lib/audit";
-import { useCategories } from "@/hooks/use-categories";
+import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import type { Category } from "@/lib/categories";
 
 // Category badge colors (background + text)
@@ -121,6 +121,8 @@ export function DocumentCard({
     return () => window.clearInterval(id);
   }, [doc.created_at]);
   const { all: allCategories } = useCategories();
+  const { getRoot } = useCategoryHelpers();
+  const moveRoot = getRoot(doc.category);
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
   const FileTypeIcon = fileStyle.Icon;
@@ -297,7 +299,7 @@ export function DocumentCard({
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto -mx-2">
             {allCategories
-              .filter((c) => c.id !== doc.category)
+              .filter((c) => c.id !== doc.category && (c.rootCatId ?? c.id) === moveRoot.id)
               .map((c) => {
                 const dotColor = c.custom && c.color
                   ? c.color
