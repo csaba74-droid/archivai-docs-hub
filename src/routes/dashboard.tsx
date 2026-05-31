@@ -267,8 +267,7 @@ function Dashboard() {
     navigate({ to: "/login" });
   };
 
-  const builtInStrict = allCats.filter((c) => !c.custom && c.mode === "strict");
-  const builtInNormal = allCats.filter((c) => !c.custom && c.mode === "normal");
+  // (legacy flat lists kept off — tree view in mobileCatsNav handles all categories)
 
   const openNewSubfolder = (parentId: string) => {
     setSubfolderParent(parentId);
