@@ -225,11 +225,30 @@ function Dashboard() {
   const setSearch = setRawQuery;
 
   const filtered = useMemo(() => {
-    return docs.filter((d) => {
+    const list = docs.filter((d) => {
       if (activeCat && d.category !== activeCat) return false;
       return true;
     });
-  }, [docs, activeCat]);
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case "created_asc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "name_asc":
+          return a.filename.localeCompare(b.filename, "hu");
+        case "name_desc":
+          return b.filename.localeCompare(a.filename, "hu");
+        case "size_desc":
+          return (Number(b.size_bytes) || 0) - (Number(a.size_bytes) || 0);
+        case "size_asc":
+          return (Number(a.size_bytes) || 0) - (Number(b.size_bytes) || 0);
+        case "created_desc":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return sorted;
+  }, [docs, activeCat, sortBy]);
 
   // Global Ctrl/Cmd+K to focus search; Escape to clear
   useEffect(() => {
