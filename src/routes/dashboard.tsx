@@ -915,6 +915,27 @@ function Dashboard() {
                     <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
                   )}
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <ArrowUpDown className="h-4 w-4 mr-2" />
+                      {sortBy === "created_desc" && "Legújabb elöl"}
+                      {sortBy === "created_asc" && "Legrégebbi elöl"}
+                      {sortBy === "name_asc" && "Név (A-Z)"}
+                      {sortBy === "name_desc" && "Név (Z-A)"}
+                      {sortBy === "size_desc" && "Méret (legnagyobb)"}
+                      {sortBy === "size_asc" && "Méret (legkisebb)"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuCheckboxItem checked={sortBy === "created_desc"} onCheckedChange={() => setSortBy("created_desc")}>Legújabb elöl</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "created_asc"} onCheckedChange={() => setSortBy("created_asc")}>Legrégebbi elöl</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "name_asc"} onCheckedChange={() => setSortBy("name_asc")}>Név (A-Z)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "name_desc"} onCheckedChange={() => setSortBy("name_desc")}>Név (Z-A)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "size_desc"} onCheckedChange={() => setSortBy("size_desc")}>Méret (legnagyobb elöl)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={sortBy === "size_asc"} onCheckedChange={() => setSortBy("size_asc")}>Méret (legkisebb elöl)</DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
                 {activeCat && (
                   <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
