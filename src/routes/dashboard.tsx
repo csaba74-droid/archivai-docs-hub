@@ -872,21 +872,6 @@ function Dashboard() {
                   </Button>
                 )}
               </div>
-              {selectedDocs.size > 0 && (
-                <div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl border bg-primary/5 border-primary/30 p-3 shadow-sm">
-                  <span className="text-sm font-medium">
-                    {selectedDocs.size} kijelölve
-                  </span>
-                  <div className="ml-auto flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedDocs(new Set())}>
-                      Mégse
-                    </Button>
-                    <Button size="sm" onClick={() => setBulkMoveOpen(true)}>
-                      <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
-                    </Button>
-                  </div>
-                </div>
-              )}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
@@ -986,6 +971,20 @@ function Dashboard() {
         onOpenChange={(v) => { setNewCatOpen(v); if (!v) setSubfolderParent(null); }}
         parentCatId={subfolderParent}
       />
+      {selectedDocs.size > 0 && (
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-20 md:bottom-6 z-40 flex items-center gap-3 rounded-full border bg-card/95 backdrop-blur shadow-xl px-4 py-2.5 animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-sm font-medium">
+            {selectedDocs.size} kijelölve
+          </span>
+          <div className="h-5 w-px bg-border" />
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDocs(new Set())}>
+            Mégse
+          </Button>
+          <Button size="sm" onClick={() => setBulkMoveOpen(true)}>
+            <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
+          </Button>
+        </div>
+      )}
       <BulkMoveDialog
         open={bulkMoveOpen}
         onOpenChange={setBulkMoveOpen}

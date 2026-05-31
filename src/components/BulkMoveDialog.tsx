@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { useCategoryHelpers } from "@/hooks/use-categories";
 import { logAudit } from "@/lib/audit";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 
 export function BulkMoveDialog({
   open,
@@ -25,7 +25,7 @@ export function BulkMoveDialog({
   docs: DocumentRow[];
   onMoved?: (movedIds: string[], newCategory: string) => void;
 }) {
-  const { all, getRoot, getCategory } = useCategoryHelpers();
+  const { all, getCategory } = useCategoryHelpers();
   const [saving, setSaving] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -33,25 +33,19 @@ export function BulkMoveDialog({
     if (open) setSelected(null);
   }, [open]);
 
-  // All selected docs should share the same root (UI enforces this via per-category view).
-  const root = useMemo(() => {
-    if (docs.length === 0) return null;
-    return getRoot(docs[0].category);
-  }, [docs, getRoot]);
-
+  // Allow moving to ANY category in the tree (main category or any subfolder).
   const options = useMemo(() => {
-    if (!root) return [] as { id: string; label: string; depth: number }[];
-    const result: { id: string; label: string; depth: number }[] = [];
+    const result: { id: string; label: string; depth: number; strict: boolean }[] = [];
     const visit = (id: string, depth: number) => {
       const c = getCategory(id);
-      result.push({ id, label: c.label, depth });
+      result.push({ id, label: c.label, depth, strict: c.mode === "strict" });
       all
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    visit(root.id, 0);
+    all.filter((c) => !c.parentCatId).forEach((root) => visit(root.id, 0));
     return result;
-  }, [root, all, getCategory]);
+  }, [all, getCategory]);
 
   const handleMove = async () => {
     if (!selected || docs.length === 0) {
@@ -95,7 +89,7 @@ export function BulkMoveDialog({
             {docs.length} dokumentum áthelyezése
           </DialogTitle>
           <DialogDescription>
-            Válassz célmappát ugyanazon a főkategórián belül.
+            Válassz célmappát — bármely főkategória vagy almappa.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,6 +107,7 @@ export function BulkMoveDialog({
               >
                 {o.depth > 0 && <ChevronRight className="h-3 w-3 opacity-50" />}
                 <span className="truncate">{o.label}</span>
+                {o.strict && <Lock className="h-3 w-3 text-lock shrink-0" />}
               </button>
             );
           })}
