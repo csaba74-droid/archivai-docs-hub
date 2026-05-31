@@ -910,7 +910,8 @@ function Dashboard() {
                       category={cat}
                       strict={strict}
                       canDelete={canDelete}
-                      selectable={selectionMode}
+                      selectable
+                      selectionMode={selectionMode}
                       isSelected={isSelected}
                       onSelect={(id) => toggleDocSelected(id)}
                       draggableIds={dragIds}
