@@ -76,10 +76,12 @@ function Dashboard() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
 
   // Clear selection when leaving / changing category or activating search
   useEffect(() => {
     setSelectedDocs(new Set());
+    setSelectionMode(false);
   }, [activeCat]);
 
   const toggleDocSelected = useCallback((id: string) => {
