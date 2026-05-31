@@ -986,6 +986,17 @@ function Dashboard() {
         onOpenChange={(v) => { setNewCatOpen(v); if (!v) setSubfolderParent(null); }}
         parentCatId={subfolderParent}
       />
+      <BulkMoveDialog
+        open={bulkMoveOpen}
+        onOpenChange={setBulkMoveOpen}
+        docs={docs.filter((d) => selectedDocs.has(d.id))}
+        onMoved={(ids, target) => {
+          setDocs((prev) =>
+            prev.map((d) => (ids.includes(d.id) ? { ...d, category: target } : d)),
+          );
+          setSelectedDocs(new Set());
+        }}
+      />
 
       </div>
     </div>
