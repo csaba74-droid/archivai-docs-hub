@@ -115,7 +115,9 @@ export function BulkMoveDialog({
             {docs.length} dokumentum áthelyezése
           </DialogTitle>
           <DialogDescription>
-            Válassz célmappát — bármely főkategória vagy almappa.
+            {sharedRoot
+              ? "Válassz célmappát ugyanazon főkategórián belül."
+              : "A kijelölt dokumentumok különböző főkategóriákban vannak — csak azonos főkategórián belül helyezhetők át."}
           </DialogDescription>
         </DialogHeader>
 
