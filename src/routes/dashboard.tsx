@@ -314,6 +314,23 @@ function Dashboard() {
       >
         <Home className="h-4 w-4" /> Kezdőlap
       </button>
+
+      <SectionHeader title="Kategóriák" />
+      <CategoryTree
+        allCats={allCats}
+        counts={counts}
+        activeCat={activeCat}
+        onSelect={(id) => { setActiveCat(id); setSearch(""); }}
+        onAddSub={openNewSubfolder}
+        onDelete={handleDeleteCustomCat}
+      />
+      <button
+        onClick={() => { setSubfolderParent(null); setNewCatOpen(true); }}
+        className="w-full mt-1 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <Plus className="h-3.5 w-3.5" /> Új kategória
+      </button>
+
       <Link
         to="/profile"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
