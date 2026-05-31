@@ -90,6 +90,10 @@ export function DocumentCard({
   category,
   strict,
   canDelete,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
+  draggableIds,
   onOpen,
   onDelete,
   onRenamed,
@@ -99,6 +103,11 @@ export function DocumentCard({
   category: Category;
   strict: boolean;
   canDelete: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  /** IDs to put into the drag payload. Defaults to [doc.id]. Pass selection set when this card is selected. */
+  draggableIds?: string[];
   onOpen: () => void;
   onDelete: () => void;
   onRenamed: (doc: DocumentRow) => void;
