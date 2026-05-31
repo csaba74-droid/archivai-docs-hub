@@ -133,6 +133,22 @@ export function getSubtreeIds(rootId: string, all: Category[]): string[] {
   return out;
 }
 
+/** Full ancestor chain (root → ... → self) for a category id. */
+export function getCategoryPath(catId: string, all: Category[]): Category[] {
+  const byId = new Map(all.map((c) => [c.id, c]));
+  const chain: Category[] = [];
+  let cur = byId.get(catId);
+  let depth = 0;
+  while (cur && depth < 64) {
+    chain.unshift(cur);
+    if (!cur.parentCatId) break;
+    cur = byId.get(cur.parentCatId);
+    depth++;
+  }
+  return chain;
+}
+
+
 
 export const FALLBACK = BUILT_IN_CATEGORIES[BUILT_IN_CATEGORIES.length - 1];
 
