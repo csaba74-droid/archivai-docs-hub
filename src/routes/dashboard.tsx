@@ -66,6 +66,7 @@ function Dashboard() {
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
+  const [subfolderParent, setSubfolderParent] = useState<string | null>(null);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
