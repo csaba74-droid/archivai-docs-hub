@@ -74,6 +74,44 @@ function Dashboard() {
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
+  const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+
+  // Clear selection when leaving / changing category or activating search
+  useEffect(() => {
+    setSelectedDocs(new Set());
+  }, [activeCat]);
+
+  const toggleDocSelected = useCallback((id: string) => {
+    setSelectedDocs((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const moveDocsTo = useCallback(async (targetCatId: string, docIds: string[]) => {
+    if (docIds.length === 0) return;
+    const { error } = await supabase
+      .from("documents")
+      .update({ category: targetCatId })
+      .in("id", docIds);
+    if (error) {
+      toast.error("Áthelyezés sikertelen", { description: error.message });
+      return;
+    }
+    await Promise.all(
+      docIds.map((id) => logAudit("move", id, { to: targetCatId, bulk: docIds.length > 1 })),
+    );
+    setDocs((prev) =>
+      prev.map((d) => (docIds.includes(d.id) ? { ...d, category: targetCatId } : d)),
+    );
+    setSelectedDocs(new Set());
+    toast.success(
+      docIds.length === 1 ? "Áthelyezve" : `${docIds.length} dokumentum áthelyezve`,
+    );
+  }, []);
 
 
   const canUpload = !trialExpired;
