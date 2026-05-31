@@ -78,6 +78,7 @@ function Dashboard() {
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
+  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc" | "size_desc" | "size_asc">("created_desc");
 
   // Clear selection when leaving / changing category or activating search
   useEffect(() => {
