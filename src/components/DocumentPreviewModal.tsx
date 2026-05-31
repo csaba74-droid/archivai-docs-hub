@@ -36,12 +36,16 @@ export function DocumentPreviewModal({
   onOpenChange,
   onUpdated,
   canEdit = true,
+  onPrev,
+  onNext,
 }: {
   doc: DocumentRow | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onUpdated?: (doc: DocumentRow) => void;
   canEdit?: boolean;
+  onPrev?: () => void;
+  onNext?: () => void;
 }) {
   const { getCategory, getRetentionDeadline } = useCategoryHelpers();
   const [url, setUrl] = useState<string | null>(null);
