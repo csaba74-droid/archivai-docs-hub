@@ -55,6 +55,10 @@ export type CustomCategoryRow = {
   is_strict_itm: boolean;
   retention_years: number | null;
   created_at: string;
+  parent_id: string | null;
+  parent_builtin: string | null;
+  root_builtin: string | null;
+  is_system?: boolean;
 };
 
 export type SubscriptionRow = {
