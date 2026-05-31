@@ -91,6 +91,7 @@ export function DocumentCard({
   strict,
   canDelete,
   selectable = false,
+  selectionMode = false,
   isSelected = false,
   onSelect,
   draggableIds,
@@ -104,6 +105,8 @@ export function DocumentCard({
   strict: boolean;
   canDelete: boolean;
   selectable?: boolean;
+  /** When true, checkbox is always visible (not only on hover). */
+  selectionMode?: boolean;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   /** IDs to put into the drag payload. Defaults to [doc.id]. Pass selection set when this card is isSelected. */
