@@ -35,6 +35,9 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useDocumentSearch } from "@/hooks/use-document-search";
 import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 import { TrialBanner } from "@/components/TrialBanner";
+import { SubfolderChips } from "@/components/SubfolderChips";
+import { BulkMoveDialog } from "@/components/BulkMoveDialog";
+import { ArrowRightLeft } from "lucide-react";
 
 
 export const Route = createFileRoute("/dashboard")({
