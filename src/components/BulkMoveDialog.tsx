@@ -89,7 +89,7 @@ export function BulkMoveDialog({
             {docs.length} dokumentum áthelyezése
           </DialogTitle>
           <DialogDescription>
-            Válassz célmappát ugyanazon a főkategórián belül.
+            Válassz célmappát — bármely főkategória vagy almappa.
           </DialogDescription>
         </DialogHeader>
 
@@ -107,6 +107,7 @@ export function BulkMoveDialog({
               >
                 {o.depth > 0 && <ChevronRight className="h-3 w-3 opacity-50" />}
                 <span className="truncate">{o.label}</span>
+                {o.strict && <Lock className="h-3 w-3 text-lock shrink-0" />}
               </button>
             );
           })}
