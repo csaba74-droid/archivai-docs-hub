@@ -260,26 +260,9 @@ export function DocumentCard({
             <DropdownMenuItem onSelect={() => void handleRename()}>
               <Pencil className="h-4 w-4" /> Átnevezés
             </DropdownMenuItem>
-            {strict && !inGrace ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownMenuItem disabled onSelect={(e) => e.preventDefault()}>
-                        <Lock className="h-4 w-4" /> Áthelyezés
-                      </DropdownMenuItem>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    Törvényileg védett dokumentum nem helyezhető át
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <DropdownMenuItem onSelect={() => setMoveOpen(true)}>
-                <ArrowRightLeft className="h-4 w-4" /> Áthelyezés
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onSelect={() => setMoveOpen(true)}>
+              <ArrowRightLeft className="h-4 w-4" /> Áthelyezés
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={!canDelete}
