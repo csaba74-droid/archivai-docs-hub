@@ -145,11 +145,20 @@ DATE EXTRACTION:
   2. Contract signing date, statement period end, tax return period end
   3. "Date due", "Due date", "fizetési határidő" — ONLY if no issue date exists
 - NEVER use the upload date.
-- Accept Hungarian formats (2024.03.15, 2024. március 15., 15/03/2024, etc.) and normalize to ISO YYYY-MM-DD.
-- ENGLISH LONG FORM with month names: "Date of issue: May 18, 2026" → 2026-05-18. Recognize: January, February, March, April, May, June, July, August, September, October, November, December (also 3-letter abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec). Formats: "May 18, 2026", "18 May 2026", "May 18 2026".
+- ALWAYS output the date in ISO format YYYY-MM-DD. Pad month and day with leading zero.
+- SUPPORTED FORMATS (recognize all, normalize to ISO):
+  * ISO: "2024-01-15" → 2024-01-15
+  * Hungarian numeric: "2024.01.15", "2024. 01. 15.", "2024.1.15", "2024/01/15" → 2024-01-15 (YYYY first = year-month-day)
+  * Hungarian long form: "2024. január 15.", "2024. jan. 15.", "január 15. 2024", "jan. 15. 2024" → 2024-01-15. Months: január/jan, február/feb, március/márc/mar, április/ápr/apr, május/máj/maj, június/jún/jun, július/júl/jul, augusztus/aug, szeptember/szept/sep, október/okt, november/nov, december/dec.
+  * English long form: "January 15, 2024", "Jan 15 2024", "Jan 15, 2024", "15 January 2024", "15 Jan 2024", "May 19 2026" → 2024-01-15 / 2026-05-19. Months: January/Jan, February/Feb, March/Mar, April/Apr, May, June/Jun, July/Jul, August/Aug, September/Sep/Sept, October/Oct, November/Nov, December/Dec.
+  * Numeric with separators ., /, -, space — disambiguation:
+    - If first segment is 4 digits → YYYY-MM-DD (e.g. "2024/01/15" → 2024-01-15).
+    - If last segment is 4 digits and the document is Hungarian (HU language cues, Ft, ÁFA, kelt, számla) → DD-MM-YYYY (e.g. "15.01.2024", "15/01/2024", "15-01-2024" → 2024-01-15).
+    - If last segment is 4 digits and the document is English (USD, $, Invoice, Date of issue without HU cues) → MM/DD/YYYY when the first segment is ≤12 AND second segment is >12, otherwise DD/MM/YYYY. When ambiguous (both ≤12), default to MM/DD/YYYY for clearly US/English documents; DD/MM/YYYY otherwise.
 - YYMMDD SHORT FORM: A 6-digit number IS a valid date IF AND ONLY IF it appears directly after a date label — specifically "Date", "Dátum", "Kelt", "Issue Date", "Date of issue", or "Invoice Date" (allowing only a colon, dash, or whitespace between the label and the number). Parse as YYMMDD: years 00–49 → 20YY, years 50–99 → 19YY. Validate that MM is 01–12 and DD is 01–31; if not, reject.
   * Example MATCH: "Date: 151111" → 2015-11-11. "Dátum 240315" → 2024-03-15.
   * Example REJECT: a 6-digit number near "Invoice No", "Customer No", "Számlaszám", "Ügyfélszám", "Order No", "Ref" — these are IDs, NOT dates. "34401", "2590", "2024/00123", "INV-2024-001" are NEVER dates.
+- CRITICAL: Always validate the result — MM must be 01–12, DD must be 01–31, and the date must be plausible. If invalid or ambiguous beyond the rules above, return null.
 - CRITICAL — do NOT confuse numeric IDs with dates:
   * Invoice numbers, customer numbers, order numbers, reference codes are NOT dates even if they appear near a "Date" column in a table header.
   * The 6-digit YYMMDD rule applies ONLY when the number IMMEDIATELY follows the date label on the document (not in an adjacent column or unrelated field).
