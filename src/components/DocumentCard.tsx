@@ -44,7 +44,7 @@ import type { DocumentRow } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
 import { getSignedUrl } from "@/lib/signed-url";
 import { logAudit } from "@/lib/audit";
-import { useCategories } from "@/hooks/use-categories";
+import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import type { Category } from "@/lib/categories";
 
 // Category badge colors (background + text)
