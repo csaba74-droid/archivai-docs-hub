@@ -643,6 +643,18 @@ function Dashboard() {
             ) : null}
           </div>
 
+          {/* Subfolder chips — direct children of active category. Acts as drop target. */}
+          {activeCat && !search.trim() && (
+            <SubfolderChips
+              parentId={activeCat}
+              all={allCats}
+              counts={counts}
+              onOpen={(id) => setActiveCat(id)}
+              onDropDocs={(target, ids) => void moveDocsTo(target, ids)}
+            />
+          )}
+
+
 
           {/* Dedicated Archivai inbox email — Pro/Vállalati only (trialing users get preview) */}
           {!activeCat && !search.trim() && (() => {
