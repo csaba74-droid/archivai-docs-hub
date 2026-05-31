@@ -51,26 +51,88 @@ export const BUILT_IN_CATEGORIES: Category[] = [
 export const CATEGORIES = BUILT_IN_CATEGORIES;
 
 export function customToCategory(c: CustomCategoryRow): Category {
+  const strict = c.is_strict_itm;
+  let parentCatId: string | null = null;
+  if (c.parent_builtin) parentCatId = c.parent_builtin;
+  else if (c.parent_id) parentCatId = `custom:${c.parent_id}`;
   return {
     id: `custom:${c.id}`,
     label: c.name,
     icon: Tag,
-    mode: c.is_strict_itm ? "strict" : "normal",
+    mode: strict ? "strict" : "normal",
     retentionYears: c.retention_years,
     retentionLabel:
       c.retention_years == null
-        ? c.is_strict_itm
+        ? strict
           ? "Határozatlan megőrzés"
           : "Nincs megőrzési korlát"
-        : `${c.retention_years} év ${c.is_strict_itm ? "kötelező megőrzés" : "ajánlott"}`,
+        : `${c.retention_years} év ${strict ? "kötelező megőrzés" : "ajánlott"}`,
     color: c.color,
     custom: true,
+    parentCatId,
+    isSystem: !!c.is_system,
   };
 }
 
 export function mergeCategories(custom: CustomCategoryRow[] = []): Category[] {
-  return [...BUILT_IN_CATEGORIES, ...custom.map(customToCategory)];
+  const builtIns = BUILT_IN_CATEGORIES.map((c) => ({ ...c, parentCatId: null, rootCatId: c.id }));
+  const customs = custom.map(customToCategory);
+  // Compute rootCatId for customs by walking up parentCatId chain
+  const byId = new Map<string, Category>();
+  builtIns.forEach((c) => byId.set(c.id, c));
+  customs.forEach((c) => byId.set(c.id, c));
+  for (const c of customs) {
+    let cur: Category | undefined = c;
+    let depth = 0;
+    while (cur && cur.parentCatId && depth < 64) {
+      const p = byId.get(cur.parentCatId);
+      if (!p) break;
+      cur = p;
+      depth++;
+    }
+    c.rootCatId = cur?.id ?? c.id;
+  }
+  return [...builtIns, ...customs];
 }
+
+/** Direct children of a given category id (one level only). */
+export function getChildren(parentId: string, all: Category[]): Category[] {
+  return all.filter((c) => c.parentCatId === parentId);
+}
+
+/** Returns true if `descendantId` is the same as `ancestorId` or a descendant of it. */
+export function isInTreeOf(descendantId: string, ancestorId: string, all: Category[]): boolean {
+  if (descendantId === ancestorId) return true;
+  const byId = new Map(all.map((c) => [c.id, c]));
+  let cur = byId.get(descendantId);
+  let depth = 0;
+  while (cur && depth < 64) {
+    if (cur.id === ancestorId) return true;
+    if (!cur.parentCatId) return false;
+    cur = byId.get(cur.parentCatId);
+    depth++;
+  }
+  return false;
+}
+
+/** Top of the tree the given category belongs to. */
+export function getRoot(catId: string, all: Category[]): Category {
+  const cat = getCategory(catId, all);
+  if (!cat.rootCatId || cat.rootCatId === cat.id) return cat;
+  return getCategory(cat.rootCatId, all);
+}
+
+/** Whole subtree (including the node itself). */
+export function getSubtreeIds(rootId: string, all: Category[]): string[] {
+  const out: string[] = [];
+  const visit = (id: string) => {
+    out.push(id);
+    for (const ch of getChildren(id, all)) visit(ch.id);
+  };
+  visit(rootId);
+  return out;
+}
+
 
 export const FALLBACK = BUILT_IN_CATEGORIES[BUILT_IN_CATEGORIES.length - 1];
 
