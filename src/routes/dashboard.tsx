@@ -16,7 +16,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, Users, Camera, BookOpen, Shield, Plug, Mail, FolderPlus,
+  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Plug, Mail, FolderPlus,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -76,10 +76,12 @@ function Dashboard() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
 
   // Clear selection when leaving / changing category or activating search
   useEffect(() => {
     setSelectedDocs(new Set());
+    setSelectionMode(false);
   }, [activeCat]);
 
   const toggleDocSelected = useCallback((id: string) => {
@@ -865,6 +867,23 @@ function Dashboard() {
                 <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
                   <Upload className="h-4 w-4 mr-2" /> Feltöltés
                 </Button>
+                <Button
+                  variant={selectionMode ? "default" : "outline"}
+                  onClick={() => {
+                    if (selectionMode) {
+                      setSelectedDocs(new Set());
+                      setSelectionMode(false);
+                    } else {
+                      setSelectionMode(true);
+                    }
+                  }}
+                >
+                  {selectionMode ? (
+                    <><X className="h-4 w-4 mr-2" /> Mégse</>
+                  ) : (
+                    <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
+                  )}
+                </Button>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
                 {activeCat && (
                   <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
@@ -891,7 +910,7 @@ function Dashboard() {
                       category={cat}
                       strict={strict}
                       canDelete={canDelete}
-                      selectable
+                      selectable={selectionMode}
                       isSelected={isSelected}
                       onSelect={(id) => toggleDocSelected(id)}
                       draggableIds={dragIds}
