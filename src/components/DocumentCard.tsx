@@ -91,8 +91,8 @@ export function DocumentCard({
   strict,
   canDelete,
   selectable = false,
-  selected = false,
-  onToggleSelect,
+  isSelected = false,
+  onSelect,
   draggableIds,
   onOpen,
   onDelete,
@@ -104,9 +104,9 @@ export function DocumentCard({
   strict: boolean;
   canDelete: boolean;
   selectable?: boolean;
-  selected?: boolean;
-  onToggleSelect?: () => void;
-  /** IDs to put into the drag payload. Defaults to [doc.id]. Pass selection set when this card is selected. */
+  isSelected?: boolean;
+  onSelect?: (id: string) => void;
+  /** IDs to put into the drag payload. Defaults to [doc.id]. Pass selection set when this card is isSelected. */
   draggableIds?: string[];
   onOpen: () => void;
   onDelete: () => void;
@@ -216,13 +216,13 @@ export function DocumentCard({
         if (menuOpen) return;
         if (selectable && (e.metaKey || e.ctrlKey || e.shiftKey)) {
           e.preventDefault();
-          onToggleSelect?.();
+          onSelect?.(doc.id);
           return;
         }
         onOpen();
       }}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict ? "border-lock/40" : ""} ${selected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
+      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict ? "border-lock/40" : ""} ${isSelected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
     >
       {/* Selection checkbox */}
       {selectable && (
@@ -230,16 +230,16 @@ export function DocumentCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onToggleSelect?.();
+            onSelect?.(doc.id);
           }}
-          aria-label={selected ? "Kijelölés feloldása" : "Kijelölés"}
+          aria-label={isSelected ? "Kijelölés feloldása" : "Kijelölés"}
           className={`h-5 w-5 rounded border flex items-center justify-center shrink-0 transition-all ${
-            selected
+            isSelected
               ? "bg-primary border-primary text-primary-foreground opacity-100"
               : "border-muted-foreground/40 bg-background opacity-0 group-hover:opacity-100"
           }`}
         >
-          {selected && (
+          {isSelected && (
             <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M3 8l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

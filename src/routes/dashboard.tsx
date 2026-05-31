@@ -892,8 +892,8 @@ function Dashboard() {
                       strict={strict}
                       canDelete={canDelete}
                       selectable
-                      selected={isSelected}
-                      onToggleSelect={() => toggleDocSelected(doc.id)}
+                      isSelected={isSelected}
+                      onSelect={(id) => toggleDocSelected(id)}
                       draggableIds={dragIds}
                       onOpen={() => setPreviewDoc(doc)}
                       onDelete={() => handleDelete(doc)}
