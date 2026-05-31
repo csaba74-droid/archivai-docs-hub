@@ -1180,10 +1180,11 @@ type CategoryGridProps = {
   counts: Record<string, number>;
   onOpen: (id: string) => void;
   onNewCategory: () => void;
+  onNewSubfolder: (parentId: string) => void;
   onDeleteCustomCat: (catId: string) => void | Promise<void>;
 };
 
-function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onDeleteCustomCat }: CategoryGridProps) {
+function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onNewSubfolder, onDeleteCustomCat }: CategoryGridProps) {
   const ordered = sortCategories(allCats);
   const inbox = ordered.find((c) => c.id === "beerkezett");
   const rest = ordered.filter((c) => c.id !== "beerkezett");
