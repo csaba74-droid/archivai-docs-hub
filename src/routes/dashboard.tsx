@@ -867,6 +867,23 @@ function Dashboard() {
                 <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
                   <Upload className="h-4 w-4 mr-2" /> Feltöltés
                 </Button>
+                <Button
+                  variant={selectionMode ? "default" : "outline"}
+                  onClick={() => {
+                    if (selectionMode) {
+                      setSelectedDocs(new Set());
+                      setSelectionMode(false);
+                    } else {
+                      setSelectionMode(true);
+                    }
+                  }}
+                >
+                  {selectionMode ? (
+                    <><X className="h-4 w-4 mr-2" /> Mégse</>
+                  ) : (
+                    <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
+                  )}
+                </Button>
                 <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
                 {activeCat && (
                   <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
