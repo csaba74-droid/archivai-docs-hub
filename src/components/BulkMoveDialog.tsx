@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { useCategoryHelpers } from "@/hooks/use-categories";
 import { logAudit } from "@/lib/audit";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 
 export function BulkMoveDialog({
   open,
