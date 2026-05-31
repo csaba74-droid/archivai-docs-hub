@@ -26,6 +26,11 @@ export type Category = {
   retentionLabel: string;
   color?: string;
   custom?: boolean;
+  /** Parent category id in client tree-id space (built-in id like "szamlak" or "custom:<uuid>"). null = top-level. */
+  parentCatId?: string | null;
+  /** Root of the tree this category belongs to. For built-ins == own id. For top-level customs == own id. */
+  rootCatId?: string;
+  isSystem?: boolean;
 };
 
 export const BUILT_IN_CATEGORIES: Category[] = [
