@@ -872,21 +872,6 @@ function Dashboard() {
                   </Button>
                 )}
               </div>
-              {selectedDocs.size > 0 && (
-                <div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl border bg-primary/5 border-primary/30 p-3 shadow-sm">
-                  <span className="text-sm font-medium">
-                    {selectedDocs.size} kijelölve
-                  </span>
-                  <div className="ml-auto flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedDocs(new Set())}>
-                      Mégse
-                    </Button>
-                    <Button size="sm" onClick={() => setBulkMoveOpen(true)}>
-                      <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
-                    </Button>
-                  </div>
-                </div>
-              )}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
                 const cat = getCategory(doc.category);
