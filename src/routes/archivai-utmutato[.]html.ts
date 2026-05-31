@@ -9,7 +9,9 @@ export const Route = createFileRoute("/archivai-utmutato.html")({
           status: 200,
           headers: {
             "content-type": "text/html; charset=utf-8",
-            "cache-control": "public, max-age=3600",
+            "cache-control": "no-cache, no-store, must-revalidate",
+            pragma: "no-cache",
+            expires: "0",
           },
         }),
     },

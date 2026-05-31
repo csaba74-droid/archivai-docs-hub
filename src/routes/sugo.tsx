@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 
 export const Route = createFileRoute("/sugo")({
   head: () => ({
@@ -11,9 +12,16 @@ export const Route = createFileRoute("/sugo")({
 });
 
 function SugoPage() {
+  // Cache-busting query param ensures iframe always fetches the latest HTML
+  const src = useMemo(
+    () => `/archivai-utmutato.html?v=${Date.now()}`,
+    [],
+  );
+
   return (
     <iframe
-      src="/archivai-utmutato.html"
+      key={src}
+      src={src}
       title="Archivai útmutató"
       style={{ width: "100%", height: "100vh", border: "none" }}
     />
