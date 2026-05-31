@@ -66,18 +66,18 @@ export function SubfolderChips({
                 /* ignore */
               }
             }}
-            className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border bg-card text-sm transition-all hover:border-primary/50 hover:shadow-sm ${
+            className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-xl border bg-card text-sm transition-all hover:border-primary/50 hover:shadow-md ${
               isHover ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""
             }`}
           >
             <span
-              className="h-2 w-2 rounded-full shrink-0"
+              className="h-2.5 w-2.5 rounded-full shrink-0"
               style={{ backgroundColor: dot }}
             />
-            <Folder className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="font-medium truncate max-w-[180px]">{c.label}</span>
-            {c.mode === "strict" && <Lock className="h-3 w-3 text-lock" />}
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <Folder className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium truncate max-w-[200px]">{c.label}</span>
+            {c.mode === "strict" && <Lock className="h-3.5 w-3.5 text-lock" />}
+            <span className="text-xs text-muted-foreground tabular-nums bg-muted px-1.5 py-0.5 rounded-md">
               {count}
             </span>
           </button>
