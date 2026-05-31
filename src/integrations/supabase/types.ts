@@ -331,6 +331,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_active_access: { Args: { _user: string }; Returns: boolean }
       log_audit: {
         Args: { _action: string; _document_id?: string; _metadata?: Json }
         Returns: undefined

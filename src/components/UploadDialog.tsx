@@ -427,7 +427,14 @@ export function UploadDialog({
         const { error: upErr } = await supabase.storage
           .from("documents")
           .upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
-        if (upErr) throw upErr;
+        if (upErr) {
+          if (/row-level security|violates|policy/i.test(upErr.message)) {
+            toast.error("A próbaidőszakod lejárt. Válassz csomagot a feltöltéshez.", {
+              action: { label: "Csomagok", onClick: () => { window.location.href = "/subscription"; } },
+            });
+          }
+          throw upErr;
+        }
 
         updateAt(i, { status: "saving", progress: 85 });
         const itm_compliant = isStrict(category);
@@ -449,7 +456,15 @@ export function UploadDialog({
           })
           .select()
           .single();
-        if (insErr) throw insErr;
+        if (insErr) {
+          await supabase.storage.from("documents").remove([path]).catch(() => {});
+          if (/row-level security|violates|policy/i.test(insErr.message)) {
+            toast.error("A próbaidőszakod lejárt. Válassz csomagot a feltöltéshez.", {
+              action: { label: "Csomagok", onClick: () => { window.location.href = "/subscription"; } },
+            });
+          }
+          throw insErr;
+        }
         okCount++;
         if (inserted) {
           void logAudit("upload", (inserted as DocumentRow).id, { filename: file.name, category, confidence: aiConfidence });
