@@ -19,6 +19,8 @@ import {
   Check,
   X,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline, isExpired } from "@/lib/categories";
