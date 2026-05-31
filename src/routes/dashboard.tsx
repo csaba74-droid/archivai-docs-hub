@@ -248,9 +248,19 @@ function Dashboard() {
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
-    docs.forEach((d) => { map[d.category] = (map[d.category] ?? 0) + 1; });
+    const byId = new Map(allCategories.map((c) => [c.id, c]));
+    docs.forEach((d) => {
+      let cur = byId.get(d.category);
+      let depth = 0;
+      while (cur && depth < 64) {
+        map[cur.id] = (map[cur.id] ?? 0) + 1;
+        if (!cur.parentCatId) break;
+        cur = byId.get(cur.parentCatId);
+        depth++;
+      }
+    });
     return map;
-  }, [docs]);
+  }, [docs, allCategories]);
 
   const handleDelete = async (doc: DocumentRow) => {
     if (!canUpload) {
