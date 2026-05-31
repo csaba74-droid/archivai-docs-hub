@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Search, X, FileIcon, Clock, Filter } from "lucide-react";
+import { Loader2, Search, X, FileIcon, Clock, Filter, ChevronRight } from "lucide-react";
 import type { DocumentRow } from "@/lib/supabase";
-import type { Category } from "@/lib/categories";
+import { getCategoryPath, type Category } from "@/lib/categories";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,11 +222,26 @@ export function SearchPanel({
                           {formatDate(hit.doc.document_date ?? hit.doc.created_at)}
                         </span>
                       </div>
+                      {(() => {
+                        const path = getCategoryPath(hit.doc.category, allCats);
+                        if (path.length === 0) return null;
+                        return (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground flex-wrap">
+                            {path.map((p, i) => (
+                              <span key={p.id} className="flex items-center gap-1">
+                                {i > 0 && <ChevronRight className="h-3 w-3 opacity-60" />}
+                                <span className={i === path.length - 1 ? "text-foreground/80" : ""}>{p.label}</span>
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       {hit.excerpt && hit.matchedField !== "filename" && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           <Highlighted text={hit.excerpt} query={query} />
                         </p>
                       )}
+
                     </div>
                   </button>
                 );
