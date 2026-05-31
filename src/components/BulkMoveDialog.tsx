@@ -33,25 +33,19 @@ export function BulkMoveDialog({
     if (open) setSelected(null);
   }, [open]);
 
-  // All selected docs should share the same root (UI enforces this via per-category view).
-  const root = useMemo(() => {
-    if (docs.length === 0) return null;
-    return getRoot(docs[0].category);
-  }, [docs, getRoot]);
-
+  // Allow moving to ANY category in the tree (main category or any subfolder).
   const options = useMemo(() => {
-    if (!root) return [] as { id: string; label: string; depth: number }[];
-    const result: { id: string; label: string; depth: number }[] = [];
+    const result: { id: string; label: string; depth: number; strict: boolean }[] = [];
     const visit = (id: string, depth: number) => {
       const c = getCategory(id);
-      result.push({ id, label: c.label, depth });
+      result.push({ id, label: c.label, depth, strict: c.mode === "strict" });
       all
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    visit(root.id, 0);
+    all.filter((c) => !c.parentCatId).forEach((root) => visit(root.id, 0));
     return result;
-  }, [root, all, getCategory]);
+  }, [all, getCategory]);
 
   const handleMove = async () => {
     if (!selected || docs.length === 0) {
