@@ -52,7 +52,7 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const { customRows, all: allCats, remove: removeCustomCat } = useCategories();
-  const { getCategory, isStrict, getRetentionDeadline } = useCategoryHelpers();
+  const { getCategory, isStrict, getRetentionDeadline, all: allCategories } = useCategoryHelpers();
   const { subscription, active, trialExpired, isTrialing, reload: reloadSubscription } = useSubscription();
   useEffect(() => { void reloadSubscription(); }, [reloadSubscription]);
 
@@ -248,9 +248,19 @@ function Dashboard() {
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
-    docs.forEach((d) => { map[d.category] = (map[d.category] ?? 0) + 1; });
+    const byId = new Map(allCategories.map((c) => [c.id, c]));
+    docs.forEach((d) => {
+      let cur = byId.get(d.category);
+      let depth = 0;
+      while (cur && depth < 64) {
+        map[cur.id] = (map[cur.id] ?? 0) + 1;
+        if (!cur.parentCatId) break;
+        cur = byId.get(cur.parentCatId);
+        depth++;
+      }
+    });
     return map;
-  }, [docs]);
+  }, [docs, allCategories]);
 
   const handleDelete = async (doc: DocumentRow) => {
     if (!canUpload) {
