@@ -270,9 +270,15 @@ function Dashboard() {
   const builtInStrict = allCats.filter((c) => !c.custom && c.mode === "strict");
   const builtInNormal = allCats.filter((c) => !c.custom && c.mode === "normal");
 
+  const openNewSubfolder = (parentId: string) => {
+    setSubfolderParent(parentId);
+    setNewCatOpen(true);
+    setMobileCatsOpen(false);
+  };
+
   const mobileCatsNav = (
     <>
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         <button
           onClick={() => { setActiveCat(null); setMobileCatsOpen(false); }}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCat === null ? "bg-brand text-brand-foreground" : "hover:bg-muted"}`}
@@ -281,35 +287,19 @@ function Dashboard() {
           <span className="text-xs text-muted-foreground">{docs.length}</span>
         </button>
 
-        <SectionHeader icon={<Lock className="h-3 w-3" />} title="Kötelező megőrzés" />
-        {builtInStrict.map((cat) => (
-          <CategoryButton key={cat.id} cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => { setActiveCat(cat.id); setMobileCatsOpen(false); }} />
-        ))}
+        <SectionHeader title="Kategóriák" />
+        <CategoryTree
+          allCats={allCats}
+          counts={counts}
+          activeCat={activeCat}
+          onSelect={(id) => { setActiveCat(id); setMobileCatsOpen(false); }}
+          onAddSub={openNewSubfolder}
+          onDelete={handleDeleteCustomCat}
+        />
 
-        <SectionHeader title="Egyéb tárolás" />
-        {builtInNormal.map((cat) => (
-          <CategoryButton key={cat.id} cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => { setActiveCat(cat.id); setMobileCatsOpen(false); }} />
-        ))}
-
-        <SectionHeader title="Saját kategóriák" />
-        {customRows.length === 0 && (
-          <p className="px-3 py-1.5 text-xs text-muted-foreground">Még nincs egyéni kategória</p>
-        )}
-        {allCats.filter((c) => c.custom).map((cat) => (
-          <div key={cat.id} className="group relative">
-            <CategoryButton cat={cat} active={activeCat === cat.id} count={counts[cat.id] ?? 0} onClick={() => { setActiveCat(cat.id); setMobileCatsOpen(false); }} />
-            <button
-              onClick={(e) => { e.stopPropagation(); handleDeleteCustomCat(cat.id); }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-60 md:opacity-0 md:group-hover:opacity-100 hover:text-destructive"
-              aria-label="Delete category"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
         <button
-          onClick={() => { setNewCatOpen(true); setMobileCatsOpen(false); }}
-          className="w-full mt-1 flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          onClick={() => { setSubfolderParent(null); setNewCatOpen(true); setMobileCatsOpen(false); }}
+          className="w-full mt-2 flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           <Plus className="h-4 w-4" /> Új kategória
         </button>
