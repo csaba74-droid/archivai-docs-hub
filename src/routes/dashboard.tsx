@@ -979,6 +979,18 @@ function Dashboard() {
           setPreviewDoc(updated);
         }}
         canEdit={canUpload}
+        onPrev={(() => {
+          if (!previewDoc) return undefined;
+          const idx = filtered.findIndex((d) => d.id === previewDoc.id);
+          if (idx > 0) return () => setPreviewDoc(filtered[idx - 1]);
+          return undefined;
+        })()}
+        onNext={(() => {
+          if (!previewDoc) return undefined;
+          const idx = filtered.findIndex((d) => d.id === previewDoc.id);
+          if (idx >= 0 && idx < filtered.length - 1) return () => setPreviewDoc(filtered[idx + 1]);
+          return undefined;
+        })()}
       />
       <UploadDialog
         open={uploadOpen}

@@ -19,6 +19,8 @@ import {
   Check,
   X,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline, isExpired } from "@/lib/categories";
@@ -34,12 +36,16 @@ export function DocumentPreviewModal({
   onOpenChange,
   onUpdated,
   canEdit = true,
+  onPrev,
+  onNext,
 }: {
   doc: DocumentRow | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onUpdated?: (doc: DocumentRow) => void;
   canEdit?: boolean;
+  onPrev?: () => void;
+  onNext?: () => void;
 }) {
   const { getCategory, getRetentionDeadline } = useCategoryHelpers();
   const [url, setUrl] = useState<string | null>(null);
@@ -70,6 +76,17 @@ export function DocumentPreviewModal({
       cancelled = true;
     };
   }, [doc, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowLeft" && onPrev) { e.preventDefault(); onPrev(); }
+      else if (e.key === "ArrowRight" && onNext) { e.preventDefault(); onNext(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onPrev, onNext]);
 
   if (!doc) return null;
   const cat = getCategory(doc.category);
@@ -141,6 +158,26 @@ export function DocumentPreviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+        {onPrev && (
+          <button
+            type="button"
+            onClick={onPrev}
+            aria-label="Előző dokumentum"
+            className="hidden md:flex items-center justify-center fixed left-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {onNext && (
+          <button
+            type="button"
+            onClick={onNext}
+            aria-label="Következő dokumentum"
+            className="hidden md:flex items-center justify-center fixed right-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
         <DialogHeader>
           <DialogTitle className="truncate flex items-center gap-2">
             {editingName ? (
