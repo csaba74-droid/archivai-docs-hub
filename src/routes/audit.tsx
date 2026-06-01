@@ -240,9 +240,7 @@ function AuditPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30">
         <div className="flex items-center gap-3 min-w-0">
-          <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/dashboard" })}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Vissza
-          </Button>
+          <BackButton />
           <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">📋 Audit napló</h1>
         </div>
         <Button onClick={exportCsv} size="sm" variant="outline">
