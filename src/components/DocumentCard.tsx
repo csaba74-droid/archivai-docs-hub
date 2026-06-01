@@ -340,7 +340,11 @@ export function DocumentCard({
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto -mx-2">
             {allCategories
-              .filter((c) => c.id !== doc.category && (c.rootCatId ?? c.id) === moveRoot.id)
+              .filter((c) =>
+                c.id !== doc.category &&
+                c.id !== "beerkezett" &&
+                (isInbox || (c.rootCatId ?? c.id) === moveRoot.id),
+              )
               .map((c) => {
                 const dotColor = c.custom && c.color
                   ? c.color
