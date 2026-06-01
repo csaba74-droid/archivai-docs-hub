@@ -426,12 +426,14 @@ function Dashboard() {
       >
         <Camera className="h-4 w-4" /> Hogyan szkennelj
       </Link>
-      <Link
-        to="/sugo"
+      <a
+        href="/sugo"
+        target="_blank"
+        rel="noopener noreferrer"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
         <BookOpen className="h-4 w-4" /> Súgó
-      </Link>
+      </a>
       <Link
         to="/sharing"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
