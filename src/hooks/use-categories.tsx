@@ -28,6 +28,7 @@ type Ctx = {
   all: Category[];
   reload: () => Promise<void>;
   create: (input: CreateCategoryInput) => Promise<string>;
+  rename: (id: string, name: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
 };
 
