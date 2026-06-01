@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Folder, Lock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Folder, Lock, MoreHorizontal, Move, Pencil, Trash2 } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { getChildren, getSubtreeIds } from "@/lib/categories";
 import {
@@ -40,6 +40,7 @@ export function SubfolderChips({
   onDropDocs: (targetCatId: string, docIds: string[]) => void;
   onRename?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onMove?: (id: string) => void;
 }) {
   const children = getChildren(parentId, all);
   const [hoverId, setHoverId] = useState<string | null>(null);
