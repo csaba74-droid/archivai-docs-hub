@@ -25,6 +25,7 @@ export function CategoryTree({
   onAddSub,
   onDelete,
   onMoveFolder,
+  onRenameFolder,
   initiallyExpanded,
 }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(() => {
@@ -57,6 +58,7 @@ export function CategoryTree({
           onAddSub={onAddSub}
           onDelete={onDelete}
           onMoveFolder={onMoveFolder}
+          onRenameFolder={onRenameFolder}
           depth={0}
         />
       ))}
