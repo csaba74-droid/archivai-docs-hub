@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Users, Trash2, Copy } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Trash2, Copy, ChevronRight } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { BackButton } from "@/components/BackButton";
 
