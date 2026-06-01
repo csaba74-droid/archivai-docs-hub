@@ -103,6 +103,7 @@ export type Database = {
         Row: {
           ai_confidence: number | null
           category: string
+          category_changed_at: string
           content_text: string | null
           created_at: string
           document_date: string | null
@@ -120,6 +121,7 @@ export type Database = {
         Insert: {
           ai_confidence?: number | null
           category: string
+          category_changed_at?: string
           content_text?: string | null
           created_at?: string
           document_date?: string | null
@@ -137,6 +139,7 @@ export type Database = {
         Update: {
           ai_confidence?: number | null
           category?: string
+          category_changed_at?: string
           content_text?: string | null
           created_at?: string
           document_date?: string | null
