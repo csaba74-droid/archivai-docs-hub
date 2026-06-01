@@ -405,6 +405,7 @@ function Dashboard() {
         onAddSub={openNewSubfolder}
         onDelete={handleDeleteCustomCat}
         onMoveFolder={(id) => setMoveFolderId(id)}
+        onRenameFolder={(id) => setRenameFolderId(id)}
       />
       <button
         onClick={() => { setSubfolderParent(null); setNewCatOpen(true); }}
