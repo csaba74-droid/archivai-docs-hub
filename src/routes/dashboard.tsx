@@ -38,6 +38,7 @@ import { SearchPanel, SearchHistoryDropdown } from "@/components/SearchPanel";
 import { TrialBanner } from "@/components/TrialBanner";
 import { SubfolderChips } from "@/components/SubfolderChips";
 import { BulkMoveDialog } from "@/components/BulkMoveDialog";
+import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { ArrowRightLeft } from "lucide-react";
 
 
@@ -77,6 +78,7 @@ function Dashboard() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [moveFolderId, setMoveFolderId] = useState<string | null>(null);
   const [bulkDownloading, setBulkDownloading] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc" | "size_desc" | "size_asc">("created_desc");
@@ -369,6 +371,7 @@ function Dashboard() {
           onSelect={(id) => { setActiveCat(id); setMobileCatsOpen(false); }}
           onAddSub={openNewSubfolder}
           onDelete={handleDeleteCustomCat}
+          onMoveFolder={(id) => { setMoveFolderId(id); setMobileCatsOpen(false); }}
         />
 
         <button
@@ -398,6 +401,7 @@ function Dashboard() {
         onSelect={(id) => { setActiveCat(id); setSearch(""); }}
         onAddSub={openNewSubfolder}
         onDelete={handleDeleteCustomCat}
+        onMoveFolder={(id) => setMoveFolderId(id)}
       />
       <button
         onClick={() => { setSubfolderParent(null); setNewCatOpen(true); }}
