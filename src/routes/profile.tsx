@@ -12,6 +12,7 @@ import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { ChangePlanDialog } from "@/components/ChangePlanDialog";
+import { BackButton } from "@/components/BackButton";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
