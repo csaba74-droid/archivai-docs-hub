@@ -149,9 +149,7 @@ function ScanGuidePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/dashboard">
-            <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Vissza</Button>
-          </Link>
+          <BackButton />
           <h1 className="text-lg md:text-xl font-bold" style={{ color: BRAND }}>
             Hogyan szkennelj
           </h1>
