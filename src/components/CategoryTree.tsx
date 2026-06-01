@@ -1,5 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { ChevronRight, Plus, X, Lock, ArrowRightLeft, Pencil } from "lucide-react";
+import { ChevronRight, Plus, Lock, MoreHorizontal, Pencil, ArrowRightLeft, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import type { Category } from "@/lib/categories";
 
 type Props = {
