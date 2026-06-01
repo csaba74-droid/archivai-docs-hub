@@ -708,6 +708,8 @@ function Dashboard() {
               counts={counts}
               onOpen={(id) => setActiveCat(id)}
               onDropDocs={(target, ids) => void moveDocsTo(target, ids)}
+              onRename={(id) => setRenameFolderId(id)}
+              onDelete={(id) => void handleDeleteCustomCat(id)}
             />
           )}
 
