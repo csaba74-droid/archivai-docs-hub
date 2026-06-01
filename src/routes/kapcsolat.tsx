@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Archive, ArrowLeft, Mail, Phone } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 
 export const Route = createFileRoute("/kapcsolat")({
   head: () => ({
