@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { BackButton } from "@/components/BackButton";
 
 export const Route = createFileRoute("/scan-guide")({
   head: () => ({
