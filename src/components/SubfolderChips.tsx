@@ -103,7 +103,7 @@ export function SubfolderChips({
             <span className="text-xs text-muted-foreground tabular-nums bg-muted px-1.5 py-0.5 rounded-md">
               {count}
             </span>
-            {(canRename || canDelete) && (
+            {(canRename || canMove || canDelete) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -122,9 +122,17 @@ export function SubfolderChips({
                       <Pencil className="h-4 w-4 mr-2" /> Átnevezés
                     </DropdownMenuItem>
                   )}
+                  {canMove && (
+                    <>
+                      {(canRename) && <DropdownMenuSeparator />}
+                      <DropdownMenuItem onSelect={() => onMove?.(c.id)}>
+                        <Move className="h-4 w-4 mr-2" /> Áthelyezés
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   {canDelete && (
                     <>
-                      {canRename && <DropdownMenuSeparator />}
+                      {(canRename || canMove) && <DropdownMenuSeparator />}
                       <DropdownMenuItem
                         onSelect={() => onDelete?.(c.id)}
                         className="text-destructive focus:text-destructive"
