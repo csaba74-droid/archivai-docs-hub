@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BackButton } from "@/components/BackButton";
 import {
   Table,
   TableBody,
@@ -105,13 +106,7 @@ function ReferralPage() {
 
   return (
     <div className="container mx-auto max-w-4xl py-10 px-4 space-y-12">
-      <Link
-        to="/dashboard"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Vissza
-      </Link>
+      <BackButton variant="ghost" />
 
       {/* SECTION 1 — Hero */}
       <section className="space-y-3">

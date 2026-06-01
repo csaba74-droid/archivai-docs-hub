@@ -39,6 +39,7 @@ import { TrialBanner } from "@/components/TrialBanner";
 import { SubfolderChips } from "@/components/SubfolderChips";
 import { BulkMoveDialog } from "@/components/BulkMoveDialog";
 import { MoveFolderDialog } from "@/components/MoveFolderDialog";
+import { RenameFolderDialog } from "@/components/RenameFolderDialog";
 import { ArrowRightLeft } from "lucide-react";
 
 
@@ -79,6 +80,7 @@ function Dashboard() {
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
   const [moveFolderId, setMoveFolderId] = useState<string | null>(null);
+  const [renameFolderId, setRenameFolderId] = useState<string | null>(null);
   const [bulkDownloading, setBulkDownloading] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc" | "size_desc" | "size_asc">("created_desc");
@@ -372,6 +374,7 @@ function Dashboard() {
           onAddSub={openNewSubfolder}
           onDelete={handleDeleteCustomCat}
           onMoveFolder={(id) => { setMoveFolderId(id); setMobileCatsOpen(false); }}
+          onRenameFolder={(id) => { setRenameFolderId(id); setMobileCatsOpen(false); }}
         />
 
         <button
@@ -402,6 +405,7 @@ function Dashboard() {
         onAddSub={openNewSubfolder}
         onDelete={handleDeleteCustomCat}
         onMoveFolder={(id) => setMoveFolderId(id)}
+        onRenameFolder={(id) => setRenameFolderId(id)}
       />
       <button
         onClick={() => { setSubfolderParent(null); setNewCatOpen(true); }}
@@ -1155,6 +1159,11 @@ function Dashboard() {
         onOpenChange={(v) => { if (!v) setMoveFolderId(null); }}
         folderId={moveFolderId}
         onMoved={() => { void loadDocs(); }}
+      />
+      <RenameFolderDialog
+        open={renameFolderId !== null}
+        onOpenChange={(v) => { if (!v) setRenameFolderId(null); }}
+        folderId={renameFolderId}
       />
 
       </div>

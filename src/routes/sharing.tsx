@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2, Users, Trash2, Copy } from "lucide-react";
 import type { Category } from "@/lib/categories";
+import { BackButton } from "@/components/BackButton";
 
 export const Route = createFileRoute("/sharing")({
   beforeLoad: async () => {
@@ -231,11 +232,7 @@ function SharingPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 md:px-8 py-4 flex items-center gap-3">
-        <Link to="/dashboard">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1" /> Vissza
-          </Button>
-        </Link>
+        <BackButton />
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-brand" />
           <h1 className="text-lg font-semibold tracking-tight">Hozzáférés megosztása</h1>

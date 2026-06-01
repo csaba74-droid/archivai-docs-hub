@@ -11,6 +11,7 @@ import { useBillingPortal } from "@/hooks/use-billing-portal";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { BackButton } from "@/components/BackButton";
 
 
 export const Route = createFileRoute("/subscription")({
@@ -117,9 +118,7 @@ function SubscriptionPage() {
     <div className="min-h-screen bg-background">
       <PaymentTestModeBanner />
       <header className="border-b bg-card px-6 py-4 flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/dashboard"><ArrowLeft className="h-4 w-4 mr-1" /> Vissza</Link>
-        </Button>
+        <BackButton />
         <h1 className="text-lg font-semibold">Előfizetés és számlázás</h1>
       </header>
 
