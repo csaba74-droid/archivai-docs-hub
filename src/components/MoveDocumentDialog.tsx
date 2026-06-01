@@ -32,7 +32,6 @@ export function MoveDocumentDialog({
   const options = useMemo(() => {
     if (!doc) return [] as { id: string; label: string; depth: number }[];
     const root = getRoot(doc.category);
-    // BFS collect tree, with depth
     const result: { id: string; label: string; depth: number }[] = [];
     const visit = (id: string, depth: number) => {
       const c = getCategory(id);
@@ -41,7 +40,14 @@ export function MoveDocumentDialog({
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    visit(root.id, 0);
+    // From "Beérkezett" allow moving anywhere — show all top-level trees except beerkezett itself.
+    if (root.id === "beerkezett") {
+      all
+        .filter((c) => c.parentCatId == null && c.id !== "beerkezett")
+        .forEach((c) => visit(c.id, 0));
+    } else {
+      visit(root.id, 0);
+    }
     return result;
   }, [doc, all, getRoot, getCategory]);
 
