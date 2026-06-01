@@ -1160,6 +1160,11 @@ function Dashboard() {
         folderId={moveFolderId}
         onMoved={() => { void loadDocs(); }}
       />
+      <RenameFolderDialog
+        open={renameFolderId !== null}
+        onOpenChange={(v) => { if (!v) setRenameFolderId(null); }}
+        folderId={renameFolderId}
+      />
 
       </div>
     </div>
