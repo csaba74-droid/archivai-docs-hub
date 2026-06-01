@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Users, Trash2, Copy } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Trash2, Copy, ChevronRight } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { BackButton } from "@/components/BackButton";
 
@@ -434,26 +434,88 @@ function CategoryPicker({
   onToggle: (id: string) => void;
   disabled?: boolean;
 }) {
+  const roots = cats.filter((c) => !c.parentCatId && c.id !== "beerkezett");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {cats.map((cat) => {
-        const checked = selected.includes(cat.id);
+    <div className="rounded-md border bg-background divide-y">
+      {roots.map((cat) => {
+        const children = cats.filter((c) => c.parentCatId === cat.id);
+        const hasChildren = children.length > 0;
+        const isExpanded = expanded.has(cat.id);
         const color = cat.color ?? CAT_COLORS[cat.id] ?? "#9CA3AF";
+        const checked = selected.includes(cat.id);
         return (
-          <label
-            key={cat.id}
-            className={`flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors ${
-              disabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            style={{ borderLeft: `4px solid ${color}` }}
-          >
-            <Checkbox
-              checked={checked}
-              onCheckedChange={() => !disabled && onToggle(cat.id)}
-              disabled={disabled}
-            />
-            <span className="truncate">{cat.label}</span>
-          </label>
+          <div key={cat.id}>
+            <div
+              className={`flex items-center gap-1 px-2 py-2 text-sm hover:bg-muted/50 transition-colors ${
+                disabled ? "opacity-50" : ""
+              }`}
+              style={{ borderLeft: `4px solid ${color}` }}
+            >
+              <button
+                type="button"
+                onClick={() => hasChildren && toggleExpand(cat.id)}
+                className={`h-6 w-6 flex items-center justify-center shrink-0 ${
+                  hasChildren ? "opacity-80 hover:opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                aria-label={isExpanded ? "Összecsuk" : "Kinyit"}
+                disabled={!hasChildren}
+              >
+                <ChevronRight
+                  className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                />
+              </button>
+              <label
+                className={`flex-1 flex items-center gap-2 min-w-0 ${
+                  disabled ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() => !disabled && onToggle(cat.id)}
+                  disabled={disabled}
+                />
+                <span className="truncate font-medium">{cat.label}</span>
+              </label>
+            </div>
+            {isExpanded && hasChildren && (
+              <div className="bg-muted/20">
+                {children.map((sub) => {
+                  const subChecked = selected.includes(sub.id);
+                  const subColor = sub.color ?? color;
+                  return (
+                    <label
+                      key={sub.id}
+                      className={`flex items-center gap-2 pl-10 pr-3 py-2 text-sm border-t hover:bg-muted/50 transition-colors ${
+                        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                    >
+                      <Checkbox
+                        checked={subChecked}
+                        onCheckedChange={() => !disabled && onToggle(sub.id)}
+                        disabled={disabled}
+                      />
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ background: subColor }}
+                      />
+                      <span className="truncate">{sub.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         );
       })}
     </div>
