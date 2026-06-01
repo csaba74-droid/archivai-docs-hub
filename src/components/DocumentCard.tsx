@@ -119,11 +119,18 @@ export function DocumentCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [moving, setMoving] = useState(false);
-  // "Beérkezett" documents are never locked and never show a grace countdown —
-  // they are always freely moveable/deleteable until categorized.
-  const isInbox = doc.category === "beerkezett";
+  const { all: allCategories } = useCategories();
+  const { getRoot } = useCategoryHelpers();
+  const moveRoot = getRoot(doc.category);
+  // Documents whose ROOT category is "Beérkezett" (inbox tree, including
+  // subfolders) are never locked and never show a grace countdown.
+  const isInbox = moveRoot.id === "beerkezett";
+  // Grace timer starts from when the doc was last moved into its current
+  // category — not the original upload time. Falls back to created_at for
+  // older rows without category_changed_at.
+  const graceStart = doc.category_changed_at ?? doc.created_at;
   const [graceRemainingMs, setGraceRemainingMs] = useState(() =>
-    isInbox ? 0 : getGraceRemainingMs(doc.created_at),
+    isInbox ? 0 : getGraceRemainingMs(graceStart),
   );
   const inGrace = !isInbox && graceRemainingMs > 0;
   useEffect(() => {
@@ -131,19 +138,16 @@ export function DocumentCard({
       setGraceRemainingMs(0);
       return;
     }
-    const initial = getGraceRemainingMs(doc.created_at);
+    const initial = getGraceRemainingMs(graceStart);
     setGraceRemainingMs(initial);
     if (initial <= 0) return;
     const id = window.setInterval(() => {
-      const left = getGraceRemainingMs(doc.created_at);
+      const left = getGraceRemainingMs(graceStart);
       setGraceRemainingMs(left);
       if (left <= 0) window.clearInterval(id);
     }, 1000);
     return () => window.clearInterval(id);
-  }, [doc.created_at, isInbox]);
-  const { all: allCategories } = useCategories();
-  const { getRoot } = useCategoryHelpers();
-  const moveRoot = getRoot(doc.category);
+  }, [graceStart, isInbox]);
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
   const FileTypeIcon = fileStyle.Icon;
