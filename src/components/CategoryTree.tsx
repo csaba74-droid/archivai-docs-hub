@@ -164,39 +164,46 @@ function TreeNode({
         >
           <Plus className="h-3 w-3" />
         </IconBtn>
-        {canRename && (
-          <IconBtn
-            onClick={(e) => {
-              e.stopPropagation();
-              onRenameFolder?.(cat.id);
-            }}
-            title="Átnevezés"
-          >
-            <Pencil className="h-3 w-3" />
-          </IconBtn>
-        )}
-        {canMove && (
-          <IconBtn
-            onClick={(e) => {
-              e.stopPropagation();
-              onMoveFolder?.(cat.id);
-            }}
-            title="Mappa áthelyezése"
-          >
-            <ArrowRightLeft className="h-3 w-3" />
-          </IconBtn>
-        )}
-        {canDelete && (
-          <IconBtn
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(cat.id);
-            }}
-            title="Törlés"
-            danger
-          >
-            <X className="h-3 w-3" />
-          </IconBtn>
+        {(canRename || canMove || canDelete) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => e.stopPropagation()}
+                title="További műveletek"
+                aria-label="További műveletek"
+                className="h-6 w-6 flex items-center justify-center rounded opacity-100 md:opacity-60 md:group-hover:opacity-100 hover:bg-muted-foreground/10 transition-opacity"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {canRename && (
+                <DropdownMenuItem onSelect={() => onRenameFolder?.(cat.id)}>
+                  <Pencil className="h-4 w-4 mr-2" /> Átnevezés
+                </DropdownMenuItem>
+              )}
+              {canMove && (
+                <DropdownMenuItem onSelect={() => onMoveFolder?.(cat.id)}>
+                  <ArrowRightLeft className="h-4 w-4 mr-2" /> Áthelyezés
+                </DropdownMenuItem>
+              )}
+              {canDelete && (
+                <>
+                  {(canRename || canMove) && <DropdownMenuSeparator />}
+                  <DropdownMenuItem
+                    onSelect={() => onDelete(cat.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" /> Törlés
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
       {isExpanded && hasChildren && (
