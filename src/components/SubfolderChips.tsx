@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Folder, Lock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Folder, Lock, MoreHorizontal, Move, Pencil, Trash2 } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { getChildren, getSubtreeIds } from "@/lib/categories";
 import {
@@ -32,6 +32,7 @@ export function SubfolderChips({
   onDropDocs,
   onRename,
   onDelete,
+  onMove,
 }: {
   parentId: string;
   all: Category[];
@@ -40,6 +41,7 @@ export function SubfolderChips({
   onDropDocs: (targetCatId: string, docIds: string[]) => void;
   onRename?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onMove?: (id: string) => void;
 }) {
   const children = getChildren(parentId, all);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -54,6 +56,7 @@ export function SubfolderChips({
         const isHover = hoverId === c.id;
         const canDelete = !!onDelete && (c.custom === true || c.isSystem === false);
         const canRename = !!onRename;
+        const canMove = !!onMove;
         return (
           <div
             key={c.id}
@@ -100,7 +103,7 @@ export function SubfolderChips({
             <span className="text-xs text-muted-foreground tabular-nums bg-muted px-1.5 py-0.5 rounded-md">
               {count}
             </span>
-            {(canRename || canDelete) && (
+            {(canRename || canMove || canDelete) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -119,9 +122,17 @@ export function SubfolderChips({
                       <Pencil className="h-4 w-4 mr-2" /> Átnevezés
                     </DropdownMenuItem>
                   )}
+                  {canMove && (
+                    <>
+                      {(canRename) && <DropdownMenuSeparator />}
+                      <DropdownMenuItem onSelect={() => onMove?.(c.id)}>
+                        <Move className="h-4 w-4 mr-2" /> Áthelyezés
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   {canDelete && (
                     <>
-                      {canRename && <DropdownMenuSeparator />}
+                      {(canRename || canMove) && <DropdownMenuSeparator />}
                       <DropdownMenuItem
                         onSelect={() => onDelete?.(c.id)}
                         className="text-destructive focus:text-destructive"
