@@ -32,6 +32,7 @@ export function SubfolderChips({
   onDropDocs,
   onRename,
   onDelete,
+  onMove,
 }: {
   parentId: string;
   all: Category[];
