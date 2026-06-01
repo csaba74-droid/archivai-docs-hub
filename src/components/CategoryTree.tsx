@@ -77,6 +77,7 @@ function TreeNode({
   onAddSub,
   onDelete,
   onMoveFolder,
+  onRenameFolder,
   depth,
 }: {
   cat: Category;
@@ -89,6 +90,7 @@ function TreeNode({
   onAddSub: (parentId: string) => void;
   onDelete: (id: string) => void;
   onMoveFolder?: (id: string) => void;
+  onRenameFolder?: (id: string) => void;
   depth: number;
 }) {
   const children = allCats.filter((c) => c.parentCatId === cat.id);
@@ -100,6 +102,7 @@ function TreeNode({
   // Only user-created custom folders can be moved (not built-in roots, not
   // the system "Beérkezett" inbox).
   const canMove = !!onMoveFolder && cat.custom && !cat.isSystem;
+  const canRename = !!onRenameFolder && cat.custom && !cat.isSystem;
 
   return (
     <div>
@@ -154,6 +157,17 @@ function TreeNode({
         >
           <Plus className="h-3 w-3" />
         </IconBtn>
+        {canRename && (
+          <IconBtn
+            onClick={(e) => {
+              e.stopPropagation();
+              onRenameFolder?.(cat.id);
+            }}
+            title="Átnevezés"
+          >
+            <Pencil className="h-3 w-3" />
+          </IconBtn>
+        )}
         {canMove && (
           <IconBtn
             onClick={(e) => {
@@ -193,6 +207,7 @@ function TreeNode({
               onAddSub={onAddSub}
               onDelete={onDelete}
               onMoveFolder={onMoveFolder}
+              onRenameFolder={onRenameFolder}
               depth={depth + 1}
             />
           ))}
