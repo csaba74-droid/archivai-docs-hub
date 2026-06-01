@@ -55,6 +55,7 @@ export function SubfolderChips({
         const isHover = hoverId === c.id;
         const canDelete = !!onDelete && (c.custom === true || c.isSystem === false);
         const canRename = !!onRename;
+        const canMove = !!onMove;
         return (
           <div
             key={c.id}
