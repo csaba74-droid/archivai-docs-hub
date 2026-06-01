@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronRight, Plus, X, Lock, ArrowRightLeft } from "lucide-react";
+import { ChevronRight, Plus, X, Lock, ArrowRightLeft, Pencil } from "lucide-react";
 import type { Category } from "@/lib/categories";
 
 type Props = {
@@ -11,6 +11,8 @@ type Props = {
   onDelete: (id: string) => void;
   /** Called when the user wants to move a (custom) folder under a different root. */
   onMoveFolder?: (id: string) => void;
+  /** Called when the user wants to rename a (custom) folder. */
+  onRenameFolder?: (id: string) => void;
   /** Pre-expanded ids (e.g. the active path). */
   initiallyExpanded?: Set<string>;
 };
