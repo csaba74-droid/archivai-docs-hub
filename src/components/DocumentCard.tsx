@@ -119,9 +119,18 @@ export function DocumentCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [moving, setMoving] = useState(false);
-  const [graceRemainingMs, setGraceRemainingMs] = useState(() => getGraceRemainingMs(doc.created_at));
-  const inGrace = graceRemainingMs > 0;
+  // "Beérkezett" documents are never locked and never show a grace countdown —
+  // they are always freely moveable/deleteable until categorized.
+  const isInbox = doc.category === "beerkezett";
+  const [graceRemainingMs, setGraceRemainingMs] = useState(() =>
+    isInbox ? 0 : getGraceRemainingMs(doc.created_at),
+  );
+  const inGrace = !isInbox && graceRemainingMs > 0;
   useEffect(() => {
+    if (isInbox) {
+      setGraceRemainingMs(0);
+      return;
+    }
     const initial = getGraceRemainingMs(doc.created_at);
     setGraceRemainingMs(initial);
     if (initial <= 0) return;
@@ -131,7 +140,7 @@ export function DocumentCard({
       if (left <= 0) window.clearInterval(id);
     }, 1000);
     return () => window.clearInterval(id);
-  }, [doc.created_at]);
+  }, [doc.created_at, isInbox]);
   const { all: allCategories } = useCategories();
   const { getRoot } = useCategoryHelpers();
   const moveRoot = getRoot(doc.category);
