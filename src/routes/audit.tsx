@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Download, ClipboardList, Loader2 } from "lucide-react";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
+import { BackButton } from "@/components/BackButton";
 
 export const Route = createFileRoute("/audit")({
   beforeLoad: async () => {
