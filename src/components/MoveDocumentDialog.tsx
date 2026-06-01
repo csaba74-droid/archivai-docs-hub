@@ -40,11 +40,13 @@ export function MoveDocumentDialog({
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    // From "Beérkezett" allow moving anywhere — show all top-level trees except beerkezett itself.
+    // From the Beérkezett tree, allow moving anywhere — including into
+    // Beérkezett subfolders. Skip "beerkezett" itself as a target.
     if (root.id === "beerkezett") {
       all
-        .filter((c) => c.parentCatId == null && c.id !== "beerkezett")
+        .filter((c) => c.parentCatId == null)
         .forEach((c) => visit(c.id, 0));
+      return result.filter((o) => o.id !== "beerkezett");
     } else {
       visit(root.id, 0);
     }
