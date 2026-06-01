@@ -31,9 +31,9 @@ export function MoveFolderDialog({
   folderId: string | null;
   onMoved?: () => void;
 }) {
-  const { all } = useCategories();
-  const { getRoot, getCategory } = useCategoryHelpers();
   const { reload } = useCategories();
+  const { getRoot, getCategory } = useCategoryHelpers();
+  const { all } = useCategories();
   const [selected, setSelected] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
