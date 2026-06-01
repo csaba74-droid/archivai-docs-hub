@@ -201,9 +201,7 @@ function ProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 sm:px-6 py-4 flex items-center gap-3 sticky top-0 z-10">
-        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/dashboard" })}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Vissza
-        </Button>
+        <BackButton />
         <h1 className="text-lg font-semibold">Profil & Beállítások</h1>
       </header>
 
