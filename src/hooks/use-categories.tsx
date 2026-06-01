@@ -82,6 +82,18 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     return `custom:${(data as unknown as CustomCategoryRow).id}`;
   }, [reload]);
 
+  const rename: Ctx["rename"] = useCallback(async (id, name) => {
+    const realId = id.startsWith("custom:") ? id.slice(7) : id;
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("A név nem lehet üres");
+    const { error } = await supabase
+      .from("custom_categories")
+      .update({ name: trimmed } as never)
+      .eq("id", realId);
+    if (error) throw error;
+    await reload();
+  }, [reload]);
+
   const remove: Ctx["remove"] = useCallback(async (id) => {
     const realId = id.startsWith("custom:") ? id.slice(7) : id;
     const { error } = await supabase.from("custom_categories").delete().eq("id", realId);
@@ -92,7 +104,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   const all = useMemo(() => mergeCategories(customRows), [customRows]);
 
   return (
-    <CategoriesContext.Provider value={{ customRows, all, reload, create, remove }}>
+    <CategoriesContext.Provider value={{ customRows, all, reload, create, rename, remove }}>
       {children}
     </CategoriesContext.Provider>
   );
@@ -106,6 +118,7 @@ export function useCategories() {
       all: BUILT_IN_CATEGORIES.map((c) => ({ ...c, parentCatId: null, rootCatId: c.id })) as Category[],
       reload: async () => {},
       create: async () => "",
+      rename: async () => {},
       remove: async () => {},
     };
   }
