@@ -70,9 +70,13 @@ export function BulkMoveDialog({
         .forEach((ch) => visit(ch.id, depth + 1));
     };
     if (sharedRoot === "beerkezett") {
+      // From the Beérkezett tree, allow moving anywhere — including into
+      // Beérkezett subfolders. Show every top-level category and descend.
+      // Skip "beerkezett" itself as a target since the docs are already there.
       all
-        .filter((c) => c.parentCatId == null && c.id !== "beerkezett")
+        .filter((c) => c.parentCatId == null)
         .forEach((c) => visit(c.id, 0));
+      return result.filter((o) => o.id !== "beerkezett");
     } else {
       visit(sharedRoot, 0);
     }
