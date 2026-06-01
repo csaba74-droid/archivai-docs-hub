@@ -129,7 +129,8 @@ export function FilePreview({
     return <img src={state.dataUrl} alt={filename} className={`object-contain bg-white ${className ?? ""}`} loading="lazy" />;
   }
   if (state.kind === "iframe") {
-    return <iframe src={state.url} title={filename} className={`bg-white w-full h-full ${className ?? ""}`} />;
+    const fitUrl = `${state.url}#zoom=page-fit`;
+    return <iframe src={fitUrl} title={filename} className={`bg-white w-full h-full ${className ?? ""}`} />;
   }
   // html
   return (
