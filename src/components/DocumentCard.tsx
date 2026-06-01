@@ -238,7 +238,7 @@ export function DocumentCard({
         onOpen();
       }}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict ? "border-lock/40" : ""} ${isSelected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
+      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict && !isInbox ? "border-lock/40" : ""} ${isSelected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
     >
       {/* Selection checkbox */}
       {selectable && (
@@ -301,7 +301,7 @@ export function DocumentCard({
 
       {/* Right: lock + menu */}
       <div className="flex items-center gap-1 shrink-0">
-        {strict && <Lock className="h-3.5 w-3.5 text-lock" />}
+        {strict && !isInbox && <Lock className="h-3.5 w-3.5 text-lock" />}
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button
@@ -343,33 +343,54 @@ export function DocumentCard({
             <DialogTitle>Melyik kategóriába helyezi át?</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto -mx-2">
-            {allCategories
-              .filter((c) =>
-                c.id !== doc.category &&
-                c.id !== "beerkezett" &&
-                (isInbox || (c.rootCatId ?? c.id) === moveRoot.id),
-              )
-              .map((c) => {
-                const dotColor = c.custom && c.color
-                  ? c.color
-                  : (CATEGORY_COLORS[c.id]?.bg ?? "#9CA3AF");
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    disabled={moving}
-                    onClick={() => void handleMove(c.id)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-left text-sm disabled:opacity-50"
-                  >
-                    <span
-                      className="h-3 w-3 rounded-full shrink-0"
-                      style={{ backgroundColor: dotColor }}
-                    />
-                    <span className="flex-1 truncate">{c.label}</span>
-                    {c.mode === "strict" && <Lock className="h-3 w-3 text-lock" />}
-                  </button>
-                );
-              })}
+            {(() => {
+              // Build a flat list of {cat, depth} walking the tree.
+              // - Inbox docs: show entire forest (all top-level categories including
+              //   Beérkezett, so its subfolders are reachable). Skip "beerkezett"
+              //   itself as a target.
+              // - Other docs: show only the doc's own root subtree.
+              const result: { cat: typeof allCategories[number]; depth: number }[] = [];
+              const visit = (id: string, depth: number) => {
+                const c = allCategories.find((x) => x.id === id);
+                if (!c) return;
+                result.push({ cat: c, depth });
+                allCategories
+                  .filter((x) => x.parentCatId === id)
+                  .forEach((ch) => visit(ch.id, depth + 1));
+              };
+              if (isInbox) {
+                allCategories
+                  .filter((c) => c.parentCatId == null)
+                  .forEach((c) => visit(c.id, 0));
+              } else {
+                visit(moveRoot.id, 0);
+              }
+              return result
+                .filter(({ cat }) => cat.id !== doc.category && cat.id !== "beerkezett")
+                .map(({ cat: c, depth }) => {
+                  const dotColor = c.custom && c.color
+                    ? c.color
+                    : (CATEGORY_COLORS[c.id]?.bg ?? "#9CA3AF");
+                  const inInboxTree = (c.rootCatId ?? c.id) === "beerkezett";
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      disabled={moving}
+                      onClick={() => void handleMove(c.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-left text-sm disabled:opacity-50"
+                      style={{ paddingLeft: `${0.75 + depth * 1.25}rem` }}
+                    >
+                      <span
+                        className="h-3 w-3 rounded-full shrink-0"
+                        style={{ backgroundColor: dotColor }}
+                      />
+                      <span className="flex-1 truncate">{c.label}</span>
+                      {c.mode === "strict" && !inInboxTree && <Lock className="h-3 w-3 text-lock" />}
+                    </button>
+                  );
+                });
+            })()}
           </div>
         </DialogContent>
       </Dialog>
