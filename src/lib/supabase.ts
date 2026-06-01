@@ -27,6 +27,7 @@ export type DocumentRow = {
   document_date: string | null;
   notes: string | null;
   created_at: string;
+  category_changed_at?: string | null;
 };
 
 export type ProfileRow = {

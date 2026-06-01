@@ -119,11 +119,18 @@ export function DocumentCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [moving, setMoving] = useState(false);
-  // "Beérkezett" documents are never locked and never show a grace countdown —
-  // they are always freely moveable/deleteable until categorized.
-  const isInbox = doc.category === "beerkezett";
+  const { all: allCategories } = useCategories();
+  const { getRoot } = useCategoryHelpers();
+  const moveRoot = getRoot(doc.category);
+  // Documents whose ROOT category is "Beérkezett" (inbox tree, including
+  // subfolders) are never locked and never show a grace countdown.
+  const isInbox = moveRoot.id === "beerkezett";
+  // Grace timer starts from when the doc was last moved into its current
+  // category — not the original upload time. Falls back to created_at for
+  // older rows without category_changed_at.
+  const graceStart = doc.category_changed_at ?? doc.created_at;
   const [graceRemainingMs, setGraceRemainingMs] = useState(() =>
-    isInbox ? 0 : getGraceRemainingMs(doc.created_at),
+    isInbox ? 0 : getGraceRemainingMs(graceStart),
   );
   const inGrace = !isInbox && graceRemainingMs > 0;
   useEffect(() => {
@@ -131,19 +138,16 @@ export function DocumentCard({
       setGraceRemainingMs(0);
       return;
     }
-    const initial = getGraceRemainingMs(doc.created_at);
+    const initial = getGraceRemainingMs(graceStart);
     setGraceRemainingMs(initial);
     if (initial <= 0) return;
     const id = window.setInterval(() => {
-      const left = getGraceRemainingMs(doc.created_at);
+      const left = getGraceRemainingMs(graceStart);
       setGraceRemainingMs(left);
       if (left <= 0) window.clearInterval(id);
     }, 1000);
     return () => window.clearInterval(id);
-  }, [doc.created_at, isInbox]);
-  const { all: allCategories } = useCategories();
-  const { getRoot } = useCategoryHelpers();
-  const moveRoot = getRoot(doc.category);
+  }, [graceStart, isInbox]);
   const fileType = getFileType(doc.filename, doc.mime_type);
   const fileStyle = FILE_TYPE_STYLES[fileType];
   const FileTypeIcon = fileStyle.Icon;
@@ -234,7 +238,7 @@ export function DocumentCard({
         onOpen();
       }}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict ? "border-lock/40" : ""} ${isSelected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
+      className={`group relative cursor-pointer p-3 flex items-center gap-3 hover:shadow-md hover:border-primary/40 transition-all ${strict && !isInbox ? "border-lock/40" : ""} ${isSelected ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""}`}
     >
       {/* Selection checkbox */}
       {selectable && (
@@ -297,7 +301,7 @@ export function DocumentCard({
 
       {/* Right: lock + menu */}
       <div className="flex items-center gap-1 shrink-0">
-        {strict && <Lock className="h-3.5 w-3.5 text-lock" />}
+        {strict && !isInbox && <Lock className="h-3.5 w-3.5 text-lock" />}
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button
@@ -339,33 +343,54 @@ export function DocumentCard({
             <DialogTitle>Melyik kategóriába helyezi át?</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto -mx-2">
-            {allCategories
-              .filter((c) =>
-                c.id !== doc.category &&
-                c.id !== "beerkezett" &&
-                (isInbox || (c.rootCatId ?? c.id) === moveRoot.id),
-              )
-              .map((c) => {
-                const dotColor = c.custom && c.color
-                  ? c.color
-                  : (CATEGORY_COLORS[c.id]?.bg ?? "#9CA3AF");
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    disabled={moving}
-                    onClick={() => void handleMove(c.id)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-left text-sm disabled:opacity-50"
-                  >
-                    <span
-                      className="h-3 w-3 rounded-full shrink-0"
-                      style={{ backgroundColor: dotColor }}
-                    />
-                    <span className="flex-1 truncate">{c.label}</span>
-                    {c.mode === "strict" && <Lock className="h-3 w-3 text-lock" />}
-                  </button>
-                );
-              })}
+            {(() => {
+              // Build a flat list of {cat, depth} walking the tree.
+              // - Inbox docs: show entire forest (all top-level categories including
+              //   Beérkezett, so its subfolders are reachable). Skip "beerkezett"
+              //   itself as a target.
+              // - Other docs: show only the doc's own root subtree.
+              const result: { cat: typeof allCategories[number]; depth: number }[] = [];
+              const visit = (id: string, depth: number) => {
+                const c = allCategories.find((x) => x.id === id);
+                if (!c) return;
+                result.push({ cat: c, depth });
+                allCategories
+                  .filter((x) => x.parentCatId === id)
+                  .forEach((ch) => visit(ch.id, depth + 1));
+              };
+              if (isInbox) {
+                allCategories
+                  .filter((c) => c.parentCatId == null)
+                  .forEach((c) => visit(c.id, 0));
+              } else {
+                visit(moveRoot.id, 0);
+              }
+              return result
+                .filter(({ cat }) => cat.id !== doc.category && cat.id !== "beerkezett")
+                .map(({ cat: c, depth }) => {
+                  const dotColor = c.custom && c.color
+                    ? c.color
+                    : (CATEGORY_COLORS[c.id]?.bg ?? "#9CA3AF");
+                  const inInboxTree = (c.rootCatId ?? c.id) === "beerkezett";
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      disabled={moving}
+                      onClick={() => void handleMove(c.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-left text-sm disabled:opacity-50"
+                      style={{ paddingLeft: `${0.75 + depth * 1.25}rem` }}
+                    >
+                      <span
+                        className="h-3 w-3 rounded-full shrink-0"
+                        style={{ backgroundColor: dotColor }}
+                      />
+                      <span className="flex-1 truncate">{c.label}</span>
+                      {c.mode === "strict" && !inInboxTree && <Lock className="h-3 w-3 text-lock" />}
+                    </button>
+                  );
+                });
+            })()}
           </div>
         </DialogContent>
       </Dialog>
