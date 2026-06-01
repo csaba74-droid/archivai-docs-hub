@@ -1454,7 +1454,7 @@ type CategoryGridProps = {
 function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onNewSubfolder, onDeleteCustomCat }: CategoryGridProps) {
   const ordered = sortCategories(allCats);
   const inbox = ordered.find((c) => c.id === "beerkezett");
-  const rest = ordered.filter((c) => c.id !== "beerkezett");
+  const rest = ordered.filter((c) => c.id !== "beerkezett" && !c.parentCatId);
   const inboxCount = inbox ? counts[inbox.id] ?? 0 : 0;
   const hasInboxDocs = inboxCount > 0;
 
