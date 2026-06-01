@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronRight, Plus, X, Lock } from "lucide-react";
+import { ChevronRight, Plus, X, Lock, ArrowRightLeft } from "lucide-react";
 import type { Category } from "@/lib/categories";
 
 type Props = {
@@ -9,6 +9,8 @@ type Props = {
   onSelect: (id: string) => void;
   onAddSub: (parentId: string) => void;
   onDelete: (id: string) => void;
+  /** Called when the user wants to move a (custom) folder under a different root. */
+  onMoveFolder?: (id: string) => void;
   /** Pre-expanded ids (e.g. the active path). */
   initiallyExpanded?: Set<string>;
 };
@@ -20,6 +22,7 @@ export function CategoryTree({
   onSelect,
   onAddSub,
   onDelete,
+  onMoveFolder,
   initiallyExpanded,
 }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(() => {
@@ -51,6 +54,7 @@ export function CategoryTree({
           onSelect={onSelect}
           onAddSub={onAddSub}
           onDelete={onDelete}
+          onMoveFolder={onMoveFolder}
           depth={0}
         />
       ))}
@@ -68,6 +72,7 @@ function TreeNode({
   onSelect,
   onAddSub,
   onDelete,
+  onMoveFolder,
   depth,
 }: {
   cat: Category;
@@ -79,6 +84,7 @@ function TreeNode({
   onSelect: (id: string) => void;
   onAddSub: (parentId: string) => void;
   onDelete: (id: string) => void;
+  onMoveFolder?: (id: string) => void;
   depth: number;
 }) {
   const children = allCats.filter((c) => c.parentCatId === cat.id);
@@ -87,6 +93,9 @@ function TreeNode({
   const active = activeCat === cat.id;
   const Icon = cat.icon;
   const canDelete = cat.custom && !cat.isSystem;
+  // Only user-created custom folders can be moved (not built-in roots, not
+  // the system "Beérkezett" inbox).
+  const canMove = !!onMoveFolder && cat.custom && !cat.isSystem;
 
   return (
     <div>
@@ -141,6 +150,17 @@ function TreeNode({
         >
           <Plus className="h-3 w-3" />
         </IconBtn>
+        {canMove && (
+          <IconBtn
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveFolder?.(cat.id);
+            }}
+            title="Mappa áthelyezése"
+          >
+            <ArrowRightLeft className="h-3 w-3" />
+          </IconBtn>
+        )}
         {canDelete && (
           <IconBtn
             onClick={(e) => {
@@ -168,6 +188,7 @@ function TreeNode({
               onSelect={onSelect}
               onAddSub={onAddSub}
               onDelete={onDelete}
+              onMoveFolder={onMoveFolder}
               depth={depth + 1}
             />
           ))}
