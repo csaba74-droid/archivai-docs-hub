@@ -951,7 +951,8 @@ function Dashboard() {
                 const baseDate = doc.document_date ?? doc.created_at;
                 const deadline = getRetentionDeadline(doc.category, baseDate);
                 const expired = !!(deadline && deadline.getTime() < Date.now());
-                const canDelete = canUpload && (!strict || expired || isInGracePeriod(doc.created_at));
+                const graceStart = doc.category_changed_at ?? doc.created_at;
+                const canDelete = canUpload && (!strict || expired || isInGracePeriod(graceStart));
                 const isSelected = selectedDocs.has(doc.id);
                 const dragIds = isSelected && selectedDocs.size > 1
                   ? Array.from(selectedDocs)
