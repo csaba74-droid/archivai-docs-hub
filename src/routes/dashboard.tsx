@@ -1137,6 +1137,12 @@ function Dashboard() {
           setSelectedDocs(new Set());
         }}
       />
+      <MoveFolderDialog
+        open={moveFolderId !== null}
+        onOpenChange={(v) => { if (!v) setMoveFolderId(null); }}
+        folderId={moveFolderId}
+        onMoved={() => { void loadDocs(); }}
+      />
 
       </div>
     </div>
