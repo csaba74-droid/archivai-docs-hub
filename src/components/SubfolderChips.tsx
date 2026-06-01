@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Folder, Lock } from "lucide-react";
+import { Folder, Lock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { getChildren, getSubtreeIds } from "@/lib/categories";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CATEGORY_COLORS: Record<string, string> = {
   szamlak: "#F59E0B",
@@ -23,12 +30,16 @@ export function SubfolderChips({
   counts,
   onOpen,
   onDropDocs,
+  onRename,
+  onDelete,
 }: {
   parentId: string;
   all: Category[];
   counts: Record<string, number>;
   onOpen: (id: string) => void;
   onDropDocs: (targetCatId: string, docIds: string[]) => void;
+  onRename?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
   const children = getChildren(parentId, all);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -41,11 +52,20 @@ export function SubfolderChips({
         const count = subtree.reduce((s, id) => s + (counts[id] ?? 0), 0);
         const dot = c.custom && c.color ? c.color : (CATEGORY_COLORS[c.id] ?? "#9CA3AF");
         const isHover = hoverId === c.id;
+        const canDelete = !!onDelete && (c.custom === true || c.isSystem === false);
+        const canRename = !!onRename;
         return (
-          <button
+          <div
             key={c.id}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={() => onOpen(c.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpen(c.id);
+              }
+            }}
             onDragOver={(e) => {
               if (e.dataTransfer.types.includes("application/x-doc-ids")) {
                 e.preventDefault();
@@ -66,7 +86,7 @@ export function SubfolderChips({
                 /* ignore */
               }
             }}
-            className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-xl border bg-card text-sm transition-all hover:border-primary/50 hover:shadow-md ${
+            className={`group flex items-center gap-2.5 pl-4 pr-2 py-2.5 rounded-xl border bg-card text-sm transition-all hover:border-primary/50 hover:shadow-md cursor-pointer ${
               isHover ? "border-primary ring-2 ring-primary/30 bg-primary/5" : ""
             }`}
           >
@@ -80,7 +100,40 @@ export function SubfolderChips({
             <span className="text-xs text-muted-foreground tabular-nums bg-muted px-1.5 py-0.5 rounded-md">
               {count}
             </span>
-          </button>
+            {(canRename || canDelete) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={(e) => e.stopPropagation()}
+                    title="További műveletek"
+                    aria-label="További műveletek"
+                    className="h-7 w-7 ml-0.5 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  {canRename && (
+                    <DropdownMenuItem onSelect={() => onRename?.(c.id)}>
+                      <Pencil className="h-4 w-4 mr-2" /> Átnevezés
+                    </DropdownMenuItem>
+                  )}
+                  {canDelete && (
+                    <>
+                      {canRename && <DropdownMenuSeparator />}
+                      <DropdownMenuItem
+                        onSelect={() => onDelete?.(c.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" /> Törlés
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         );
       })}
     </div>
