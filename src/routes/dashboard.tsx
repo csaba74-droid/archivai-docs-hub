@@ -1350,7 +1350,7 @@ function MobileHome({ docs, counts, allCats, onOpenCategory, onOpenDoc, onNewCat
       <div>
         <h3 className="text-sm font-semibold text-brand px-1 mb-2">Kategóriák</h3>
         <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-          {allCats.filter((c) => c.id !== "beerkezett").map((cat) => {
+          {allCats.filter((c) => c.id !== "beerkezett" && !c.parentCatId).map((cat) => {
             const strict = cat.mode === "strict";
             const color = cat.color ?? MOBILE_CAT_COLORS[cat.id] ?? "#9CA3AF";
             const count = counts[cat.id] ?? 0;
@@ -1454,7 +1454,7 @@ type CategoryGridProps = {
 function CategoryGrid({ allCats, counts, onOpen, onNewCategory, onNewSubfolder, onDeleteCustomCat }: CategoryGridProps) {
   const ordered = sortCategories(allCats);
   const inbox = ordered.find((c) => c.id === "beerkezett");
-  const rest = ordered.filter((c) => c.id !== "beerkezett");
+  const rest = ordered.filter((c) => c.id !== "beerkezett" && !c.parentCatId);
   const inboxCount = inbox ? counts[inbox.id] ?? 0 : 0;
   const hasInboxDocs = inboxCount > 0;
 
