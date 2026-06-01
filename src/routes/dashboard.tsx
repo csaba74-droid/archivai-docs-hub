@@ -664,11 +664,24 @@ function Dashboard() {
                   <span className="mx-2">→</span>
                   <span className="text-foreground font-medium">{getCategory(activeCat).label}</span>
                 </nav>
-                <div>
-                  <h2 className="text-2xl font-bold tracking-tight">{getCategory(activeCat).label}</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {filtered.length} dokumentum{search.trim() && ` — találat: "${search}"`}
-                  </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight">{getCategory(activeCat).label}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {filtered.length} dokumentum{search.trim() && ` — találat: "${search}"`}
+                    </p>
+                  </div>
+                  {(() => {
+                    const cat = getCategory(activeCat);
+                    if (cat.custom && !cat.isSystem && cat.parentCatId) {
+                      return (
+                        <Button variant="outline" size="sm" onClick={() => setMoveFolderId(activeCat)}>
+                          <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Mappa áthelyezése
+                        </Button>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
             ) : search.trim() ? (
