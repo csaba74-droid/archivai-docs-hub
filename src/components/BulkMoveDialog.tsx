@@ -58,7 +58,7 @@ export function BulkMoveDialog({
     return [...roots][0];
   }, [docs, rootOf]);
 
-  // Only show the tree under the shared root.
+  // Only show the tree under the shared root. From "Beérkezett" allow moving anywhere.
   const options = useMemo(() => {
     if (!sharedRoot) return [];
     const result: { id: string; label: string; depth: number; strict: boolean }[] = [];
@@ -69,7 +69,13 @@ export function BulkMoveDialog({
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    visit(sharedRoot, 0);
+    if (sharedRoot === "beerkezett") {
+      all
+        .filter((c) => c.parentCatId == null && c.id !== "beerkezett")
+        .forEach((c) => visit(c.id, 0));
+    } else {
+      visit(sharedRoot, 0);
+    }
     return result;
   }, [all, getCategory, sharedRoot]);
 
