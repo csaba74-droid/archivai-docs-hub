@@ -31,7 +31,7 @@ import { FilePreview } from "./FilePreview";
 import { toast } from "sonner";
 
 export function DocumentPreviewModal({
-  doc,
+  doc: propDoc,
   open,
   onOpenChange,
   onUpdated,
@@ -55,27 +55,59 @@ export function DocumentPreviewModal({
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const [versions, setVersions] = useState<DocumentRow[]>([]);
+  const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
 
+  // The doc currently shown: either the explicitly selected version, or the prop doc
+  const activeDoc = activeVersionId
+    ? versions.find((v) => v.id === activeVersionId) ?? propDoc
+    : propDoc;
 
   useEffect(() => {
     let cancelled = false;
-    if (!doc || !open) {
+    if (!propDoc || !open) {
       setUrl(null);
+      setVersions([]);
+      setActiveVersionId(null);
       return;
     }
-    setNameValue(doc.filename);
+    setActiveVersionId(null);
+    setVersions([]);
+
+    // Load all versions in this chain (root + children)
+    const rootId = propDoc.parent_document_id ?? propDoc.id;
+    void supabase
+      .from("documents")
+      .select("*")
+      .or(`id.eq.${rootId},parent_document_id.eq.${rootId}`)
+      .order("version_number", { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data && data.length > 0) {
+          setVersions(data as DocumentRow[]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [propDoc, open]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeDoc || !open) return;
+    setNameValue(activeDoc.filename);
     setEditingName(false);
-    setNotesValue(doc.notes ?? "");
+    setNotesValue(activeDoc.notes ?? "");
     setEditingNotes(false);
 
-    void logAudit("view", doc.id);
-    getSignedUrl(doc.storage_path, 600).then((u) => {
+    void logAudit("view", activeDoc.id);
+    getSignedUrl(activeDoc.storage_path, 600).then((u) => {
       if (!cancelled) setUrl(u);
     });
     return () => {
       cancelled = true;
     };
-  }, [doc, open]);
+  }, [activeDoc, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +120,8 @@ export function DocumentPreviewModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onPrev, onNext]);
 
-  if (!doc) return null;
+  if (!activeDoc) return null;
+  const doc = activeDoc;
   const cat = getCategory(doc.category);
   const strict = cat.mode === "strict";
   const baseDateForRetention = doc.document_date ?? doc.created_at;
@@ -211,7 +244,7 @@ export function DocumentPreviewModal({
               </div>
             ) : (
               <>
-                <span className="truncate">{doc.filename} (v3)</span>
+                <span className="truncate">{doc.filename}{doc.version_number && doc.version_number > 1 ? ` (v${doc.version_number})` : ""}</span>
                 <button
                   onClick={() => setEditingName(true)}
                   className="text-muted-foreground hover:text-foreground shrink-0"
@@ -336,6 +369,36 @@ export function DocumentPreviewModal({
                 {doc.sha256 ?? "—"}
               </code>
             </div>
+
+            {versions.length > 1 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+                  Verziók ({versions.length})
+                </div>
+                <div className="space-y-1">
+                  {versions.map((v) => {
+                    const isActive = v.id === doc.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setActiveVersionId(v.id)}
+                        className={`w-full text-left flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border text-xs transition-colors ${
+                          isActive
+                            ? "border-brand bg-brand/5 text-foreground"
+                            : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        <span className="font-semibold shrink-0">v{v.version_number ?? 1}</span>
+                        <span className="text-muted-foreground truncate flex-1 text-right">
+                          {new Date(v.created_at).toLocaleString("hu-HU")}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <Button onClick={handleDownload} disabled={!url} className="w-full">
               <Download className="h-4 w-4 mr-2" /> Letöltés

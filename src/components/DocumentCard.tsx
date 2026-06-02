@@ -99,6 +99,7 @@ export function DocumentCard({
   onDelete,
   onRenamed,
   onMoved,
+  versionCount = 1,
 }: {
   doc: DocumentRow;
   category: Category;
@@ -115,6 +116,8 @@ export function DocumentCard({
   onDelete: () => void;
   onRenamed: (doc: DocumentRow) => void;
   onMoved?: (doc: DocumentRow) => void;
+  /** Total number of versions for this root document (>=1). Shown as a v{n} badge when >1. */
+  versionCount?: number;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
@@ -273,8 +276,17 @@ export function DocumentCard({
 
       {/* Middle: filename + badge + date */}
       <div className="flex-1 min-w-0 space-y-1">
-        <p className="text-sm font-semibold truncate leading-tight" title={doc.filename}>
-          {doc.filename}
+        <p className="text-sm font-semibold truncate leading-tight flex items-center gap-1.5" title={doc.filename}>
+          <span className="truncate">{doc.filename}</span>
+          {versionCount > 1 && (
+            <Badge
+              variant="outline"
+              className="text-[10px] py-0 h-4 px-1.5 shrink-0 border-brand/40 text-brand bg-brand/5 font-medium"
+              title={`${versionCount} verzió elérhető`}
+            >
+              v{versionCount}
+            </Badge>
+          )}
         </p>
         <div className="flex items-center gap-2 flex-wrap">
           <Badge

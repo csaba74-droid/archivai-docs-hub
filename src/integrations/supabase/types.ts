@@ -113,10 +113,12 @@ export type Database = {
           mime_type: string | null
           notes: string | null
           original_filename: string | null
+          parent_document_id: string | null
           sha256: string | null
           size_bytes: number | null
           storage_path: string
           user_id: string
+          version_number: number
         }
         Insert: {
           ai_confidence?: number | null
@@ -131,10 +133,12 @@ export type Database = {
           mime_type?: string | null
           notes?: string | null
           original_filename?: string | null
+          parent_document_id?: string | null
           sha256?: string | null
           size_bytes?: number | null
           storage_path: string
           user_id: string
+          version_number?: number
         }
         Update: {
           ai_confidence?: number | null
@@ -149,12 +153,22 @@ export type Database = {
           mime_type?: string | null
           notes?: string | null
           original_filename?: string | null
+          parent_document_id?: string | null
           sha256?: string | null
           size_bytes?: number | null
           storage_path?: string
           user_id?: string
+          version_number?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_parent_document_id_fkey"
+            columns: ["parent_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nav_settings: {
         Row: {
