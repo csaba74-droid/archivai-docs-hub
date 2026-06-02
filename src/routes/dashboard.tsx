@@ -1154,13 +1154,16 @@ function Dashboard() {
                 void logAudit("download", d.id, { filename: d.filename, bulk: true });
               }));
               const blob = await zip.generateAsync({ type: "blob" });
-              const catLabel = activeCat ? getCategory(activeCat).label : "vegyes";
-              const safeCat = catLabel.replace(/[^a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ_-]+/g, "_");
+              const selectedCats = new Set(selected.map((d) => d.category));
+              const catLabel = selectedCats.size === 1
+                ? getCategory(selected[0].category).label
+                : "Archivai letöltés";
+              const safeCat = catLabel.replace(/[^a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ _-]+/g, "_").trim();
               const date = new Date().toISOString().slice(0, 10);
               const a = document.createElement("a");
               const objUrl = URL.createObjectURL(blob);
               a.href = objUrl;
-              a.download = `Archivai_${safeCat}_${date}.zip`;
+              a.download = `${safeCat}_${date}.zip`;
               document.body.appendChild(a);
               a.click();
               a.remove();
