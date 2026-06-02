@@ -66,9 +66,18 @@ function ProfilePage() {
   const [taxNumber, setTaxNumber] = useState("");
   const [savingBilling, setSavingBilling] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+
+  const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const deleteAccountFn = useServerFn(deleteAccount);
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
