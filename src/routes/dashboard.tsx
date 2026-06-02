@@ -1021,6 +1021,7 @@ function Dashboard() {
                   <DocumentHoverPreview key={doc.id} doc={doc}>
                     <DocumentCard
                       doc={doc}
+                      versionCount={versionCounts[doc.id] ?? 1}
                       category={cat}
                       strict={strict}
                       canDelete={canDelete}
