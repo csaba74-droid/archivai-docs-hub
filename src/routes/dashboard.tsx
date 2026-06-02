@@ -42,6 +42,7 @@ import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { RenameFolderDialog } from "@/components/RenameFolderDialog";
 import { ArrowRightLeft } from "lucide-react";
 import { SharedWithMeSection } from "@/components/SharedWithMeSection";
+import { SharedWithMeSidebar } from "@/components/SharedWithMeSidebar";
 
 
 export const Route = createFileRoute("/dashboard")({
