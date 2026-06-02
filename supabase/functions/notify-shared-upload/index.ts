@@ -117,7 +117,7 @@ Deno.serve(async (req: Request) => {
     const recipients = Array.from(
       new Set(
         (shares ?? [])
-          .filter((s) => s.status !== "revoked")
+          .filter((s) => s.status === "accepted")
           .map((s) => s.invited_email?.toLowerCase().trim())
           .filter((e): e is string => !!e && e !== uploader_email?.toLowerCase().trim()),
       ),
