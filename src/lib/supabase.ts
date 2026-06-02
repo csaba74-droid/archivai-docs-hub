@@ -28,6 +28,8 @@ export type DocumentRow = {
   notes: string | null;
   created_at: string;
   category_changed_at?: string | null;
+  parent_document_id?: string | null;
+  version_number?: number | null;
 };
 
 export type ProfileRow = {
