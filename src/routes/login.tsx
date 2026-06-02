@@ -115,8 +115,8 @@ export function AuthPage({
         if (error) throw error;
       }
       window.location.href = redirectTarget;
-    } catch (err: any) {
-      setError(err.message ?? "Hiba történt");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Hiba történt");
     } finally {
       setLoading(false);
     }
