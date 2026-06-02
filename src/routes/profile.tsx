@@ -676,6 +676,20 @@ function ProfilePage() {
             </div>
           )}
         </Card>
+        {/* Account deletion */}
+        <Card className="p-6 border-destructive/40">
+          <div className="flex items-center gap-2 mb-2">
+            <Trash2 className="h-5 w-5 text-destructive" />
+            <h2 className="text-base font-semibold text-destructive">Fiók törlése</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            A fiók és az összes hozzá tartozó adat (dokumentumok, kategóriák, megosztások, előfizetés) véglegesen törlésre kerül. Ez a művelet nem visszavonható.
+          </p>
+          <Button variant="destructive" onClick={() => { setDeleteConfirm(""); setDeleteOpen(true); }}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Fiók végleges törlése
+          </Button>
+        </Card>
       </main>
 
 
@@ -686,6 +700,38 @@ function ProfilePage() {
       />
 
       <ChangePlanDialog open={changePlanOpen} onOpenChange={setChangePlanOpen} />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Biztosan törlöd a fiókod?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ez a művelet véglegesen törli a fiókodat és minden hozzá tartozó adatot
+              (dokumentumok, kategóriák, megosztások, előfizetés). A művelet nem visszavonható.
+              <br /><br />
+              A megerősítéshez írd be: <strong>TÖRLÉS</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="TÖRLÉS"
+            autoComplete="off"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAccount}>Mégse</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deleteConfirm !== "TÖRLÉS" || deletingAccount}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAccount && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Fiók törlése
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
