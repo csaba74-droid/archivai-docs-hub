@@ -241,18 +241,18 @@ export function DocumentPreviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 grid md:grid-cols-[1fr_300px] gap-4 overflow-hidden">
-          <div className="bg-muted rounded-lg overflow-hidden min-h-[400px]">
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_300px] gap-4 overflow-y-auto md:overflow-hidden">
+          <div className="bg-muted rounded-lg overflow-hidden min-h-[300px] md:min-h-[400px]">
             <FilePreview
               path={doc.storage_path}
               mimeType={doc.mime_type}
               filename={doc.filename}
               variant="full"
-              className="w-full h-full min-h-[60vh]"
+              className="w-full h-full min-h-[50vh] md:min-h-[60vh]"
             />
           </div>
 
-          <div className="space-y-3 overflow-y-auto text-sm pr-2">
+          <div className="space-y-3 md:overflow-y-auto text-sm md:pr-2">
             <Field label="Eredeti fájlnév" value={doc.original_filename} />
             <Field label="Feltöltve" value={new Date(doc.created_at).toLocaleString("hu-HU")} />
             <div className="rounded-lg border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700/60 p-3 shadow-sm">
