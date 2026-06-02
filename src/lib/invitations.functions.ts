@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { appSupabaseAdmin } from "@/lib/app-supabase-admin.server";
 
 const tokenSchema = z.object({ token: z.string().uuid() });
 
@@ -9,7 +9,7 @@ export const lookupInvitation = createServerFn({ method: "POST" })
   .inputValidator((input) => tokenSchema.parse(input))
   .handler(async ({ data }) => {
     console.log("[lookupInvitation] token:", data.token);
-    const { data: inv, error } = await supabaseAdmin
+    const { data: inv, error } = await appSupabaseAdmin
       .from("shared_access")
       .select("*")
       .eq("id", data.token)
@@ -22,7 +22,7 @@ export const lookupInvitation = createServerFn({ method: "POST" })
 
     let ownerName = "Egy felhasználó";
     try {
-      const { data: ownerUser } = await supabaseAdmin.auth.admin.getUserById(inv.owner_user_id);
+      const { data: ownerUser } = await appSupabaseAdmin.auth.admin.getUserById(inv.owner_user_id);
       const meta = (ownerUser.user?.user_metadata ?? {}) as {
         full_name?: string;
         company?: string;
@@ -53,7 +53,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
       throw new Error("Hiányzó hozzáférési token. Jelentkezz be újra.");
     }
 
-    const { data: userResult, error: userErr } = await supabaseAdmin.auth.getUser(accessToken);
+    const { data: userResult, error: userErr } = await appSupabaseAdmin.auth.getUser(accessToken);
     if (userErr || !userResult?.user) {
       console.error("[acceptInvitation] getUser failed:", userErr);
       throw new Error(
@@ -64,7 +64,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
     const userId = userResult.user.id;
     const userEmail = userResult.user.email ?? null;
 
-    const { data: inv, error: lookupErr } = await supabaseAdmin
+    const { data: inv, error: lookupErr } = await appSupabaseAdmin
       .from("shared_access")
       .select("id, invited_email, invited_user_id, status")
       .eq("id", data.token)
@@ -83,7 +83,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
       );
     }
 
-    const { error: updErr } = await supabaseAdmin
+    const { error: updErr } = await appSupabaseAdmin
       .from("shared_access")
       .update({
         status: "accepted",
