@@ -31,7 +31,7 @@ import { FilePreview } from "./FilePreview";
 import { toast } from "sonner";
 
 export function DocumentPreviewModal({
-  doc,
+  doc: propDoc,
   open,
   onOpenChange,
   onUpdated,
