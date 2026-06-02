@@ -32,7 +32,7 @@ export function AuthPage({
   initialMode?: "login" | "register";
   redirectTo?: string;
 }) {
-  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -40,6 +40,7 @@ export function AuthPage({
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
 
   const redirectTarget = safeRedirectPath(
     redirectTo ??
