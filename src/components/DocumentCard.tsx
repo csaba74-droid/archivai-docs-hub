@@ -276,8 +276,17 @@ export function DocumentCard({
 
       {/* Middle: filename + badge + date */}
       <div className="flex-1 min-w-0 space-y-1">
-        <p className="text-sm font-semibold truncate leading-tight" title={doc.filename}>
-          {doc.filename}
+        <p className="text-sm font-semibold truncate leading-tight flex items-center gap-1.5" title={doc.filename}>
+          <span className="truncate">{doc.filename}</span>
+          {versionCount > 1 && (
+            <Badge
+              variant="outline"
+              className="text-[10px] py-0 h-4 px-1.5 shrink-0 border-brand/40 text-brand bg-brand/5 font-medium"
+              title={`${versionCount} verzió elérhető`}
+            >
+              v{versionCount}
+            </Badge>
+          )}
         </p>
         <div className="flex items-center gap-2 flex-wrap">
           <Badge
