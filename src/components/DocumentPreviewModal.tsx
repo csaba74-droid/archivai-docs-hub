@@ -55,27 +55,59 @@ export function DocumentPreviewModal({
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const [versions, setVersions] = useState<DocumentRow[]>([]);
+  const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
 
+  // The doc currently shown: either the explicitly selected version, or the prop doc
+  const activeDoc = activeVersionId
+    ? versions.find((v) => v.id === activeVersionId) ?? doc
+    : doc;
 
   useEffect(() => {
     let cancelled = false;
     if (!doc || !open) {
       setUrl(null);
+      setVersions([]);
+      setActiveVersionId(null);
       return;
     }
-    setNameValue(doc.filename);
+    setActiveVersionId(null);
+    setVersions([]);
+
+    // Load all versions in this chain (root + children)
+    const rootId = doc.parent_document_id ?? doc.id;
+    void supabase
+      .from("documents")
+      .select("*")
+      .or(`id.eq.${rootId},parent_document_id.eq.${rootId}`)
+      .order("version_number", { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data && data.length > 0) {
+          setVersions(data as DocumentRow[]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [doc, open]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeDoc || !open) return;
+    setNameValue(activeDoc.filename);
     setEditingName(false);
-    setNotesValue(doc.notes ?? "");
+    setNotesValue(activeDoc.notes ?? "");
     setEditingNotes(false);
 
-    void logAudit("view", doc.id);
-    getSignedUrl(doc.storage_path, 600).then((u) => {
+    void logAudit("view", activeDoc.id);
+    getSignedUrl(activeDoc.storage_path, 600).then((u) => {
       if (!cancelled) setUrl(u);
     });
     return () => {
       cancelled = true;
     };
-  }, [doc, open]);
+  }, [activeDoc, open]);
 
   useEffect(() => {
     if (!open) return;
