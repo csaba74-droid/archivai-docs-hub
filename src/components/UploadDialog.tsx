@@ -126,6 +126,11 @@ export function UploadDialog({
     currentDate: string;
   } | null>(null);
   const [datePromptValue, setDatePromptValue] = useState<string>("");
+  const [pendingVersion, setPendingVersion] = useState<{
+    fileName: string;
+    existingDate: string;
+    resolve: (v: boolean | null) => void;
+  } | null>(null);
 
   const reset = () => {
     setFiles([]);
