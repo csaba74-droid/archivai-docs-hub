@@ -201,14 +201,22 @@ function AcceptInvitationPage() {
             </div>
 
             {userEmail ? (
-              <>
-                {userEmail.toLowerCase() !== invitation.invited_email.toLowerCase() && (
+              userEmail.toLowerCase() !== invitation.invited_email.toLowerCase() ? (
+                <>
                   <p className="text-xs text-amber-700">
-                    Figyelem: Ön <strong>{userEmail}</strong> címmel van bejelentkezve,
-                    de a meghívó a(z) <strong>{invitation.invited_email}</strong> címre
-                    érkezett.
+                    Ön <strong>{userEmail}</strong> címmel van bejelentkezve, de a
+                    meghívó a(z) <strong>{invitation.invited_email}</strong> címre
+                    érkezett. A meghívó elfogadásához váltson fiókot.
                   </p>
-                )}
+                  <Button
+                    className="w-full"
+                    style={{ backgroundColor: "#1A2B4A" }}
+                    onClick={handleSwitchAccount}
+                  >
+                    Kijelentkezés és átváltás
+                  </Button>
+                </>
+              ) : (
                 <Button
                   className="w-full"
                   style={{ backgroundColor: "#1A2B4A" }}
@@ -218,7 +226,7 @@ function AcceptInvitationPage() {
                   {accepting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Meghívó elfogadása
                 </Button>
-              </>
+              )
             ) : (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
