@@ -454,6 +454,38 @@ export function UploadDialog({
 
         updateAt(i, { status: "saving", progress: 85 });
         const itm_compliant = isStrict(category);
+
+        // Check for existing document with same name+category → offer to upload as new version
+        let parentDocumentId: string | null = null;
+        let versionNumber = 1;
+        const { data: existingRoots } = await supabase
+          .from("documents")
+          .select("id, filename, category, version_number, created_at, parent_document_id")
+          .eq("user_id", user.id)
+          .eq("category", category)
+          .eq("filename", file.name)
+          .is("parent_document_id", null)
+          .limit(1);
+        const existingRoot = existingRoots?.[0] as { id: string; created_at: string } | undefined;
+        if (existingRoot) {
+          const asVersion = await askVersion({
+            fileName: file.name,
+            existingDate: new Date(existingRoot.created_at).toLocaleDateString("hu-HU"),
+          });
+          if (asVersion) {
+            parentDocumentId = existingRoot.id;
+            const { data: siblings } = await supabase
+              .from("documents")
+              .select("version_number")
+              .eq("parent_document_id", existingRoot.id);
+            const maxV = (siblings ?? []).reduce(
+              (m, r) => Math.max(m, Number((r as { version_number: number | null }).version_number) || 1),
+              1,
+            );
+            versionNumber = maxV + 1;
+          }
+        }
+
         const { data: inserted, error: insErr } = await supabase
           .from("documents")
           .insert({
@@ -469,6 +501,8 @@ export function UploadDialog({
             content_text: contentText || null,
             ai_confidence: aiConfidence,
             document_date: finalDocDate,
+            parent_document_id: parentDocumentId,
+            version_number: versionNumber,
           })
           .select()
           .single();
