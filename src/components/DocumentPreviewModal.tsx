@@ -370,6 +370,36 @@ export function DocumentPreviewModal({
               </code>
             </div>
 
+            {versions.length > 1 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+                  Verziók ({versions.length})
+                </div>
+                <div className="space-y-1">
+                  {versions.map((v) => {
+                    const isActive = v.id === doc.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setActiveVersionId(v.id)}
+                        className={`w-full text-left flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border text-xs transition-colors ${
+                          isActive
+                            ? "border-brand bg-brand/5 text-foreground"
+                            : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        <span className="font-semibold shrink-0">v{v.version_number ?? 1}</span>
+                        <span className="text-muted-foreground truncate flex-1 text-right">
+                          {new Date(v.created_at).toLocaleString("hu-HU")}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <Button onClick={handleDownload} disabled={!url} className="w-full">
               <Download className="h-4 w-4 mr-2" /> Letöltés
             </Button>
