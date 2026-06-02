@@ -476,6 +476,21 @@ export function UploadDialog({
           .then((res) => console.log("[s3-backup] invoke returned", res))
           .catch((err) => console.warn("[s3-backup] failed", err));
         console.log("[s3-backup] invoke call dispatched (fire-and-forget)");
+
+        // Fire-and-forget notification to users with shared access to this category.
+        if (inserted) {
+          void supabase.functions
+            .invoke("notify-shared-upload", {
+              body: {
+                document_id: (inserted as DocumentRow).id,
+                category,
+                filename: file.name,
+                uploader_name: user.user_metadata?.full_name ?? null,
+                uploader_email: user.email ?? null,
+              },
+            })
+            .catch((err) => console.warn("[notify-shared-upload] failed", err));
+        }
         updateAt(i, { status: "done", progress: 100 });
 
         // Post-upload: always confirm document date (pre-filled with detected date or today).
