@@ -61,7 +61,6 @@ function SharingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
-  
 
   const plan = subscription?.plan ?? "alap";
   const limit = PLAN_LIMITS[plan] ?? 1;
@@ -152,23 +151,19 @@ function SharingPage() {
       return;
     }
 
-
     try {
       console.log("Sending invitation to:", trimmed);
       console.log("Calling edge function...");
-      const { data: fnData, error: fnError } = await supabase.functions.invoke(
-        "send-invitation",
-        {
-          body: {
-            to_email: trimmed,
-            owner_name: u.user.email ?? "",
-            categories: selectedCats
-              .map((c) => allCats.find((cat) => cat.id === c)?.label ?? c)
-              .join(", "),
-            invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
-          },
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("send-invitation", {
+        body: {
+          to_email: trimmed,
+          owner_name: u.user.email ?? "",
+          categories: selectedCats
+            .map((c) => allCats.find((cat) => cat.id === c)?.label ?? c)
+            .join(", "),
+          invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
         },
-      );
+      });
       console.log("Edge function result:", fnData, fnError);
       if (fnError) throw fnError;
       if (fnData && typeof fnData === "object" && "error" in fnData && fnData.error) {
@@ -249,8 +244,8 @@ function SharingPage() {
         <div className="rounded-lg border bg-card p-4 flex items-center justify-between">
           <div>
             <div className="text-sm font-medium">
-              {PLAN_INFO[plan].label} csomag — {usedCount}/
-              {limit === Infinity ? "∞" : limit} meghívott
+              {PLAN_INFO[plan].label} csomag — {usedCount}/{limit === Infinity ? "∞" : limit}{" "}
+              meghívott
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               {plan === "alap" && "Max 1 meghívott felhasználó"}
@@ -300,8 +295,8 @@ function SharingPage() {
 
           {limitReached && (
             <p className="text-xs text-destructive">
-              Elérted a {PLAN_INFO[plan].label} csomag meghívó-limitjét. Magasabb csomagban
-              többet hívhatsz meg.
+              Elérted a {PLAN_INFO[plan].label} csomag meghívó-limitjét. Magasabb csomagban többet
+              hívhatsz meg.
             </p>
           )}
         </section>
@@ -337,7 +332,11 @@ function SharingPage() {
                           : ""
                       }
                     >
-                      {s.status === "accepted" ? "Elfogadva" : s.status === "pending" ? "Függőben" : "Visszavonva"}
+                      {s.status === "accepted"
+                        ? "Elfogadva"
+                        : s.status === "pending"
+                          ? "Függőben"
+                          : "Visszavonva"}
                     </Badge>
                   </div>
 

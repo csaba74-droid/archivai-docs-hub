@@ -111,7 +111,6 @@ export function AuthPage({
           if (subErr) console.warn("[signup] trial subscription insert:", subErr.message);
         }
       } else {
-
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
@@ -140,9 +139,7 @@ export function AuthPage({
           {mode === "login" ? "Bejelentkezés" : "Regisztráció"}
         </h2>
         <p className="text-sm text-muted-foreground mb-6">
-          {mode === "login"
-            ? "Lépj be a fiókodba a folytatáshoz"
-            : "Hozz létre új fiókot"}
+          {mode === "login" ? "Lépj be a fiókodba a folytatáshoz" : "Hozz létre új fiókot"}
         </p>
 
         <form onSubmit={submit} className="space-y-4">
@@ -150,7 +147,12 @@ export function AuthPage({
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="name">Teljes név</Label>
-                <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                <Input
+                  id="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="company">Cég</Label>
@@ -160,11 +162,24 @@ export function AuthPage({
           )}
           <div className="space-y-1.5">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Jelszó</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
           </div>
 
           {mode === "register" && (

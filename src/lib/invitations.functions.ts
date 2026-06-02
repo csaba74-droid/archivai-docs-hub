@@ -22,18 +22,12 @@ export const lookupInvitation = createServerFn({ method: "POST" })
 
     let ownerName = "Egy felhasználó";
     try {
-      const { data: ownerUser } = await supabaseAdmin.auth.admin.getUserById(
-        inv.owner_user_id,
-      );
+      const { data: ownerUser } = await supabaseAdmin.auth.admin.getUserById(inv.owner_user_id);
       const meta = (ownerUser.user?.user_metadata ?? {}) as {
         full_name?: string;
         company?: string;
       };
-      ownerName =
-        meta.full_name ||
-        meta.company ||
-        ownerUser.user?.email ||
-        "Egy felhasználó";
+      ownerName = meta.full_name || meta.company || ownerUser.user?.email || "Egy felhasználó";
     } catch {
       // fall back to default
     }
@@ -59,8 +53,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
       throw new Error("Hiányzó hozzáférési token. Jelentkezz be újra.");
     }
 
-    const { data: userResult, error: userErr } =
-      await supabaseAdmin.auth.getUser(accessToken);
+    const { data: userResult, error: userErr } = await supabaseAdmin.auth.getUser(accessToken);
     if (userErr || !userResult?.user) {
       console.error("[acceptInvitation] getUser failed:", userErr);
       throw new Error(
@@ -79,20 +72,12 @@ export const acceptInvitation = createServerFn({ method: "POST" })
 
     if (lookupErr) throw new Error(lookupErr.message);
     if (!inv) throw new Error("Érvénytelen vagy lejárt meghívó");
-    if (inv.status === "revoked")
-      throw new Error("Ez a meghívó visszavonásra került");
-    if (
-      inv.status === "accepted" &&
-      inv.invited_user_id &&
-      inv.invited_user_id !== userId
-    ) {
+    if (inv.status === "revoked") throw new Error("Ez a meghívó visszavonásra került");
+    if (inv.status === "accepted" && inv.invited_user_id && inv.invited_user_id !== userId) {
       throw new Error("Ezt a meghívót már egy másik fiókkal elfogadták.");
     }
 
-    if (
-      userEmail &&
-      String(inv.invited_email).toLowerCase() !== userEmail.toLowerCase()
-    ) {
+    if (userEmail && String(inv.invited_email).toLowerCase() !== userEmail.toLowerCase()) {
       throw new Error(
         `A meghívó a ${inv.invited_email} címre érkezett. Jelentkezz be ezzel az email címmel.`,
       );

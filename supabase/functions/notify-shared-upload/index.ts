@@ -5,8 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -43,10 +42,10 @@ Deno.serve(async (req: Request) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!apiKey || !supabaseUrl || !serviceKey) {
-      return new Response(
-        JSON.stringify({ error: "Missing server configuration" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Missing server configuration" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const payload = (await req.json()) as Payload;
@@ -124,10 +123,10 @@ Deno.serve(async (req: Request) => {
     );
 
     if (recipients.length === 0) {
-      return new Response(
-        JSON.stringify({ ok: true, sent: 0, message: "No shared recipients" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ ok: true, sent: 0, message: "No shared recipients" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const uploader = uploader_name?.trim() || uploader_email?.trim() || "egy felhasználó";

@@ -64,9 +64,7 @@ function AcceptInvitationPage() {
         }
       } catch (e) {
         if (!cancelled)
-          setError(
-            e instanceof Error ? e.message : "Érvénytelen vagy lejárt meghívó",
-          );
+          setError(e instanceof Error ? e.message : "Érvénytelen vagy lejárt meghívó");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -125,7 +123,6 @@ function AcceptInvitationPage() {
     void handleAccept();
   }, [accepting, autoAcceptStarted, handleAccept, invitation, userEmail]);
 
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <Card className="w-full max-w-md p-8 shadow-lg">
@@ -178,8 +175,8 @@ function AcceptInvitationPage() {
           <div className="space-y-5">
             <div>
               <h2 className="text-xl font-bold leading-snug">
-                <span style={{ color: "#1A2B4A" }}>{ownerName}</span> meghívta Önt az
-                Archivai rendszerbe
+                <span style={{ color: "#1A2B4A" }}>{ownerName}</span> meghívta Önt az Archivai
+                rendszerbe
               </h2>
               <p className="text-sm text-muted-foreground mt-2">
                 Elfogadás után hozzáférést kap az alábbi dokumentumkategóriákhoz:
@@ -214,9 +211,9 @@ function AcceptInvitationPage() {
               userEmail.toLowerCase() !== invitation.invited_email.toLowerCase() ? (
                 <>
                   <p className="text-xs text-amber-700">
-                    Ön <strong>{userEmail}</strong> címmel van bejelentkezve, de a
-                    meghívó a(z) <strong>{invitation.invited_email}</strong> címre
-                    érkezett. A meghívó elfogadásához váltson fiókot.
+                    Ön <strong>{userEmail}</strong> címmel van bejelentkezve, de a meghívó a(z){" "}
+                    <strong>{invitation.invited_email}</strong> címre érkezett. A meghívó
+                    elfogadásához váltson fiókot.
                   </p>
                   <Button
                     className="w-full"
