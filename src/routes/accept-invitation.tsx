@@ -35,6 +35,7 @@ function AcceptInvitationPage() {
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [ownerName, setOwnerName] = useState<string>("Egy felhasználó");
+  const [categoryLabels, setCategoryLabels] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
@@ -54,13 +55,18 @@ function AcceptInvitationPage() {
       setUserEmail(u.user?.email ?? null);
 
       try {
-        const { invitation: inv, ownerName: owner } = await lookupInvitation({ data: { token } });
+        const {
+          invitation: inv,
+          ownerName: owner,
+          categoryLabels: labels,
+        } = await lookupInvitation({ data: { token } });
         if (cancelled) return;
         if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
         } else {
           setInvitation(inv as Invitation);
           setOwnerName(owner || "Egy felhasználó");
+          setCategoryLabels(labels ?? {});
         }
       } catch (e) {
         if (!cancelled)
