@@ -478,13 +478,24 @@ function ProfilePage() {
           </div>
         </Card>
 
-        {/* Security */}
+        {/* Password change */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Shield className="h-5 w-5 text-brand" />
-            <h2 className="text-base font-semibold">Biztonsági beállítások</h2>
+            <h2 className="text-base font-semibold">Jelszó módosítása</h2>
           </div>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="currentPassword">Jelenlegi jelszó</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+                className="mt-1"
+              />
+            </div>
             <div>
               <Label htmlFor="newPassword">Új jelszó</Label>
               <Input
@@ -510,13 +521,66 @@ function ProfilePage() {
             </div>
             <Button
               onClick={changePassword}
-              disabled={changingPassword || !newPassword || !confirmPassword}
+              disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
             >
               {changingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Jelszó megváltoztatása
+              Jelszó mentése
             </Button>
           </div>
         </Card>
+
+        {/* Notification settings */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="h-5 w-5 text-brand" />
+            <h2 className="text-base font-semibold">Értesítési beállítások</h2>
+          </div>
+          {profileLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Betöltés…
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notif-incoming" className="text-sm font-medium">Beérkező dokumentum értesítő</Label>
+                  <p className="text-xs text-muted-foreground">Email értesítés új beérkezett dokumentumról.</p>
+                </div>
+                <Switch
+                  id="notif-incoming"
+                  checked={notifications.incoming_document}
+                  disabled={savingNotifications}
+                  onCheckedChange={(v) => saveNotifications({ ...notifications, incoming_document: v })}
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notif-trial" className="text-sm font-medium">Próbaidőszak lejárat értesítő</Label>
+                  <p className="text-xs text-muted-foreground">Emlékeztető a próbaidőszak vége előtt.</p>
+                </div>
+                <Switch
+                  id="notif-trial"
+                  checked={notifications.trial_expiry}
+                  disabled={savingNotifications}
+                  onCheckedChange={(v) => saveNotifications({ ...notifications, trial_expiry: v })}
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notif-shared" className="text-sm font-medium">Megosztott mappába feltöltés értesítő</Label>
+                  <p className="text-xs text-muted-foreground">Értesítés, ha valaki feltölt egy önnel megosztott mappába.</p>
+                </div>
+                <Switch
+                  id="notif-shared"
+                  checked={notifications.shared_upload}
+                  disabled={savingNotifications}
+                  onCheckedChange={(v) => saveNotifications({ ...notifications, shared_upload: v })}
+                />
+              </div>
+            </div>
+          )}
+        </Card>
+
 
         {/* NAV API integráció */}
         <Card id="nav" className="p-6 scroll-mt-20">
