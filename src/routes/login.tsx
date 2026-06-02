@@ -100,6 +100,9 @@ export function AuthPage({
             full_name: fullName,
             company,
             referred_by: referredBy,
+            billing_name: billingName || null,
+            billing_address: billingAddress || null,
+            tax_number: taxNumber || null,
           });
           // Fallback: create trial subscription client-side in case the
           // signup trigger isn't installed. RLS allows users to insert
