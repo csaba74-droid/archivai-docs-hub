@@ -203,7 +203,7 @@ function AcceptInvitationPage() {
                       borderColor: "#1A2B4A33",
                     }}
                   >
-                    {categoryLabel(cid)}
+                    {categoryLabels[cid] ?? builtInLabel(cid)}
                   </span>
                 ))
               )}
