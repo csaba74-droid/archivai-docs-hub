@@ -244,7 +244,7 @@ export function DocumentPreviewModal({
               </div>
             ) : (
               <>
-                <span className="truncate">{doc.filename} (v3)</span>
+                <span className="truncate">{doc.filename}{doc.version_number && doc.version_number > 1 ? ` (v${doc.version_number})` : ""}</span>
                 <button
                   onClick={() => setEditingName(true)}
                   className="text-muted-foreground hover:text-foreground shrink-0"
