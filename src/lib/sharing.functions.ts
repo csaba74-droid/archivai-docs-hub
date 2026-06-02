@@ -44,7 +44,7 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
     const { data: shares } = await supabaseAdmin
       .from("shared_access")
       .select("id, owner_user_id, categories, status, invited_user_id, invited_email")
-      .eq("status", "active");
+      .eq("status", "accepted");
 
     const mine = (shares ?? []).filter((s) => {
       const row = s as {
@@ -66,7 +66,7 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
     if (toBackfill.length > 0) {
       await supabaseAdmin
         .from("shared_access")
-        .update({ invited_user_id: user.id })
+        .update({ invited_user_id: user.id, updated_at: new Date().toISOString() })
         .in("id", toBackfill);
     }
 
