@@ -41,6 +41,7 @@ import { BulkMoveDialog } from "@/components/BulkMoveDialog";
 import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { RenameFolderDialog } from "@/components/RenameFolderDialog";
 import { ArrowRightLeft } from "lucide-react";
+import { SharedWithMeSection } from "@/components/SharedWithMeSection";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -874,6 +875,7 @@ function Dashboard() {
                 onNewSubfolder={openNewSubfolder}
                 onDeleteCustomCat={handleDeleteCustomCat}
               />
+              <SharedWithMeSection onOpen={(id) => setActiveCat(id)} />
             </div>
           )}
 
