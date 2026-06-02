@@ -42,6 +42,7 @@ import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { RenameFolderDialog } from "@/components/RenameFolderDialog";
 import { ArrowRightLeft } from "lucide-react";
 import { SharedWithMeSection } from "@/components/SharedWithMeSection";
+import { SharedWithMeSidebar } from "@/components/SharedWithMeSidebar";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -378,6 +379,11 @@ function Dashboard() {
           onRenameFolder={(id) => { setRenameFolderId(id); setMobileCatsOpen(false); }}
         />
 
+        <SharedWithMeSidebar
+          activeCat={activeCat}
+          onSelect={(id) => { setActiveCat(id); setMobileCatsOpen(false); }}
+        />
+
         <button
           onClick={() => { setSubfolderParent(null); setNewCatOpen(true); setMobileCatsOpen(false); }}
           className="w-full mt-2 flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -414,6 +420,11 @@ function Dashboard() {
       >
         <Plus className="h-3.5 w-3.5" /> Új kategória
       </button>
+
+      <SharedWithMeSidebar
+        activeCat={activeCat}
+        onSelect={(id) => { setActiveCat(id); setSearch(""); }}
+      />
 
       <Link
         to="/profile"
