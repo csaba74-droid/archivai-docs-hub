@@ -86,16 +86,29 @@ function AcceptInvitationPage() {
     if (!invitation) return;
     setAccepting(true);
     try {
+      // Refresh the session so the bearer token sent to the server is
+      // signed with the current JWT signing key (avoids "unrecognized kid"
+      // 403s after Supabase rotated the signing key).
+      await supabase.auth.refreshSession().catch(() => null);
       await acceptInvitation({ data: { token: invitation.id } });
       toast.success("Meghívó elfogadva");
       navigate({ to: "/dashboard" });
     } catch (e) {
-      toast.error("Sikertelen elfogadás", {
-        description: e instanceof Error ? e.message : "Ismeretlen hiba",
-      });
+      const msg = e instanceof Error ? e.message : "Ismeretlen hiba";
+      toast.error("Sikertelen elfogadás", { description: msg });
+      // If the session is truly stale, sign out and bounce to login with redirect
+      if (/munkamenet|Unauthorized|token|JWT/i.test(msg)) {
+        await supabase.auth.signOut().catch(() => null);
+        window.location.href = loginWithRedirect;
+      }
     } finally {
       setAccepting(false);
     }
+  };
+
+  const handleSwitchAccount = async () => {
+    await supabase.auth.signOut().catch(() => null);
+    window.location.href = loginWithRedirect;
   };
 
   const loginWithRedirect = `/login?redirect=${encodeURIComponent(
