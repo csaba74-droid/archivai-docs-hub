@@ -45,7 +45,7 @@ function AdminReferralsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_referrals");
+    const { data, error } = await supabase.rpc("admin_referral_list");
     if (error) {
       toast.error("Nem sikerült betölteni az adatokat: " + error.message);
       setRows([]);
