@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { appSupabaseAdmin } from "@/lib/app-supabase-admin.server";
 
 export type SharedWithMeItem = {
   catId: string; // built-in id like "szamlak" or "custom:<uuid>"
@@ -35,13 +35,13 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
     const accessToken = authHeader.slice(7).trim();
     if (!accessToken) return { items: [] };
 
-    const { data: userResult } = await supabaseAdmin.auth.getUser(accessToken);
+    const { data: userResult } = await appSupabaseAdmin.auth.getUser(accessToken);
     const user = userResult?.user;
     if (!user) return { items: [] };
 
     // Match invitations either by linked user id or by email (case-insensitive)
     const email = (user.email ?? "").toLowerCase();
-    const { data: shares } = await supabaseAdmin
+    const { data: shares } = await appSupabaseAdmin
       .from("shared_access")
       .select("id, owner_user_id, categories, status, invited_user_id, invited_email")
       .eq("status", "accepted");
@@ -64,7 +64,7 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
       .filter((s) => (s as { invited_user_id: string | null }).invited_user_id !== user.id)
       .map((s) => (s as { id: string }).id);
     if (toBackfill.length > 0) {
-      await supabaseAdmin
+      await appSupabaseAdmin
         .from("shared_access")
         .update({ invited_user_id: user.id, updated_at: new Date().toISOString() })
         .in("id", toBackfill);
@@ -85,7 +85,7 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
     // Owner profile names (fallback to auth.users email)
     const ownerInfo = new Map<string, { name: string; email: string | null }>();
     if (ownerIds.length > 0) {
-      const { data: profiles } = await supabaseAdmin
+      const { data: profiles } = await appSupabaseAdmin
         .from("profiles")
         .select("id, full_name, company, email")
         .in("id", ownerIds);
@@ -105,7 +105,7 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
       for (const oid of ownerIds) {
         if (!ownerInfo.has(oid)) {
           try {
-            const { data } = await supabaseAdmin.auth.admin.getUserById(oid);
+            const { data } = await appSupabaseAdmin.auth.admin.getUserById(oid);
             const u = data?.user;
             const meta = (u?.user_metadata ?? {}) as {
               full_name?: string;
@@ -125,7 +125,7 @@ export const listSharedWithMe = createServerFn({ method: "POST" }).handler(
     // Custom category labels/colors
     const customMeta = new Map<string, { name: string; color: string }>();
     if (customIds.length > 0) {
-      const { data: customs } = await supabaseAdmin
+      const { data: customs } = await appSupabaseAdmin
         .from("custom_categories")
         .select("id, name, color")
         .in("id", customIds);
