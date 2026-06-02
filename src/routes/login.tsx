@@ -111,11 +111,34 @@ export function AuthPage({
           });
           if (subErr) console.warn("[signup] trial subscription insert:", subErr.message);
         }
-      } else {
+      } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        window.location.href = redirectTarget;
       }
-      window.location.href = redirectTarget;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const forgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setForgotSuccess(null);
+    if (!email) {
+      setError("Add meg az e-mail címedet.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSuccess("Jelszó-visszaállítási link elküldve. Nézd meg az e-mail fiókodat!");
+      setEmail("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Hiba történt");
     } finally {
