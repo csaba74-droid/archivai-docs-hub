@@ -1,18 +1,42 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock, Receipt } from "lucide-react";
+import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock, Receipt, Bell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase, type ProfileRow } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { ChangePlanDialog } from "@/components/ChangePlanDialog";
 import { BackButton } from "@/components/BackButton";
+import { deleteAccount } from "@/lib/account.functions";
+
+type NotificationSettings = {
+  incoming_document: boolean;
+  trial_expiry: boolean;
+  shared_upload: boolean;
+};
+const DEFAULT_NOTIFICATIONS: NotificationSettings = {
+  incoming_document: true,
+  trial_expiry: true,
+  shared_upload: true,
+};
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
