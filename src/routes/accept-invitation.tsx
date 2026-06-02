@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Archive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { BUILT_IN_CATEGORIES } from "@/lib/categories";
-import { acceptInvitation } from "@/lib/invitations.functions";
+import { acceptInvitation, lookupInvitation } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/accept-invitation")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -21,7 +21,7 @@ type Invitation = {
   invited_email: string;
   invited_user_id: string | null;
   categories: string[];
-  status: "pending" | "active" | "revoked";
+  status: "pending" | "accepted" | "revoked";
 };
 
 function categoryLabel(id: string) {
@@ -52,20 +52,14 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
-      console.log("Token from URL:", token);
       try {
-        const { data: inv, error } = await supabase
-          .from("shared_access")
-          .select("*")
-          .eq("id", token)
-          .maybeSingle();
-        console.log("Query result:", inv, error);
+        const { invitation: inv, ownerName: owner } = await lookupInvitation({ data: { token } });
         if (cancelled) return;
-        if (error) throw new Error(error.message);
         if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
         } else {
           setInvitation(inv as Invitation);
+          setOwnerName(owner || "Egy felhasználó");
         }
       } catch (e) {
         if (!cancelled)
@@ -149,7 +143,7 @@ function AcceptInvitationPage() {
               </Button>
             </Link>
           </div>
-        ) : invitation?.status === "active" ? (
+        ) : invitation?.status === "accepted" ? (
           <div className="text-center space-y-4 py-4">
             <CheckCircle2 className="h-10 w-10 mx-auto" style={{ color: "#0F6E56" }} />
             <h2 className="text-lg font-semibold">Már elfogadta ezt a meghívót</h2>
