@@ -73,7 +73,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
 
     const { data: inv, error: lookupErr } = await supabaseAdmin
       .from("shared_access")
-      .select("id, invited_email, status")
+      .select("id, invited_email, invited_user_id, status")
       .eq("id", data.token)
       .maybeSingle();
 
@@ -81,6 +81,13 @@ export const acceptInvitation = createServerFn({ method: "POST" })
     if (!inv) throw new Error("Érvénytelen vagy lejárt meghívó");
     if (inv.status === "revoked")
       throw new Error("Ez a meghívó visszavonásra került");
+    if (
+      inv.status === "accepted" &&
+      inv.invited_user_id &&
+      inv.invited_user_id !== userId
+    ) {
+      throw new Error("Ezt a meghívót már egy másik fiókkal elfogadták.");
+    }
 
     if (
       userEmail &&
@@ -94,7 +101,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
     const { error: updErr } = await supabaseAdmin
       .from("shared_access")
       .update({
-        status: "active",
+        status: "accepted",
         invited_user_id: userId,
         updated_at: new Date().toISOString(),
       })
