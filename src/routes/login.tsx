@@ -199,6 +199,35 @@ export function AuthPage({
                 <Label htmlFor="company">Cég</Label>
                 <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} />
               </div>
+              <div className="rounded-md border border-dashed p-3 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Számlázási adatok (opcionális) — később is megadható a Profil oldalon
+                </p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="billingName" className="text-xs">Számlázási név</Label>
+                  <Input
+                    id="billingName"
+                    value={billingName}
+                    onChange={(e) => setBillingName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="billingAddress" className="text-xs">Számlázási cím</Label>
+                  <Input
+                    id="billingAddress"
+                    value={billingAddress}
+                    onChange={(e) => setBillingAddress(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="taxNumber" className="text-xs">Adószám</Label>
+                  <Input
+                    id="taxNumber"
+                    value={taxNumber}
+                    onChange={(e) => setTaxNumber(e.target.value)}
+                  />
+                </div>
+              </div>
             </>
           )}
           <div className="space-y-1.5">
