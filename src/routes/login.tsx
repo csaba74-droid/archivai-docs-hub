@@ -213,7 +213,7 @@ export function AuthPage({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required={mode !== "forgot"}
+                required
                 minLength={6}
               />
               {mode === "login" && (
