@@ -22,6 +22,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuChe
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { logAudit } from "@/lib/audit";
 import { isInGracePeriod, GRACE_AUDIT_NOTE } from "@/lib/grace-period";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
