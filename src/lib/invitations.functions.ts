@@ -32,7 +32,23 @@ export const lookupInvitation = createServerFn({ method: "POST" })
       // fall back to default
     }
 
-    return { invitation: inv, ownerName };
+    // Resolve human-readable labels for custom: category IDs
+    const categoryLabels: Record<string, string> = {};
+    const customIds = (inv.categories ?? [])
+      .filter((c: string) => typeof c === "string" && c.startsWith("custom:"))
+      .map((c: string) => c.slice(7));
+    if (customIds.length > 0) {
+      const { data: customs } = await appSupabaseAdmin
+        .from("custom_categories")
+        .select("id, name")
+        .in("id", customIds);
+      (customs ?? []).forEach((c) => {
+        const row = c as { id: string; name: string };
+        categoryLabels[`custom:${row.id}`] = row.name;
+      });
+    }
+
+    return { invitation: inv, ownerName, categoryLabels };
   });
 
 export const acceptInvitation = createServerFn({ method: "POST" })
