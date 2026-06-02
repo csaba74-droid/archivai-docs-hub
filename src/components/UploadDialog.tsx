@@ -844,6 +844,33 @@ export function UploadDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Version prompt: same filename + category already exists */}
+      <Dialog open={!!pendingVersion} onOpenChange={(v) => { if (!v) resolveVersion(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Egy ilyen nevű dokumentum már létezik</DialogTitle>
+            <DialogDescription>
+              {pendingVersion?.fileName}
+              {pendingVersion && <> — eredeti feltöltés: {pendingVersion.existingDate}</>}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm py-2">
+            Új verzióként szeretné feltölteni? Ha nem, külön dokumentumként kerül mentésre.
+          </p>
+          <DialogFooter className="flex flex-row gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => resolveVersion(false)}>
+              Nem, külön dokumentumként
+            </Button>
+            <Button
+              className="bg-brand hover:bg-brand-hover text-brand-foreground"
+              onClick={() => resolveVersion(true)}
+            >
+              Igen, új verzióként
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
