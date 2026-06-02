@@ -159,12 +159,35 @@ function ProfilePage() {
         .select("*")
         .eq("id", u.user.id)
         .maybeSingle();
-      const row = p as ProfileRow | null;
+      const row = p as (ProfileRow & { billing_name?: string | null; billing_address?: string | null; tax_number?: string | null }) | null;
       setFullName(row?.full_name ?? "");
       setCompany(row?.company ?? "");
+      setBillingName(row?.billing_name ?? "");
+      setBillingAddress(row?.billing_address ?? "");
+      setTaxNumber(row?.tax_number ?? "");
       setProfileLoading(false);
     })();
   }, []);
+
+  const saveBilling = async () => {
+    setSavingBilling(true);
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: u.user.id,
+        billing_name: billingName || null,
+        billing_address: billingAddress || null,
+        tax_number: taxNumber || null,
+      });
+    setSavingBilling(false);
+    if (error) {
+      toast.error("Mentési hiba", { description: error.message });
+      return;
+    }
+    toast.success("Számlázási adatok mentve");
+  };
 
   const saveProfile = async () => {
     setSavingProfile(true);
