@@ -279,6 +279,56 @@ function ProfilePage() {
           )}
         </Card>
 
+        {/* Billing info */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Receipt className="h-5 w-5 text-brand" />
+            <h2 className="text-base font-semibold">Számlázási adatok</h2>
+          </div>
+          {profileLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Betöltés…
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="billingName">Számlázási név</Label>
+                <Input
+                  id="billingName"
+                  value={billingName}
+                  onChange={(e) => setBillingName(e.target.value)}
+                  placeholder="pl. Példa Kft."
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="billingAddress">Számlázási cím</Label>
+                <Input
+                  id="billingAddress"
+                  value={billingAddress}
+                  onChange={(e) => setBillingAddress(e.target.value)}
+                  placeholder="pl. 1011 Budapest, Fő utca 1."
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="taxNumber">Adószám</Label>
+                <Input
+                  id="taxNumber"
+                  value={taxNumber}
+                  onChange={(e) => setTaxNumber(e.target.value)}
+                  placeholder="pl. 12345678-1-23"
+                  className="mt-1"
+                />
+              </div>
+              <Button onClick={saveBilling} disabled={savingBilling}>
+                {savingBilling && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Mentés
+              </Button>
+            </div>
+          )}
+        </Card>
+
         {/* Subscription */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
