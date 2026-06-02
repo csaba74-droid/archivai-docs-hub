@@ -88,6 +88,8 @@ function Dashboard() {
   const [moveFolderId, setMoveFolderId] = useState<string | null>(null);
   const [renameFolderId, setRenameFolderId] = useState<string | null>(null);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc" | "size_desc" | "size_asc">("created_desc");
 
