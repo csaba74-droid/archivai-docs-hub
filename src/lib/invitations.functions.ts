@@ -3,23 +3,19 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const tokenSchema = z.object({ token: z.string().min(1) });
+const tokenSchema = z.object({ token: z.string().uuid() });
 
 export const lookupInvitation = createServerFn({ method: "POST" })
   .inputValidator((input) => tokenSchema.parse(input))
   .handler(async ({ data }) => {
-    const rawToken = data.token;
-    const cleanToken = rawToken.trim().replace(/[^a-f0-9-]/gi, "");
-    console.log("[lookupInvitation] raw token:", rawToken);
-    console.log("[lookupInvitation] cleaned token:", cleanToken);
-
+    console.log("[lookupInvitation] token:", data.token);
     const { data: inv, error } = await supabaseAdmin
       .from("shared_access")
       .select("*")
-      .eq("id", cleanToken)
+      .eq("id", data.token)
       .maybeSingle();
 
-    console.log("[lookupInvitation] DB query result:", { invitation: inv, error });
+    console.log("[lookupInvitation] result:", inv, "error:", error);
 
     if (error) throw new Error(error.message);
     if (!inv) return { invitation: null, ownerName: "" };
@@ -68,11 +64,10 @@ export const acceptInvitation = createServerFn({ method: "POST" })
     const userId = userResult.user.id;
     const userEmail = userResult.user.email ?? null;
 
-    const cleanToken = data.token.trim().replace(/[^a-f0-9-]/gi, '');
     const { data: inv, error: lookupErr } = await supabaseAdmin
       .from("shared_access")
       .select("id, invited_email, invited_user_id, status")
-      .eq("id", cleanToken)
+      .eq("id", data.token)
       .maybeSingle();
 
     if (lookupErr) throw new Error(lookupErr.message);
@@ -95,7 +90,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
         invited_user_id: userId,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", cleanToken);
+      .eq("id", data.token);
 
     if (updErr) throw new Error(updErr.message);
     return { ok: true };

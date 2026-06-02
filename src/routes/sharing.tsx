@@ -161,7 +161,7 @@ function SharingPage() {
           categories: selectedCats
             .map((c) => allCats.find((cat) => cat.id === c)?.label ?? c)
             .join(", "),
-          invitation_link: `https://archivai.hu/accept-invitation?token=${inserted.id}`,
+          invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
         },
       });
       console.log("Edge function result:", fnData, fnError);

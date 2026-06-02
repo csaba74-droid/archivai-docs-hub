@@ -1,9 +1,15 @@
-// Re-export the canonical Supabase client from the generated integration file.
-// The previous hardcoded URL/key pointed to a DIFFERENT Supabase project than
-// the one the server functions (supabaseAdmin) use, which caused inserts and
-// reads to hit different databases (e.g. invitations created from sharing.tsx
-// were not visible to lookupInvitation on the server).
-export { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = "https://jofxnjtktwuzmjjcgofw.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_UvtuR3PW0qi6ia8Y07kwFQ_p5dbL2Ix";
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  },
+});
 
 export type DocumentRow = {
   id: string;
