@@ -82,6 +82,10 @@ function AcceptInvitationPage() {
     };
   }, [token]);
 
+  const loginWithRedirect = `/login?redirect=${encodeURIComponent(
+    `/accept-invitation?token=${token}`,
+  )}`;
+
   const handleAccept = async () => {
     if (!invitation) return;
     setAccepting(true);
