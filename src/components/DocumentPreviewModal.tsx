@@ -157,13 +157,13 @@ export function DocumentPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl w-screen h-screen max-h-screen rounded-none p-4 sm:p-6 sm:w-full sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-hidden flex flex-col [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:flex [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:bg-background/90 [&>button.absolute]:border [&>button.absolute]:rounded-full [&>button.absolute]:shadow [&>button.absolute>svg]:h-5 [&>button.absolute>svg]:w-5">
         {onPrev && (
           <button
             type="button"
             onClick={onPrev}
             aria-label="Előző dokumentum"
-            className="hidden md:flex items-center justify-center fixed left-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+            className="flex items-center justify-center fixed left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 h-11 w-11 sm:h-10 sm:w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -173,7 +173,7 @@ export function DocumentPreviewModal({
             type="button"
             onClick={onNext}
             aria-label="Következő dokumentum"
-            className="hidden md:flex items-center justify-center fixed right-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+            className="flex items-center justify-center fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 h-11 w-11 sm:h-10 sm:w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
