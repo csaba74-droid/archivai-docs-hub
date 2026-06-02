@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ function AcceptInvitationPage() {
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const [autoAcceptStarted, setAutoAcceptStarted] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,7 +81,7 @@ function AcceptInvitationPage() {
     `/accept-invitation?token=${token}`,
   )}`;
 
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     if (!invitation) return;
     setAccepting(true);
     try {
@@ -102,12 +103,27 @@ function AcceptInvitationPage() {
     } finally {
       setAccepting(false);
     }
-  };
+  }, [invitation, loginWithRedirect, navigate]);
 
   const handleSwitchAccount = async () => {
     await supabase.auth.signOut().catch(() => null);
     window.location.href = loginWithRedirect;
   };
+
+  useEffect(() => {
+    if (
+      autoAcceptStarted ||
+      accepting ||
+      !invitation ||
+      invitation.status !== "pending" ||
+      !userEmail ||
+      userEmail.toLowerCase() !== invitation.invited_email.toLowerCase()
+    ) {
+      return;
+    }
+    setAutoAcceptStarted(true);
+    void handleAccept();
+  }, [accepting, autoAcceptStarted, handleAccept, invitation, userEmail]);
 
 
   return (
