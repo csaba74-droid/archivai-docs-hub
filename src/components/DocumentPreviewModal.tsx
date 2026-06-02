@@ -60,12 +60,12 @@ export function DocumentPreviewModal({
 
   // The doc currently shown: either the explicitly selected version, or the prop doc
   const activeDoc = activeVersionId
-    ? versions.find((v) => v.id === activeVersionId) ?? doc
-    : doc;
+    ? versions.find((v) => v.id === activeVersionId) ?? propDoc
+    : propDoc;
 
   useEffect(() => {
     let cancelled = false;
-    if (!doc || !open) {
+    if (!propDoc || !open) {
       setUrl(null);
       setVersions([]);
       setActiveVersionId(null);
@@ -75,7 +75,7 @@ export function DocumentPreviewModal({
     setVersions([]);
 
     // Load all versions in this chain (root + children)
-    const rootId = doc.parent_document_id ?? doc.id;
+    const rootId = propDoc.parent_document_id ?? propDoc.id;
     void supabase
       .from("documents")
       .select("*")
@@ -90,7 +90,7 @@ export function DocumentPreviewModal({
     return () => {
       cancelled = true;
     };
-  }, [doc, open]);
+  }, [propDoc, open]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +120,8 @@ export function DocumentPreviewModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onPrev, onNext]);
 
-  if (!doc) return null;
+  if (!activeDoc) return null;
+  const doc = activeDoc;
   const cat = getCategory(doc.category);
   const strict = cat.mode === "strict";
   const baseDateForRetention = doc.document_date ?? doc.created_at;
