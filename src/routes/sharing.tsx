@@ -28,7 +28,7 @@ type ShareRow = {
   invited_email: string;
   invited_user_id: string | null;
   categories: string[];
-  status: "pending" | "active" | "revoked";
+  status: "pending" | "accepted" | "revoked";
   created_at: string;
 };
 
@@ -330,14 +330,14 @@ function SharingPage() {
                       </div>
                     </div>
                     <Badge
-                      variant={s.status === "active" ? "default" : "secondary"}
+                      variant={s.status === "accepted" ? "default" : "secondary"}
                       className={
-                        s.status === "active"
+                        s.status === "accepted"
                           ? "bg-[#0F6E56] text-white hover:bg-[#0F6E56]/90"
                           : ""
                       }
                     >
-                      {s.status === "active" ? "Aktív" : s.status === "pending" ? "Függőben" : "Visszavonva"}
+                      {s.status === "accepted" ? "Elfogadva" : s.status === "pending" ? "Függőben" : "Visszavonva"}
                     </Badge>
                   </div>
 
