@@ -37,6 +37,9 @@ export function AuthPage({
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
+  const [billingName, setBillingName] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
