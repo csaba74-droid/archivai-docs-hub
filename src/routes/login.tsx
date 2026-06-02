@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,29 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Archive } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
-  component: () => <AuthPage initialMode="login" />,
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : "",
+  }),
+  component: LoginPage,
 });
 
-export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "register" }) {
-  const navigate = useNavigate();
+function safeRedirectPath(value: string | null | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
+  return value;
+}
+
+function LoginPage() {
+  const { redirect } = Route.useSearch();
+  return <AuthPage initialMode="login" redirectTo={redirect} />;
+}
+
+export function AuthPage({
+  initialMode = "login",
+  redirectTo,
+}: {
+  initialMode?: "login" | "register";
+  redirectTo?: string;
+}) {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,11 +41,18 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectTarget = safeRedirectPath(
+    redirectTo ??
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("redirect")
+        : null),
+  );
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) window.location.href = redirectTarget;
     });
-  }, [navigate]);
+  }, [redirectTarget]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +85,7 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}${redirectTarget}`,
             data: { full_name: fullName, company, referred_by: referredBy },
           },
         });
@@ -86,13 +111,12 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
           if (subErr) console.warn("[signup] trial subscription insert:", subErr.message);
         }
       } else {
-
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/" });
-    } catch (err: any) {
-      setError(err.message ?? "Hiba történt");
+      window.location.href = redirectTarget;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Hiba történt");
     } finally {
       setLoading(false);
     }
@@ -115,9 +139,7 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
           {mode === "login" ? "Bejelentkezés" : "Regisztráció"}
         </h2>
         <p className="text-sm text-muted-foreground mb-6">
-          {mode === "login"
-            ? "Lépj be a fiókodba a folytatáshoz"
-            : "Hozz létre új fiókot"}
+          {mode === "login" ? "Lépj be a fiókodba a folytatáshoz" : "Hozz létre új fiókot"}
         </p>
 
         <form onSubmit={submit} className="space-y-4">
@@ -125,7 +147,12 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="name">Teljes név</Label>
-                <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                <Input
+                  id="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="company">Cég</Label>
@@ -135,11 +162,24 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
           )}
           <div className="space-y-1.5">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Jelszó</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
           </div>
 
           {mode === "register" && (

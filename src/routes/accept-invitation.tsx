@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Archive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { BUILT_IN_CATEGORIES } from "@/lib/categories";
-import { acceptInvitation } from "@/lib/invitations.functions";
+import { acceptInvitation, lookupInvitation } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/accept-invitation")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -21,7 +21,7 @@ type Invitation = {
   invited_email: string;
   invited_user_id: string | null;
   categories: string[];
-  status: "pending" | "active" | "revoked";
+  status: "pending" | "accepted" | "revoked";
 };
 
 function categoryLabel(id: string) {
@@ -38,6 +38,7 @@ function AcceptInvitationPage() {
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const [autoAcceptStarted, setAutoAcceptStarted] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,26 +53,18 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
-      console.log("Token from URL:", token);
       try {
-        const { data: inv, error } = await supabase
-          .from("shared_access")
-          .select("*")
-          .eq("id", token)
-          .maybeSingle();
-        console.log("Query result:", inv, error);
+        const { invitation: inv, ownerName: owner } = await lookupInvitation({ data: { token } });
         if (cancelled) return;
-        if (error) throw new Error(error.message);
         if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
         } else {
           setInvitation(inv as Invitation);
+          setOwnerName(owner || "Egy felhasználó");
         }
       } catch (e) {
         if (!cancelled)
-          setError(
-            e instanceof Error ? e.message : "Érvénytelen vagy lejárt meghívó",
-          );
+          setError(e instanceof Error ? e.message : "Érvénytelen vagy lejárt meghívó");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -86,7 +79,7 @@ function AcceptInvitationPage() {
     `/accept-invitation?token=${token}`,
   )}`;
 
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     if (!invitation) return;
     setAccepting(true);
     try {
@@ -108,13 +101,27 @@ function AcceptInvitationPage() {
     } finally {
       setAccepting(false);
     }
-  };
+  }, [invitation, loginWithRedirect, navigate]);
 
   const handleSwitchAccount = async () => {
     await supabase.auth.signOut().catch(() => null);
     window.location.href = loginWithRedirect;
   };
 
+  useEffect(() => {
+    if (
+      autoAcceptStarted ||
+      accepting ||
+      !invitation ||
+      invitation.status !== "pending" ||
+      !userEmail ||
+      userEmail.toLowerCase() !== invitation.invited_email.toLowerCase()
+    ) {
+      return;
+    }
+    setAutoAcceptStarted(true);
+    void handleAccept();
+  }, [accepting, autoAcceptStarted, handleAccept, invitation, userEmail]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
@@ -149,7 +156,7 @@ function AcceptInvitationPage() {
               </Button>
             </Link>
           </div>
-        ) : invitation?.status === "active" ? (
+        ) : invitation?.status === "accepted" ? (
           <div className="text-center space-y-4 py-4">
             <CheckCircle2 className="h-10 w-10 mx-auto" style={{ color: "#0F6E56" }} />
             <h2 className="text-lg font-semibold">Már elfogadta ezt a meghívót</h2>
@@ -168,8 +175,8 @@ function AcceptInvitationPage() {
           <div className="space-y-5">
             <div>
               <h2 className="text-xl font-bold leading-snug">
-                <span style={{ color: "#1A2B4A" }}>{ownerName}</span> meghívta Önt az
-                Archivai rendszerbe
+                <span style={{ color: "#1A2B4A" }}>{ownerName}</span> meghívta Önt az Archivai
+                rendszerbe
               </h2>
               <p className="text-sm text-muted-foreground mt-2">
                 Elfogadás után hozzáférést kap az alábbi dokumentumkategóriákhoz:
@@ -204,9 +211,9 @@ function AcceptInvitationPage() {
               userEmail.toLowerCase() !== invitation.invited_email.toLowerCase() ? (
                 <>
                   <p className="text-xs text-amber-700">
-                    Ön <strong>{userEmail}</strong> címmel van bejelentkezve, de a
-                    meghívó a(z) <strong>{invitation.invited_email}</strong> címre
-                    érkezett. A meghívó elfogadásához váltson fiókot.
+                    Ön <strong>{userEmail}</strong> címmel van bejelentkezve, de a meghívó a(z){" "}
+                    <strong>{invitation.invited_email}</strong> címre érkezett. A meghívó
+                    elfogadásához váltson fiókot.
                   </p>
                   <Button
                     className="w-full"
