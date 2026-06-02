@@ -37,6 +37,9 @@ export function AuthPage({
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
+  const [billingName, setBillingName] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +100,9 @@ export function AuthPage({
             full_name: fullName,
             company,
             referred_by: referredBy,
+            billing_name: billingName || null,
+            billing_address: billingAddress || null,
+            tax_number: taxNumber || null,
           });
           // Fallback: create trial subscription client-side in case the
           // signup trigger isn't installed. RLS allows users to insert
@@ -192,6 +198,35 @@ export function AuthPage({
               <div className="space-y-1.5">
                 <Label htmlFor="company">Cég</Label>
                 <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} />
+              </div>
+              <div className="rounded-md border border-dashed p-3 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Számlázási adatok (opcionális) — később is megadható a Profil oldalon
+                </p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="billingName" className="text-xs">Számlázási név</Label>
+                  <Input
+                    id="billingName"
+                    value={billingName}
+                    onChange={(e) => setBillingName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="billingAddress" className="text-xs">Számlázási cím</Label>
+                  <Input
+                    id="billingAddress"
+                    value={billingAddress}
+                    onChange={(e) => setBillingAddress(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="taxNumber" className="text-xs">Adószám</Label>
+                  <Input
+                    id="taxNumber"
+                    value={taxNumber}
+                    onChange={(e) => setTaxNumber(e.target.value)}
+                  />
+                </div>
               </div>
             </>
           )}

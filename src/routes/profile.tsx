@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock } from "lucide-react";
+import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,10 @@ function ProfilePage() {
   const [company, setCompany] = useState("");
   const [profileLoading, setProfileLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [billingName, setBillingName] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
+  const [savingBilling, setSavingBilling] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -155,12 +159,35 @@ function ProfilePage() {
         .select("*")
         .eq("id", u.user.id)
         .maybeSingle();
-      const row = p as ProfileRow | null;
+      const row = p as (ProfileRow & { billing_name?: string | null; billing_address?: string | null; tax_number?: string | null }) | null;
       setFullName(row?.full_name ?? "");
       setCompany(row?.company ?? "");
+      setBillingName(row?.billing_name ?? "");
+      setBillingAddress(row?.billing_address ?? "");
+      setTaxNumber(row?.tax_number ?? "");
       setProfileLoading(false);
     })();
   }, []);
+
+  const saveBilling = async () => {
+    setSavingBilling(true);
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: u.user.id,
+        billing_name: billingName || null,
+        billing_address: billingAddress || null,
+        tax_number: taxNumber || null,
+      });
+    setSavingBilling(false);
+    if (error) {
+      toast.error("Mentési hiba", { description: error.message });
+      return;
+    }
+    toast.success("Számlázási adatok mentve");
+  };
 
   const saveProfile = async () => {
     setSavingProfile(true);
@@ -246,6 +273,56 @@ function ProfilePage() {
               </div>
               <Button onClick={saveProfile} disabled={savingProfile}>
                 {savingProfile && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Mentés
+              </Button>
+            </div>
+          )}
+        </Card>
+
+        {/* Billing info */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Receipt className="h-5 w-5 text-brand" />
+            <h2 className="text-base font-semibold">Számlázási adatok</h2>
+          </div>
+          {profileLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Betöltés…
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="billingName">Számlázási név</Label>
+                <Input
+                  id="billingName"
+                  value={billingName}
+                  onChange={(e) => setBillingName(e.target.value)}
+                  placeholder="pl. Példa Kft."
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="billingAddress">Számlázási cím</Label>
+                <Input
+                  id="billingAddress"
+                  value={billingAddress}
+                  onChange={(e) => setBillingAddress(e.target.value)}
+                  placeholder="pl. 1011 Budapest, Fő utca 1."
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="taxNumber">Adószám</Label>
+                <Input
+                  id="taxNumber"
+                  value={taxNumber}
+                  onChange={(e) => setTaxNumber(e.target.value)}
+                  placeholder="pl. 12345678-1-23"
+                  className="mt-1"
+                />
+              </div>
+              <Button onClick={saveBilling} disabled={savingBilling}>
+                {savingBilling && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Mentés
               </Button>
             </div>

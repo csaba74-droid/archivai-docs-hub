@@ -192,6 +192,8 @@ export type Database = {
       profiles: {
         Row: {
           archivai_email: string | null
+          billing_address: string | null
+          billing_name: string | null
           company: string | null
           created_at: string
           email: string | null
@@ -201,9 +203,12 @@ export type Database = {
           referral_discount_used: boolean
           referral_reward_sent: boolean
           referred_by: string | null
+          tax_number: string | null
         }
         Insert: {
           archivai_email?: string | null
+          billing_address?: string | null
+          billing_name?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
@@ -213,9 +218,12 @@ export type Database = {
           referral_discount_used?: boolean
           referral_reward_sent?: boolean
           referred_by?: string | null
+          tax_number?: string | null
         }
         Update: {
           archivai_email?: string | null
+          billing_address?: string | null
+          billing_name?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
@@ -225,6 +233,7 @@ export type Database = {
           referral_discount_used?: boolean
           referral_reward_sent?: boolean
           referred_by?: string | null
+          tax_number?: string | null
         }
         Relationships: []
       }
