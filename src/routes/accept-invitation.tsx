@@ -24,7 +24,7 @@ type Invitation = {
   status: "pending" | "accepted" | "revoked";
 };
 
-function categoryLabel(id: string) {
+function builtInLabel(id: string) {
   const found = BUILT_IN_CATEGORIES.find((c) => c.id === id);
   return found?.label ?? id;
 }
