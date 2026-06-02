@@ -1162,11 +1162,109 @@ function Dashboard() {
               <><Download className="h-4 w-4 mr-1.5" /> Letöltés</>
             )}
           </Button>
-          <Button size="sm" onClick={() => setBulkMoveOpen(true)} disabled={bulkDownloading}>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => setBulkDeleteOpen(true)}
+            disabled={bulkDownloading || bulkDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-1.5" /> Törlés
+          </Button>
+          <Button size="sm" onClick={() => setBulkMoveOpen(true)} disabled={bulkDownloading || bulkDeleting}>
             <ArrowRightLeft className="h-4 w-4 mr-1.5" /> Áthelyezés
           </Button>
         </div>
       )}
+      {(() => {
+        const selected = docs.filter((d) => selectedDocs.has(d.id));
+        const deletable = selected.filter((d) => {
+          const baseDate = d.document_date ?? d.created_at;
+          const deadline = getRetentionDeadline(d.category, baseDate);
+          const expired = !!(deadline && deadline.getTime() < Date.now());
+          const inGrace = isInGracePeriod(d.created_at);
+          return !(isStrict(d.category) && !expired && !inGrace);
+        });
+        const lockedCount = selected.length - deletable.length;
+        const handleConfirm = async () => {
+          if (!canUpload) {
+            toast.error("Csak olvasási hozzáférés", { description: "Rendezd a fizetést." });
+            setBulkDeleteOpen(false);
+            return;
+          }
+          setBulkDeleting(true);
+          let success = 0;
+          const failed: string[] = [];
+          for (const d of deletable) {
+            try {
+              const inGrace = isInGracePeriod(d.created_at);
+              await logAudit("delete", d.id, {
+                filename: d.filename,
+                bulk: true,
+                ...(inGrace ? { within_grace: true, note: GRACE_AUDIT_NOTE } : {}),
+              });
+              await supabase.storage.from("documents").remove([d.storage_path]);
+              const { error } = await supabase.from("documents").delete().eq("id", d.id);
+              if (error) throw error;
+              success++;
+            } catch (e) {
+              failed.push(d.filename);
+              console.warn("bulk delete failed", d.id, e);
+            }
+          }
+          const deletedIds = new Set(deletable.map((d) => d.id));
+          setDocs((prev) => prev.filter((d) => !deletedIds.has(d.id) || failed.includes(d.filename)));
+          setSelectedDocs(new Set());
+          setBulkDeleting(false);
+          setBulkDeleteOpen(false);
+          if (success > 0) {
+            toast.success(
+              lockedCount > 0
+                ? `${success} dokumentum törölve. ${lockedCount} dokumentum zárolva van és nem törölhető.`
+                : `${success} dokumentum törölve`,
+            );
+          }
+          if (failed.length > 0) {
+            toast.error(`${failed.length} dokumentum törlése sikertelen`);
+          }
+        };
+        return (
+          <AlertDialog open={bulkDeleteOpen} onOpenChange={(v) => { if (!bulkDeleting) setBulkDeleteOpen(v); }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Dokumentumok törlése</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {lockedCount > 0 && deletable.length > 0 ? (
+                    <>
+                      {lockedCount} dokumentum zárolva van és nem törölhető. {deletable.length} dokumentum törölve lesz.
+                      <br />Ez a művelet nem vonható vissza.
+                    </>
+                  ) : lockedCount > 0 && deletable.length === 0 ? (
+                    <>A kijelölt {lockedCount} dokumentum mindegyike zárolva van — törvényi megőrzés alatt áll és nem törölhető.</>
+                  ) : (
+                    <>Biztosan törölni szeretné a kijelölt {deletable.length} dokumentumot? Ez a művelet nem vonható vissza.</>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={bulkDeleting}>Mégse</AlertDialogCancel>
+                {deletable.length > 0 && (
+                  <AlertDialogAction
+                    onClick={(e) => { e.preventDefault(); void handleConfirm(); }}
+                    disabled={bulkDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {bulkDeleting ? (
+                      <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Törlés…</>
+                    ) : (
+                      <>Törlés ({deletable.length})</>
+                    )}
+                  </AlertDialogAction>
+                )}
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        );
+      })()}
       <BulkMoveDialog
         open={bulkMoveOpen}
         onOpenChange={setBulkMoveOpen}
