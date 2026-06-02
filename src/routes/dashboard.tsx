@@ -153,12 +153,27 @@ function Dashboard() {
   );
 
 
+  const [versionCounts, setVersionCounts] = useState<Record<string, number>>({});
   const loadDocs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("documents").select("*").order("created_at", { ascending: false });
     if (error) toast.error("Betöltési hiba", { description: error.message });
-    else if (data) setDocs(data as DocumentRow[]);
+    else if (data) {
+      const all = data as DocumentRow[];
+      // Count versions per root: each child contributes to its parent_document_id's count
+      const counts: Record<string, number> = {};
+      all.forEach((d) => {
+        if (d.parent_document_id) {
+          counts[d.parent_document_id] = (counts[d.parent_document_id] ?? 0) + 1;
+        }
+      });
+      // Add 1 (the root itself) where there are any children
+      Object.keys(counts).forEach((k) => { counts[k] += 1; });
+      setVersionCounts(counts);
+      // Only roots appear in the main list; older versions are accessed via preview modal
+      setDocs(all.filter((d) => !d.parent_document_id));
+    }
     setLoading(false);
   }, []);
 
