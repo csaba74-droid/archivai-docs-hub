@@ -99,6 +99,7 @@ export function DocumentCard({
   onDelete,
   onRenamed,
   onMoved,
+  versionCount = 1,
 }: {
   doc: DocumentRow;
   category: Category;
@@ -115,6 +116,8 @@ export function DocumentCard({
   onDelete: () => void;
   onRenamed: (doc: DocumentRow) => void;
   onMoved?: (doc: DocumentRow) => void;
+  /** Total number of versions for this root document (>=1). Shown as a v{n} badge when >1. */
+  versionCount?: number;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
