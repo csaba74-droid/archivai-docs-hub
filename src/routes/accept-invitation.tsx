@@ -53,8 +53,17 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
+      // Direct client-side check to see if the row is visible from the browser's Supabase project
+      const { data: directCheck, error: directErr } = await supabase
+        .from("shared_access")
+        .select("id, status")
+        .eq("id", token)
+        .maybeSingle();
+      console.log("[accept-invitation] direct check:", { token, directCheck, directErr });
+
       try {
         const { invitation: inv, ownerName: owner } = await lookupInvitation({ data: { token } });
+        console.log("[accept-invitation] lookupInvitation result:", { inv, owner });
         if (cancelled) return;
         if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
