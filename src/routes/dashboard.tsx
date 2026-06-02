@@ -379,6 +379,11 @@ function Dashboard() {
           onRenameFolder={(id) => { setRenameFolderId(id); setMobileCatsOpen(false); }}
         />
 
+        <SharedWithMeSidebar
+          activeCat={activeCat}
+          onSelect={(id) => { setActiveCat(id); setMobileCatsOpen(false); }}
+        />
+
         <button
           onClick={() => { setSubfolderParent(null); setNewCatOpen(true); setMobileCatsOpen(false); }}
           className="w-full mt-2 flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
