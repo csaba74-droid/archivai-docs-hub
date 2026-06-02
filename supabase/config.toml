@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.trial-expiry-notification]
 verify_jwt = false
+
+[functions.notify-shared-upload]
+verify_jwt = true
