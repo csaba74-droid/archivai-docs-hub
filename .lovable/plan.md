@@ -1,68 +1,37 @@
-## Cél
+# Document versioning
 
-Korlátlan mélységű almappa-fa minden főkategória (beépített és egyéni) alatt. Almappa-szintű fa megjelenik a sidebarban és a dashboardon. Dokumentumok mozgathatók ugyanazon főkategória fáján belül.
+## Database
+Migration adds two columns to `documents`:
+- `parent_document_id uuid` nullable, references `documents(id)` ON DELETE CASCADE
+- `version_number integer NOT NULL DEFAULT 1`
+- Index on `parent_document_id` for fast version lookups
 
-## Adatmodell (1 migráció)
+A document with `parent_document_id = NULL` is the "root". Versions point to the root via `parent_document_id`. The root itself is version 1; subsequent uploads get `version_number = max(existing) + 1`.
 
-A `custom_categories` táblára:
+## Upload flow (`UploadDialog.tsx` + dashboard upload path)
+After AI categorization picks a final category (or user picks one), before insert:
+1. Query existing documents where `user_id = me`, `category = chosen`, `filename = chosen filename`, `parent_document_id IS NULL` (root only).
+2. If match found → show confirm dialog: "Egy ilyen nevű dokumentum már létezik. Új verzióként szeretné feltölteni?"
+   - **Yes** → insert new document row with `parent_document_id = root.id`, `version_number = current_max + 1`. Use same filename/category.
+   - **No** → upload normally (current behavior, may produce duplicate filename).
+3. If no match → upload normally.
 
-- `parent_id uuid null` → FK `custom_categories.id` ON DELETE RESTRICT (custom szülő)
-- `parent_builtin text null` → ha a szülő egy beépített kategória (pl. `"szamlak"`)
-- `root_builtin text null` → a fa gyökerének beépített kulcsa, ha a fa egy beépített alá lóg (mozgatás-ellenőrzéshez); ha custom gyökér, akkor null
-- CHECK: `parent_id` és `parent_builtin` legfeljebb az egyik nem-null
-- Validation trigger: nem lehet ciklus; subfolder mode/retention öröklődik a gyökértől létrehozáskor (de szerkeszthető)
-- `is_system = true` rekord törlése továbbra is tiltott
-- Almappa törlése csak akkor megengedett, ha üres (nincs dokumentum a category-jén és nincs gyermek almappa) — RLS-be nem tehető, ezért dialógus + trigger
+Storage path stays unique per upload (already uses random uuid), so files don't collide.
 
-A `documents.category` továbbra is **az adott (al)mappa azonosítója**: `"szamlak"`, vagy `"custom:<uuid>"`. Nem változik a séma a documents oldalon.
+## Document card (`DocumentCard.tsx`)
+- For each root document, count its versions (root + children). If `>1`, render a small badge `v{count}` next to the filename.
+- Fetched once per dashboard load: aggregate `{root_id: max_version}` map and pass to cards. Simplest path: include version_number on the row and a `version_count` either via a separate grouped query or a view. Implementation will do a single grouped query `SELECT parent_document_id, COUNT(*)` and merge.
 
-## Frontend
+## Preview modal (`DocumentPreviewModal.tsx`)
+- On open, fetch all rows where `id = doc.id OR parent_document_id = root_id` (where `root_id = doc.parent_document_id ?? doc.id`).
+- New "Verziók" panel in the metadata sidebar listing each version with `v{n}` and upload date, newest first. Click switches the previewed version (updates signed URL + metadata, without closing modal).
+- Highlight currently-shown version.
 
-### `src/hooks/use-categories.tsx`
-- `customRows` betölti az új mezőket
-- Új helper: `buildTree(allCats)` → `TreeNode[]` (rekurzív children)
-- Új helper: `getRootId(catId)` → a fa gyökerének id-je (beépítettnél `"szamlak"`, customnál a top-level custom id)
-- `create({ ..., parentId?, parentBuiltin? })` paraméterezhető
-- `remove(id)` megpróbálja a törlést; RLS / FK hiba → toast „Nem üres mappa"
+## Deletion guard
+Existing delete logic already blocks locked docs. Extension: if a document is a root AND has child versions, deletion of the root is allowed only if none of the versions are locked. Simpler interpretation per spec ("cannot delete older versions of locked documents"): block delete of any version whose root or any sibling is locked. Implementation: in `handleDelete` / bulk delete, when a doc has versions, treat all as locked if any in the chain is locked.
 
-### `src/components/CustomCategoryDialog.tsx`
-- Új `parent` prop (`{ kind: "builtin", id: string } | { kind: "custom", id: string } | null`)
-- Ha van parent, a dialógus címe „Új almappa a(z) X alatt", a name/color/mode örökölhető default-tal
+## Dashboard listing
+Only root documents (parent_document_id IS NULL) appear in the main grid. Older versions are accessed via the preview modal's Verziók section.
 
-### Sidebar — `src/routes/dashboard.tsx` (`mobileCatsNav` + új `desktopCatsNav`)
-Jelenleg a desktop sidebar nem mutatja a kategóriákat, csak nav linkeket. Hozzáadunk egy bontható fa-szekciót:
-- Built-in main → expand chevron → almappák (children)
-- Custom main → ugyanúgy
-- Hover/active sorban: `+` ikon → „Új almappa" (megnyitja a dialógust előre-kitöltött parent-tel)
-- Almappánál `x` ikon → törlés (csak ha üres)
-- Saját `useState<Set<string>>` az expanded szülőknek (localStorage-ben perzisztálva)
-
-### Dashboard kategória nézet
-- `CategoryGrid` (`!activeCat` állapot): a kártyák alján kis „almappák" sáv, vagy expand chevron, hogy almappákat is mutasson
-- Ha `activeCat` egy szülő: a fejléc breadcrumb + a kártyák felett egy „almappák" csíkban a gyerekek (chip-szerű, kattintható), és új-almappa gomb
-- Ha `activeCat` egy almappa: breadcrumb `Összes → Főkategória → Almappa`
-- `filtered` szűrés: ha az aktív kategória szülő, akkor leszármazottainak dokumentumai is megjelennek (opcionálisan); MVP-re: csak az aktuális szint dokumentumai
-
-### Dokumentum mozgatás (ugyanazon főkategórián belül)
-- `DocumentCard` / preview modal kap egy „Áthelyezés" akciót (már most is van rename/move audit action)
-- Dialógus: a doksi gyökér-fájának (`getRootId(doc.category)`) összes leszármazottja listázva (radio vagy select)
-- Mentés: `update documents set category = <új>` — kliens validál, hogy ugyanaz a `root`
-
-### Mobil bottom nav / `MobileHome`
-- A meglévő mobil kategória-listában minden szülőhöz expand chevron + a gyerekei behúzva alatta
-- „Új almappa" sor minden szülő alatt
-
-## Technikai részletek
-
-- Új migráció: `ALTER TABLE custom_categories ADD COLUMN parent_id uuid REFERENCES custom_categories(id) ON DELETE RESTRICT`, `ADD COLUMN parent_builtin text`, `ADD COLUMN root_builtin text`, CHECK + ciklus-trigger
-- `types.ts` automatikusan frissül a migráció után
-- `Category` típus a `src/lib/categories.ts`-ben kiegészül: `parentId?: string | null` (a fa id-je a kliensen: szülő built-in id vagy `custom:<uuid>`)
-- `mergeCategories` topológiai rendezést végez, hogy a children rendben legyenek
-- `useCategoryHelpers` új: `getChildren(parentCatId)`, `getRoot(catId)`, `isDescendantOf(a, b)`
-
-## Megerősítendő részek megnyitás előtt
-
-1. Almappák a **beépített** főkategóriák (Számlák, Szerződések…) alatt is engedélyezve legyenek? Igen → mindkét szülő-típus kell (built-in és custom). Nem → csak `parent_id` FK kell.
-2. A főkategória dokumentum-listája tartalmazza-e az almappák dokumentumait is, vagy szigorúan csak a saját szintjét?
-
-Ha ezek megvannak, megírom a migrációt, majd a kódot.
+## Out of scope
+No changes to sharing, audit-log shape (audit log entries use the version's id naturally), or bulk-move semantics (moving a root does not move its versions — versions inherit root's category logically since they share filename+category at upload time; if user moves root later, versions stay linked by parent_document_id regardless of category).
