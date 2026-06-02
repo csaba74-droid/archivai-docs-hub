@@ -9,10 +9,29 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Archive } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
-  component: () => <AuthPage initialMode="login" />,
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : "",
+  }),
+  component: LoginPage,
 });
 
-export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "register" }) {
+function safeRedirectPath(value: string | null | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
+  return value;
+}
+
+function LoginPage() {
+  const { redirect } = Route.useSearch();
+  return <AuthPage initialMode="login" redirectTo={redirect} />;
+}
+
+export function AuthPage({
+  initialMode = "login",
+  redirectTo,
+}: {
+  initialMode?: "login" | "register";
+  redirectTo?: string;
+}) {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [email, setEmail] = useState("");
@@ -23,11 +42,18 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectTarget = safeRedirectPath(
+    redirectTo ??
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("redirect")
+        : null),
+  );
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) window.location.href = redirectTarget;
     });
-  }, [navigate]);
+  }, [redirectTarget]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +86,7 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}${redirectTarget}`,
             data: { full_name: fullName, company, referred_by: referredBy },
           },
         });
@@ -90,7 +116,7 @@ export function AuthPage({ initialMode = "login" }: { initialMode?: "login" | "r
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/" });
+      window.location.href = redirectTarget;
     } catch (err: any) {
       setError(err.message ?? "Hiba történt");
     } finally {
