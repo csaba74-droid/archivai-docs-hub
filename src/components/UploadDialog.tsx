@@ -212,6 +212,17 @@ export function UploadDialog({
     resolver?.(save);
   };
 
+  const askVersion = (params: { fileName: string; existingDate: string }) =>
+    new Promise<boolean | null>((resolve) => {
+      setPendingVersion({ ...params, resolve });
+    });
+
+  const resolveVersion = (v: boolean | null) => {
+    if (!pendingVersion) return;
+    pendingVersion.resolve(v);
+    setPendingVersion(null);
+  };
+
 
   const startUpload = async () => {
     if (files.length === 0) {
