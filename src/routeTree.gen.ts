@@ -13,6 +13,7 @@ import { Route as SugoRouteImport } from './routes/sugo'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SharingRouteImport } from './routes/sharing'
 import { Route as ScanGuideRouteImport } from './routes/scan-guide'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -47,6 +48,11 @@ const SharingRoute = SharingRouteImport.update({
 const ScanGuideRoute = ScanGuideRouteImport.update({
   id: '/scan-guide',
   path: '/scan-guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/referral': typeof ReferralRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/referral': typeof ReferralRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/referral': typeof ReferralRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scan-guide': typeof ScanGuideRoute
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/referral'
     | '/register'
+    | '/reset-password'
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/referral'
     | '/register'
+    | '/reset-password'
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/referral'
     | '/register'
+    | '/reset-password'
     | '/scan-guide'
     | '/sharing'
     | '/subscription'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ReferralRoute: typeof ReferralRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScanGuideRoute: typeof ScanGuideRoute
   SharingRoute: typeof SharingRoute
   SubscriptionRoute: typeof SubscriptionRoute
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/scan-guide'
       fullPath: '/scan-guide'
       preLoaderRoute: typeof ScanGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -439,6 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ReferralRoute: ReferralRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScanGuideRoute: ScanGuideRoute,
   SharingRoute: SharingRoute,
   SubscriptionRoute: SubscriptionRoute,

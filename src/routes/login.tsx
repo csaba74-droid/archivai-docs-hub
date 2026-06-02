@@ -32,7 +32,7 @@ export function AuthPage({
   initialMode?: "login" | "register";
   redirectTo?: string;
 }) {
-  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -40,6 +40,7 @@ export function AuthPage({
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
 
   const redirectTarget = safeRedirectPath(
     redirectTo ??
@@ -110,17 +111,55 @@ export function AuthPage({
           });
           if (subErr) console.warn("[signup] trial subscription insert:", subErr.message);
         }
-      } else {
+      } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        window.location.href = redirectTarget;
       }
-      window.location.href = redirectTarget;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Hiba történt");
     } finally {
       setLoading(false);
     }
   };
+
+  const forgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setForgotSuccess(null);
+    if (!email) {
+      setError("Add meg az e-mail címedet.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSuccess("Jelszó-visszaállítási link elküldve. Nézd meg az e-mail fiókodat!");
+      setEmail("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const title =
+    mode === "login" ? "Bejelentkezés" :
+    mode === "register" ? "Regisztráció" :
+    "Jelszó visszaállítása";
+
+  const subtitle =
+    mode === "login" ? "Lépj be a fiókodba a folytatáshoz" :
+    mode === "register" ? "Hozz létre új fiókot" :
+    "Add meg az e-mail címedet, és küldünk egy visszaállítási linket";
+
+  const buttonLabel =
+    mode === "login" ? "Bejelentkezés" :
+    mode === "register" ? "Regisztráció" :
+    "Link küldése";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -135,14 +174,10 @@ export function AuthPage({
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mb-1">
-          {mode === "login" ? "Bejelentkezés" : "Regisztráció"}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          {mode === "login" ? "Lépj be a fiókodba a folytatáshoz" : "Hozz létre új fiókot"}
-        </p>
+        <h2 className="text-2xl font-bold mb-1">{title}</h2>
+        <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={mode === "forgot" ? forgotSubmit : submit} className="space-y-4">
           {mode === "register" && (
             <>
               <div className="space-y-1.5">
@@ -170,17 +205,32 @@ export function AuthPage({
               required
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Jelszó</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
+          {mode !== "forgot" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Jelszó</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              {mode === "login" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("forgot");
+                    setError(null);
+                    setForgotSuccess(null);
+                  }}
+                  className="text-sm text-brand hover:underline"
+                >
+                  Elfelejtett jelszó?
+                </button>
+              )}
+            </div>
+          )}
 
           {mode === "register" && (
             <div className="flex items-start gap-2 pt-1">
@@ -206,23 +256,42 @@ export function AuthPage({
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {forgotSuccess && <p className="text-sm text-green-600">{forgotSuccess}</p>}
 
           <Button
             type="submit"
             className="w-full"
             disabled={loading || (mode === "register" && !acceptedTerms)}
           >
-            {loading ? "Folyamatban..." : mode === "login" ? "Bejelentkezés" : "Regisztráció"}
+            {loading ? "Folyamatban..." : buttonLabel}
           </Button>
         </form>
 
-        <button
-          type="button"
-          onClick={() => setMode(mode === "login" ? "register" : "login")}
-          className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center"
-        >
-          {mode === "login" ? "Nincs még fiókod? Regisztrálj" : "Van fiókod? Jelentkezz be"}
-        </button>
+        {mode === "forgot" ? (
+          <button
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setError(null);
+              setForgotSuccess(null);
+            }}
+            className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center"
+          >
+            Vissza a bejelentkezéshez
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === "login" ? "register" : "login");
+              setError(null);
+              setForgotSuccess(null);
+            }}
+            className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center"
+          >
+            {mode === "login" ? "Nincs még fiókod? Regisztrálj" : "Van fiókod? Jelentkezz be"}
+          </button>
+        )}
       </Card>
     </div>
   );
