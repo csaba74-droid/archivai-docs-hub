@@ -1,18 +1,42 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock, Receipt } from "lucide-react";
+import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock, Receipt, Bell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase, type ProfileRow } from "@/lib/supabase";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { GdprExportButton } from "@/components/GdprExportButton";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { ChangePlanDialog } from "@/components/ChangePlanDialog";
 import { BackButton } from "@/components/BackButton";
+import { deleteAccount } from "@/lib/account.functions";
+
+type NotificationSettings = {
+  incoming_document: boolean;
+  trial_expiry: boolean;
+  shared_upload: boolean;
+};
+const DEFAULT_NOTIFICATIONS: NotificationSettings = {
+  incoming_document: true,
+  trial_expiry: true,
+  shared_upload: true,
+};
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -42,9 +66,18 @@ function ProfilePage() {
   const [taxNumber, setTaxNumber] = useState("");
   const [savingBilling, setSavingBilling] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+
+  const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const deleteAccountFn = useServerFn(deleteAccount);
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
@@ -159,12 +192,13 @@ function ProfilePage() {
         .select("*")
         .eq("id", u.user.id)
         .maybeSingle();
-      const row = p as (ProfileRow & { billing_name?: string | null; billing_address?: string | null; tax_number?: string | null }) | null;
+      const row = p as (ProfileRow & { billing_name?: string | null; billing_address?: string | null; tax_number?: string | null; notification_settings?: Partial<NotificationSettings> | null }) | null;
       setFullName(row?.full_name ?? "");
       setCompany(row?.company ?? "");
       setBillingName(row?.billing_name ?? "");
       setBillingAddress(row?.billing_address ?? "");
       setTaxNumber(row?.tax_number ?? "");
+      setNotifications({ ...DEFAULT_NOTIFICATIONS, ...(row?.notification_settings ?? {}) });
       setProfileLoading(false);
     })();
   }, []);
@@ -206,6 +240,10 @@ function ProfilePage() {
   };
 
   const changePassword = async () => {
+    if (!currentPassword) {
+      toast.error("Add meg a jelenlegi jelszót");
+      return;
+    }
     if (newPassword.length < 8) {
       toast.error("Jelszó túl rövid", { description: "Legalább 8 karakter szükséges" });
       return;
@@ -215,16 +253,72 @@ function ProfilePage() {
       return;
     }
     setChangingPassword(true);
+    // Verify current password by attempting a sign-in.
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user?.email) {
+      setChangingPassword(false);
+      toast.error("Nincs bejelentkezve");
+      return;
+    }
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: u.user.email,
+      password: currentPassword,
+    });
+    if (signInErr) {
+      setChangingPassword(false);
+      toast.error("Hibás jelenlegi jelszó");
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPassword(false);
     if (error) {
       toast.error("Hiba", { description: error.message });
       return;
     }
+    setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     toast.success("Jelszó megváltoztatva");
   };
+
+  const saveNotifications = async (next: NotificationSettings) => {
+    setNotifications(next);
+    setSavingNotifications(true);
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) {
+      setSavingNotifications(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: u.user.id, notification_settings: next } as never);
+    setSavingNotifications(false);
+    if (error) {
+      toast.error("Mentési hiba", { description: error.message });
+      return;
+    }
+    toast.success("Értesítési beállítások mentve");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const res = await deleteAccountFn();
+      if (!res.ok) {
+        toast.error("Törlési hiba", { description: res.error });
+        return;
+      }
+      toast.success("Fiók törölve");
+      await supabase.auth.signOut();
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error("Törlési hiba", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setDeletingAccount(false);
+      setDeleteOpen(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -384,13 +478,24 @@ function ProfilePage() {
           </div>
         </Card>
 
-        {/* Security */}
+        {/* Password change */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Shield className="h-5 w-5 text-brand" />
-            <h2 className="text-base font-semibold">Biztonsági beállítások</h2>
+            <h2 className="text-base font-semibold">Jelszó módosítása</h2>
           </div>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="currentPassword">Jelenlegi jelszó</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+                className="mt-1"
+              />
+            </div>
             <div>
               <Label htmlFor="newPassword">Új jelszó</Label>
               <Input
@@ -416,13 +521,66 @@ function ProfilePage() {
             </div>
             <Button
               onClick={changePassword}
-              disabled={changingPassword || !newPassword || !confirmPassword}
+              disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
             >
               {changingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Jelszó megváltoztatása
+              Jelszó mentése
             </Button>
           </div>
         </Card>
+
+        {/* Notification settings */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="h-5 w-5 text-brand" />
+            <h2 className="text-base font-semibold">Értesítési beállítások</h2>
+          </div>
+          {profileLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Betöltés…
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notif-incoming" className="text-sm font-medium">Beérkező dokumentum értesítő</Label>
+                  <p className="text-xs text-muted-foreground">Email értesítés új beérkezett dokumentumról.</p>
+                </div>
+                <Switch
+                  id="notif-incoming"
+                  checked={notifications.incoming_document}
+                  disabled={savingNotifications}
+                  onCheckedChange={(v) => saveNotifications({ ...notifications, incoming_document: v })}
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notif-trial" className="text-sm font-medium">Próbaidőszak lejárat értesítő</Label>
+                  <p className="text-xs text-muted-foreground">Emlékeztető a próbaidőszak vége előtt.</p>
+                </div>
+                <Switch
+                  id="notif-trial"
+                  checked={notifications.trial_expiry}
+                  disabled={savingNotifications}
+                  onCheckedChange={(v) => saveNotifications({ ...notifications, trial_expiry: v })}
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notif-shared" className="text-sm font-medium">Megosztott mappába feltöltés értesítő</Label>
+                  <p className="text-xs text-muted-foreground">Értesítés, ha valaki feltölt egy önnel megosztott mappába.</p>
+                </div>
+                <Switch
+                  id="notif-shared"
+                  checked={notifications.shared_upload}
+                  disabled={savingNotifications}
+                  onCheckedChange={(v) => saveNotifications({ ...notifications, shared_upload: v })}
+                />
+              </div>
+            </div>
+          )}
+        </Card>
+
 
         {/* NAV API integráció */}
         <Card id="nav" className="p-6 scroll-mt-20">
@@ -518,6 +676,20 @@ function ProfilePage() {
             </div>
           )}
         </Card>
+        {/* Account deletion */}
+        <Card className="p-6 border-destructive/40">
+          <div className="flex items-center gap-2 mb-2">
+            <Trash2 className="h-5 w-5 text-destructive" />
+            <h2 className="text-base font-semibold text-destructive">Fiók törlése</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            A fiók és az összes hozzá tartozó adat (dokumentumok, kategóriák, megosztások, előfizetés) véglegesen törlésre kerül. Ez a művelet nem visszavonható.
+          </p>
+          <Button variant="destructive" onClick={() => { setDeleteConfirm(""); setDeleteOpen(true); }}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Fiók végleges törlése
+          </Button>
+        </Card>
       </main>
 
 
@@ -528,6 +700,38 @@ function ProfilePage() {
       />
 
       <ChangePlanDialog open={changePlanOpen} onOpenChange={setChangePlanOpen} />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Biztosan törlöd a fiókod?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ez a művelet véglegesen törli a fiókodat és minden hozzá tartozó adatot
+              (dokumentumok, kategóriák, megosztások, előfizetés). A művelet nem visszavonható.
+              <br /><br />
+              A megerősítéshez írd be: <strong>TÖRLÉS</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="TÖRLÉS"
+            autoComplete="off"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAccount}>Mégse</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deleteConfirm !== "TÖRLÉS" || deletingAccount}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAccount && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Fiók törlése
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

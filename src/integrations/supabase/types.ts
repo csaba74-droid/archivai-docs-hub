@@ -199,6 +199,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          notification_settings: Json
           partner_type: string | null
           referral_discount_used: boolean
           referral_reward_sent: boolean
@@ -214,6 +215,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          notification_settings?: Json
           partner_type?: string | null
           referral_discount_used?: boolean
           referral_reward_sent?: boolean
@@ -229,6 +231,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          notification_settings?: Json
           partner_type?: string | null
           referral_discount_used?: boolean
           referral_reward_sent?: boolean
