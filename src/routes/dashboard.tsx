@@ -875,6 +875,7 @@ function Dashboard() {
                 onNewSubfolder={openNewSubfolder}
                 onDeleteCustomCat={handleDeleteCustomCat}
               />
+              <SharedWithMeSection onOpen={(id) => setActiveCat(id)} />
             </div>
           )}
 
