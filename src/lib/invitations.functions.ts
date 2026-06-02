@@ -3,16 +3,17 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const tokenSchema = z.object({ token: z.string().uuid() });
+const tokenSchema = z.object({ token: z.string().min(1) });
 
 export const lookupInvitation = createServerFn({ method: "POST" })
   .inputValidator((input) => tokenSchema.parse(input))
   .handler(async ({ data }) => {
-    console.log("[lookupInvitation] token:", data.token);
+    const cleanToken = data.token.trim().replace(/[^a-f0-9-]/gi, '');
+    console.log("[lookupInvitation] token:", cleanToken);
     const { data: inv, error } = await supabaseAdmin
       .from("shared_access")
       .select("*")
-      .eq("id", data.token)
+      .eq("id", cleanToken)
       .maybeSingle();
 
     console.log("[lookupInvitation] result:", inv, "error:", error);
@@ -64,10 +65,11 @@ export const acceptInvitation = createServerFn({ method: "POST" })
     const userId = userResult.user.id;
     const userEmail = userResult.user.email ?? null;
 
+    const cleanToken = data.token.trim().replace(/[^a-f0-9-]/gi, '');
     const { data: inv, error: lookupErr } = await supabaseAdmin
       .from("shared_access")
       .select("id, invited_email, invited_user_id, status")
-      .eq("id", data.token)
+      .eq("id", cleanToken)
       .maybeSingle();
 
     if (lookupErr) throw new Error(lookupErr.message);
@@ -90,7 +92,7 @@ export const acceptInvitation = createServerFn({ method: "POST" })
         invited_user_id: userId,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", data.token);
+      .eq("id", cleanToken);
 
     if (updErr) throw new Error(updErr.message);
     return { ok: true };
