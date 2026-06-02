@@ -291,7 +291,7 @@ function ProfilePage() {
     }
     const { error } = await supabase
       .from("profiles")
-      .upsert({ id: u.user.id, notification_settings: next });
+      .upsert({ id: u.user.id, notification_settings: next } as never);
     setSavingNotifications(false);
     if (error) {
       toast.error("Mentési hiba", { description: error.message });
