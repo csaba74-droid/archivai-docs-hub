@@ -421,6 +421,11 @@ function Dashboard() {
         <Plus className="h-3.5 w-3.5" /> Új kategória
       </button>
 
+      <SharedWithMeSidebar
+        activeCat={activeCat}
+        onSelect={(id) => { setActiveCat(id); setSearch(""); }}
+      />
+
       <Link
         to="/profile"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
