@@ -53,10 +53,8 @@ function AcceptInvitationPage() {
       if (cancelled) return;
       setUserEmail(u.user?.email ?? null);
 
-
       try {
         const { invitation: inv, ownerName: owner } = await lookupInvitation({ data: { token } });
-        console.log("[accept-invitation] lookupInvitation result:", { inv, owner });
         if (cancelled) return;
         if (!inv) {
           setError("Érvénytelen vagy lejárt meghívó");
