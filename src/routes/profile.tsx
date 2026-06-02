@@ -240,6 +240,10 @@ function ProfilePage() {
   };
 
   const changePassword = async () => {
+    if (!currentPassword) {
+      toast.error("Add meg a jelenlegi jelszót");
+      return;
+    }
     if (newPassword.length < 8) {
       toast.error("Jelszó túl rövid", { description: "Legalább 8 karakter szükséges" });
       return;
@@ -249,16 +253,72 @@ function ProfilePage() {
       return;
     }
     setChangingPassword(true);
+    // Verify current password by attempting a sign-in.
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user?.email) {
+      setChangingPassword(false);
+      toast.error("Nincs bejelentkezve");
+      return;
+    }
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: u.user.email,
+      password: currentPassword,
+    });
+    if (signInErr) {
+      setChangingPassword(false);
+      toast.error("Hibás jelenlegi jelszó");
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPassword(false);
     if (error) {
       toast.error("Hiba", { description: error.message });
       return;
     }
+    setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     toast.success("Jelszó megváltoztatva");
   };
+
+  const saveNotifications = async (next: NotificationSettings) => {
+    setNotifications(next);
+    setSavingNotifications(true);
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) {
+      setSavingNotifications(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: u.user.id, notification_settings: next });
+    setSavingNotifications(false);
+    if (error) {
+      toast.error("Mentési hiba", { description: error.message });
+      return;
+    }
+    toast.success("Értesítési beállítások mentve");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const res = await deleteAccountFn();
+      if (!res.ok) {
+        toast.error("Törlési hiba", { description: res.error });
+        return;
+      }
+      toast.success("Fiók törölve");
+      await supabase.auth.signOut();
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error("Törlési hiba", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setDeletingAccount(false);
+      setDeleteOpen(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
