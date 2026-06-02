@@ -157,13 +157,13 @@ export function DocumentPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl w-screen h-screen max-h-screen rounded-none p-4 sm:p-6 sm:w-full sm:h-auto sm:max-h-[92vh] sm:rounded-lg overflow-hidden flex flex-col [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:flex [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:bg-background/90 [&>button.absolute]:border [&>button.absolute]:rounded-full [&>button.absolute]:shadow [&>button.absolute>svg]:h-5 [&>button.absolute>svg]:w-5">
         {onPrev && (
           <button
             type="button"
             onClick={onPrev}
             aria-label="Előző dokumentum"
-            className="hidden md:flex items-center justify-center fixed left-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+            className="flex items-center justify-center fixed left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 h-11 w-11 sm:h-10 sm:w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -173,7 +173,7 @@ export function DocumentPreviewModal({
             type="button"
             onClick={onNext}
             aria-label="Következő dokumentum"
-            className="hidden md:flex items-center justify-center fixed right-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
+            className="flex items-center justify-center fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 h-11 w-11 sm:h-10 sm:w-10 rounded-full bg-background/90 border shadow hover:bg-accent"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -241,18 +241,18 @@ export function DocumentPreviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 grid md:grid-cols-[1fr_300px] gap-4 overflow-hidden">
-          <div className="bg-muted rounded-lg overflow-hidden min-h-[400px]">
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_300px] gap-4 overflow-y-auto md:overflow-hidden">
+          <div className="bg-muted rounded-lg overflow-hidden min-h-[300px] md:min-h-[400px]">
             <FilePreview
               path={doc.storage_path}
               mimeType={doc.mime_type}
               filename={doc.filename}
               variant="full"
-              className="w-full h-full min-h-[60vh]"
+              className="w-full h-full min-h-[50vh] md:min-h-[60vh]"
             />
           </div>
 
-          <div className="space-y-3 overflow-y-auto text-sm pr-2">
+          <div className="space-y-3 md:overflow-y-auto text-sm md:pr-2">
             <Field label="Eredeti fájlnév" value={doc.original_filename} />
             <Field label="Feltöltve" value={new Date(doc.created_at).toLocaleString("hu-HU")} />
             <div className="rounded-lg border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700/60 p-3 shadow-sm">
