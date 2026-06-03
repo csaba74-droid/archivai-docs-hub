@@ -250,6 +250,18 @@ function AuditPage() {
     return <span className="text-xs text-muted-foreground">{text}</span>;
   };
 
+  const renderActor = (uid: string) => {
+    const a = actorsMap[uid];
+    if (!a) return <span className="text-xs text-muted-foreground">—</span>;
+    const name = a.full_name || a.email || uid.slice(0, 8);
+    return (
+      <span className="text-xs">
+        <span className="font-medium">{name}</span>
+        {a.full_name && a.email && <span className="text-muted-foreground"> ({a.email})</span>}
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30">
