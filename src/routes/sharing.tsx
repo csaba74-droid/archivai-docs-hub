@@ -35,10 +35,11 @@ type ShareRow = {
   created_at: string;
 };
 
+// Alap: nem oszthat meg. Pro: max 3 megosztott felhasználó. Vállalati: korlátlan.
 const PLAN_LIMITS: Record<string, number> = {
-  alap: 1,
+  alap: 0,
   pro: 3,
-  vallalati: 5,
+  vallalati: Number.POSITIVE_INFINITY,
 };
 
 const CAT_COLORS: Record<string, string> = {
