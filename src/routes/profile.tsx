@@ -92,12 +92,13 @@ function ProfilePage() {
       const { data } = await supabase
         .from("shared_access")
         .select("status")
-        .eq("owner_user_id", u.user.id);
+        .eq("owner_user_id", u.user.id)
+        .eq("access_type", "member");
       const rows = (data ?? []) as { status: string }[];
-      const active = rows.filter((r) => r.status !== "revoked");
+      const activeRows = rows.filter((r) => r.status !== "revoked");
       setMemberCount({
-        total: active.length,
-        accepted: active.filter((r) => r.status === "accepted").length,
+        total: activeRows.length,
+        accepted: activeRows.filter((r) => r.status === "accepted").length,
       });
     })();
   }, [isVallalati]);
