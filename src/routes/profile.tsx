@@ -90,22 +90,19 @@ function ProfilePage() {
   const [navSaving, setNavSaving] = useState(false);
   const [navTesting, setNavTesting] = useState(false);
 
-  const saveNav = async () => {
+  const persistNav = async (): Promise<boolean> => {
     if (!/^\d{8}-\d-\d{2}$/.test(navTaxNumber)) {
       toast.error("Érvénytelen adószám", { description: "Formátum: 12345678-1-23" });
-      return;
+      return false;
     }
     if (!navUsername || !navPassword || !navSignatureKey || !navExchangeKey) {
       toast.error("Hiányzó mezők", { description: "Töltsön ki minden mezőt." });
-      return;
+      return false;
     }
-    setNavSaving(true);
-    const { data: u, error: userErr } = await supabase.auth.getUser();
-    console.log("[NAV save] auth.getUser:", { user: u?.user?.id, userErr });
+    const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
-      setNavSaving(false);
       toast.error("Nincs bejelentkezve");
-      return;
+      return false;
     }
     const payload = {
       user_id: u.user.id,
@@ -115,26 +112,32 @@ function ProfilePage() {
       signature_key: navSignatureKey,
       exchange_key: navExchangeKey,
     };
-    console.log("[NAV save] upserting payload:", payload);
-    const { data: upsertData, error } = await supabase
+    const { error } = await supabase
       .from("nav_settings")
       .upsert(payload, { onConflict: "user_id" })
       .select();
-    console.log("[NAV save] upsert result:", { upsertData, error });
-    setNavSaving(false);
     if (error) {
       console.error("[NAV save] error:", error);
       toast.error("Mentési hiba", { description: error.message });
-      return;
+      return false;
     }
-    toast.success("NAV beállítások mentve");
+    return true;
+  };
+
+  const saveNav = async () => {
+    setNavSaving(true);
+    const ok = await persistNav();
+    setNavSaving(false);
+    if (ok) toast.success("NAV beállítások mentve");
   };
 
   const testNav = async () => {
     setNavTesting(true);
     try {
-      const { data: u, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !u.user) {
+      const ok = await persistNav();
+      if (!ok) return;
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
         toast.error("Nincs bejelentkezve");
         return;
       }
@@ -159,6 +162,7 @@ function ProfilePage() {
       setNavTesting(false);
     }
   };
+
 
   useEffect(() => {
     (async () => {
