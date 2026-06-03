@@ -53,7 +53,7 @@ const PLAN_FEATURES: Record<PlanKey, string[]> = {
     "Minden Pro funkció",
     "Több felhasználó kezelése",
     "Prioritásos ügyfélszolgálat",
-    "NAV számlaadatok importálása",
+    "Automatikus számlák beérkezése e-mailből",
   ],
 };
 
