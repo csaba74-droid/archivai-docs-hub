@@ -1,37 +1,62 @@
-# Document versioning
+# Workspace Members for Vállalati plan
 
-## Database
-Migration adds two columns to `documents`:
-- `parent_document_id uuid` nullable, references `documents(id)` ON DELETE CASCADE
-- `version_number integer NOT NULL DEFAULT 1`
-- Index on `parent_document_id` for fast version lookups
+Per your clarification, this builds on the existing `shared_access` system (owner invites by email + chooses categories) and adds role-based write access for Vállalati subscribers. NAV removal is already complete from the previous turn.
 
-A document with `parent_document_id = NULL` is the "root". Versions point to the root via `parent_document_id`. The root itself is version 1; subsequent uploads get `version_number = max(existing) + 1`.
+## 1. Database changes (migration)
 
-## Upload flow (`UploadDialog.tsx` + dashboard upload path)
-After AI categorization picks a final category (or user picks one), before insert:
-1. Query existing documents where `user_id = me`, `category = chosen`, `filename = chosen filename`, `parent_document_id IS NULL` (root only).
-2. If match found → show confirm dialog: "Egy ilyen nevű dokumentum már létezik. Új verzióként szeretné feltölteni?"
-   - **Yes** → insert new document row with `parent_document_id = root.id`, `version_number = current_max + 1`. Use same filename/category.
-   - **No** → upload normally (current behavior, may produce duplicate filename).
-3. If no match → upload normally.
+**`shared_access` table — add columns:**
+- `role text not null default 'viewer'` — `'viewer' | 'editor'`
+- (no other schema change needed; categories array already exists)
 
-Storage path stays unique per upload (already uses random uuid), so files don't collide.
+**RLS policy updates:**
+- `documents`: add INSERT policy — allow when an accepted `shared_access` row exists with `invited_user_id = auth.uid()`, `role = 'editor'`, and the target category is in `sa.categories`. UPDATE policy similarly. **No DELETE** for editors (per your choice).
+- `custom_categories`: editors get SELECT only (no schema mutation).
+- Existing viewer SELECT policies stay as-is.
 
-## Document card (`DocumentCard.tsx`)
-- For each root document, count its versions (root + children). If `>1`, render a small badge `v{count}` next to the filename.
-- Fetched once per dashboard load: aggregate `{root_id: max_version}` map and pass to cards. Simplest path: include version_number on the row and a `version_count` either via a separate grouped query or a view. Implementation will do a single grouped query `SELECT parent_document_id, COUNT(*)` and merge.
+**Helper function** `public.is_workspace_editor(_owner uuid, _category text)` (SECURITY DEFINER) used by the new INSERT/UPDATE policies to avoid recursion.
 
-## Preview modal (`DocumentPreviewModal.tsx`)
-- On open, fetch all rows where `id = doc.id OR parent_document_id = root_id` (where `root_id = doc.parent_document_id ?? doc.id`).
-- New "Verziók" panel in the metadata sidebar listing each version with `v{n}` and upload date, newest first. Click switches the previewed version (updates signed URL + metadata, without closing modal).
-- Highlight currently-shown version.
+**Server-side guard:** trigger on `shared_access` INSERT — reject if owner's active member count (status in pending/accepted, distinct invited_email) ≥ 5, or if owner's subscription plan ≠ `vallalati`. Keeps the 5-member cap and Vállalati gate enforceable even outside the UI.
 
-## Deletion guard
-Existing delete logic already blocks locked docs. Extension: if a document is a root AND has child versions, deletion of the root is allowed only if none of the versions are locked. Simpler interpretation per spec ("cannot delete older versions of locked documents"): block delete of any version whose root or any sibling is locked. Implementation: in `handleDelete` / bulk delete, when a doc has versions, treat all as locked if any in the chain is locked.
+## 2. UI — Profile & Settings page
 
-## Dashboard listing
-Only root documents (parent_document_id IS NULL) appear in the main grid. Older versions are accessed via the preview modal's Verziók section.
+New card **"Munkaterület tagok"**, only rendered when `subscription.plan === 'vallalati'`:
+- List of active shares (email, role, status, accepted/pending, categories count)
+- "Tag meghívása" form: email, role select (Szerkesztő/Olvasó), category multi-select (reuse existing category picker from sharing page)
+- Per-row: change role, revoke (delete shared_access)
+- Counter "X / 5 aktív tag"
+- Invite button disabled at 5
 
-## Out of scope
-No changes to sharing, audit-log shape (audit log entries use the version's id naturally), or bulk-move semantics (moving a root does not move its versions — versions inherit root's category logically since they share filename+category at upload time; if user moves root later, versions stay linked by parent_document_id regardless of category).
+Invitation flow reuses existing `send-invitation` edge function (already wired for sharing). New rows just carry `role`.
+
+## 3. Sidebar — workspace badge
+
+In `src/routes/dashboard.tsx` sidebar, for Vállalati owners show a small badge: **"Munkaterület · N tag"** linking to the new profile section. Count = accepted shares for current user.
+
+## 4. Audit log — actor attribution
+
+`src/routes/audit.tsx`:
+- Query also fetches profiles for distinct `user_id`s and joins client-side, showing `full_name (email)` per row.
+- For workspace owners, also include audit entries where `user_id` is one of their accepted workspace members (so the owner sees member actions in their own audit view).
+
+## 5. Pricing/feature text
+
+- `src/routes/subscription.tsx` Vállalati card: append "Akár 5 munkatárs hozzáadása — közös munkaterület audit naplóval".
+- `src/routes/index.tsx` Vállalati feature list: same line.
+
+## Technical notes
+
+- All new code reads `subscription.plan` via existing `useSubscription()` hook — no new entitlement plumbing.
+- Member cap (5) and plan gate enforced both in UI and in the DB trigger.
+- Editors cannot delete (DB has no INSERT-time DELETE policy for them); attempting a delete from UI is hidden via role check.
+- The existing `accept-invitation` flow already handles `invited_user_id` linkage on accept — no change.
+
+## Files touched
+
+- new migration (shared_access.role, INSERT/UPDATE policies on documents, trigger, helper fn)
+- `src/routes/profile.tsx` — add Workspace Members card
+- `src/routes/dashboard.tsx` — sidebar badge
+- `src/routes/audit.tsx` — show actor + include member actions
+- `src/routes/subscription.tsx` — pricing text
+- `src/routes/index.tsx` — pricing text
+
+Confirm and I'll implement.
