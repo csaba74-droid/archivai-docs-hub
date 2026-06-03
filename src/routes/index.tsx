@@ -418,7 +418,7 @@ function LandingPage() {
                 features: [
                   "100 GB tárhely",
                   "Korlátlan dokumentum",
-                  "Korlátlan meghívott felhasználó",
+                  "Akár 5 munkatárs hozzáadása — közös munkaterület audit naplóval",
                   "Korlátlan egyéni kategória",
                   "Minden Pro funkció",
                   "Automatikus számlák beérkezése e-mailből",

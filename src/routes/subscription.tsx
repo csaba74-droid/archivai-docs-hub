@@ -51,7 +51,7 @@ const PLAN_FEATURES: Record<PlanKey, string[]> = {
     "100 GB tárhely",
     "Korlátlan dokumentum",
     "Minden Pro funkció",
-    "Több felhasználó kezelése",
+    "Akár 5 munkatárs hozzáadása — közös munkaterület audit naplóval",
     "Prioritásos ügyfélszolgálat",
     "Automatikus számlák beérkezése e-mailből",
   ],
