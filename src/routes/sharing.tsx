@@ -362,24 +362,56 @@ function SharingPage() {
                         Meghívva: {new Date(s.created_at).toLocaleDateString("hu-HU")}
                       </div>
                     </div>
-                    <Badge
-                      variant={s.status === "accepted" ? "default" : "secondary"}
-                      className={
-                        s.status === "accepted"
-                          ? "bg-[#0F6E56] text-white hover:bg-[#0F6E56]/90"
-                          : ""
-                      }
-                    >
-                      {s.status === "accepted"
-                        ? "Elfogadva"
-                        : s.status === "pending"
-                          ? "Függőben"
-                          : "Visszavonva"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {plan === "vallalati" && (
+                        <Badge variant="outline" className="capitalize">
+                          {s.role === "editor" ? "Szerkesztő" : "Olvasó"}
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={s.status === "accepted" ? "default" : "secondary"}
+                        className={
+                          s.status === "accepted"
+                            ? "bg-[#0F6E56] text-white hover:bg-[#0F6E56]/90"
+                            : ""
+                        }
+                      >
+                        {s.status === "accepted"
+                          ? "Elfogadva"
+                          : s.status === "pending"
+                            ? "Függőben"
+                            : "Visszavonva"}
+                      </Badge>
+                    </div>
                   </div>
 
                   {editingId === s.id ? (
                     <div className="space-y-3">
+                      {plan === "vallalati" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Szerepkör</Label>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditRole("viewer")}
+                              className={`flex-1 rounded-md border px-3 py-1.5 text-xs ${
+                                editRole === "viewer" ? "border-brand bg-brand/5" : "border-border"
+                              }`}
+                            >
+                              Olvasó
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditRole("editor")}
+                              className={`flex-1 rounded-md border px-3 py-1.5 text-xs ${
+                                editRole === "editor" ? "border-brand bg-brand/5" : "border-border"
+                              }`}
+                            >
+                              Szerkesztő
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <CategoryPicker
                         cats={allCats}
                         selected={editCats}
