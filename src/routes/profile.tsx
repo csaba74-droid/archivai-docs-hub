@@ -84,24 +84,25 @@ function ProfilePage() {
   const isVallalati = subscription?.plan === "vallalati";
 
   const [memberCount, setMemberCount] = useState<{ total: number; accepted: number }>({ total: 0, accepted: 0 });
+  const [guestCount, setGuestCount] = useState<number>(0);
   useEffect(() => {
-    if (!isVallalati) return;
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data } = await supabase
         .from("shared_access")
-        .select("status")
-        .eq("owner_user_id", u.user.id)
-        .eq("access_type", "member");
-      const rows = (data ?? []) as { status: string }[];
-      const activeRows = rows.filter((r) => r.status !== "revoked");
+        .select("status, access_type")
+        .eq("owner_user_id", u.user.id);
+      const rows = (data ?? []) as { status: string; access_type: string | null }[];
+      const members = rows.filter((r) => r.access_type === "member" && r.status !== "revoked");
+      const guests = rows.filter((r) => (r.access_type ?? "guest") === "guest" && r.status !== "revoked");
       setMemberCount({
-        total: activeRows.length,
-        accepted: activeRows.filter((r) => r.status === "accepted").length,
+        total: members.length,
+        accepted: members.filter((r) => r.status === "accepted").length,
       });
+      setGuestCount(guests.length);
     })();
-  }, [isVallalati]);
+  }, []);
 
   const canCancel = subscription?.status !== "canceled";
   const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
