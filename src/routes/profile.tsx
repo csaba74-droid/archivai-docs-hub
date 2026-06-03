@@ -91,6 +91,7 @@ function ProfilePage() {
   const [navTesting, setNavTesting] = useState(false);
 
   const persistNav = async (): Promise<boolean> => {
+    console.log('[NAV] persistNav called', { navTaxNumber, navUsername });
     if (!/^\d{8}-\d-\d{2}$/.test(navTaxNumber)) {
       toast.error("Érvénytelen adószám", { description: "Formátum: 12345678-1-23" });
       return false;
