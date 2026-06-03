@@ -2,7 +2,7 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, Receipt, Bell, Trash2 } from "lucide-react";
+import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, Receipt, Bell, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -83,6 +83,24 @@ function ProfilePage() {
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const isVallalati = subscription?.plan === "vallalati";
 
+  const [memberCount, setMemberCount] = useState<{ total: number; accepted: number }>({ total: 0, accepted: 0 });
+  useEffect(() => {
+    if (!isVallalati) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase
+        .from("shared_access")
+        .select("status")
+        .eq("owner_user_id", u.user.id);
+      const rows = (data ?? []) as { status: string }[];
+      const active = rows.filter((r) => r.status !== "revoked");
+      setMemberCount({
+        total: active.length,
+        accepted: active.filter((r) => r.status === "accepted").length,
+      });
+    })();
+  }, [isVallalati]);
 
   const canCancel = subscription?.status !== "canceled";
   const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
@@ -442,6 +460,32 @@ function ProfilePage() {
             </Button>
           </div>
         </Card>
+
+        {/* Workspace members — Vállalati only */}
+        {isVallalati && (
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-brand" />
+              <h2 className="text-base font-semibold">Munkaterület tagok</h2>
+              <Badge variant="secondary" className="ml-auto">
+                {memberCount.total} / 5 aktív
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Hívj meg legfeljebb 5 munkatársat e-mailben. A meghívottak a kiválasztott
+              kategóriák tartalmát látják (Olvasó), vagy fel is tölthetnek (Szerkesztő).
+              Minden műveletet a közös audit napló rögzít.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild>
+                <Link to="/sharing">Tagok kezelése</Link>
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                {memberCount.accepted} elfogadta a meghívót
+              </span>
+            </div>
+          </Card>
+        )}
 
         {/* Notification settings */}
         <Card className="p-6">

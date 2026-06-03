@@ -22,6 +22,8 @@ export const Route = createFileRoute("/sharing")({
   component: SharingPage,
 });
 
+type ShareRole = "viewer" | "editor";
+
 type ShareRow = {
   id: string;
   owner_user_id: string;
@@ -29,13 +31,14 @@ type ShareRow = {
   invited_user_id: string | null;
   categories: string[];
   status: "pending" | "accepted" | "revoked";
+  role: ShareRole;
   created_at: string;
 };
 
 const PLAN_LIMITS: Record<string, number> = {
   alap: 1,
   pro: 3,
-  vallalati: Infinity,
+  vallalati: 5,
 };
 
 const CAT_COLORS: Record<string, string> = {
@@ -58,9 +61,11 @@ function SharingPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<ShareRole>("viewer");
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
+  const [editRole, setEditRole] = useState<ShareRole>("viewer");
 
   const plan = subscription?.plan ?? "alap";
   const limit = PLAN_LIMITS[plan] ?? 1;
@@ -118,6 +123,7 @@ function SharingPage() {
       owner_user_id: u.user.id,
       invited_email: trimmed,
       categories: selectedCats,
+      role: selectedRole,
       status: "pending" as const,
     };
     console.log("[sharing] Inserting shared_access row:", insertPayload);
@@ -181,6 +187,7 @@ function SharingPage() {
     setSubmitting(false);
     setEmail("");
     setSelectedCats([]);
+    setSelectedRole("viewer");
     void reload();
   };
 
@@ -198,6 +205,7 @@ function SharingPage() {
   const startEdit = (s: ShareRow) => {
     setEditingId(s.id);
     setEditCats(s.categories);
+    setEditRole(s.role ?? "viewer");
   };
 
   const saveEdit = async () => {
@@ -208,7 +216,7 @@ function SharingPage() {
     }
     const { error } = await supabase
       .from("shared_access")
-      .update({ categories: editCats, updated_at: new Date().toISOString() })
+      .update({ categories: editCats, role: editRole, updated_at: new Date().toISOString() })
       .eq("id", editingId);
     if (error) {
       toast.error("Mentés sikertelen", { description: error.message });
@@ -245,12 +253,12 @@ function SharingPage() {
           <div>
             <div className="text-sm font-medium">
               {PLAN_INFO[plan].label} csomag — {usedCount}/{limit === Infinity ? "∞" : limit}{" "}
-              meghívott
+              {plan === "vallalati" ? "munkatárs" : "meghívott"}
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               {plan === "alap" && "Max 1 meghívott felhasználó"}
               {plan === "pro" && "Max 3 meghívott felhasználó"}
-              {plan === "vallalati" && "Korlátlan meghívott felhasználó"}
+              {plan === "vallalati" && "Akár 5 munkatárs — közös munkaterület audit naplóval"}
             </div>
           </div>
           {plan !== "vallalati" && (
@@ -277,6 +285,36 @@ function SharingPage() {
               disabled={limitReached}
             />
           </div>
+
+          {plan === "vallalati" && (
+            <div className="space-y-2">
+              <Label>Szerepkör</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole("viewer")}
+                  disabled={limitReached}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                    selectedRole === "viewer" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="font-medium">Olvasó</div>
+                  <div className="text-xs text-muted-foreground">Csak megtekintés</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole("editor")}
+                  disabled={limitReached}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                    selectedRole === "editor" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="font-medium">Szerkesztő</div>
+                  <div className="text-xs text-muted-foreground">Feltöltés és szerkesztés (törlés nélkül)</div>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Megosztott kategóriák</Label>
@@ -324,24 +362,56 @@ function SharingPage() {
                         Meghívva: {new Date(s.created_at).toLocaleDateString("hu-HU")}
                       </div>
                     </div>
-                    <Badge
-                      variant={s.status === "accepted" ? "default" : "secondary"}
-                      className={
-                        s.status === "accepted"
-                          ? "bg-[#0F6E56] text-white hover:bg-[#0F6E56]/90"
-                          : ""
-                      }
-                    >
-                      {s.status === "accepted"
-                        ? "Elfogadva"
-                        : s.status === "pending"
-                          ? "Függőben"
-                          : "Visszavonva"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {plan === "vallalati" && (
+                        <Badge variant="outline" className="capitalize">
+                          {s.role === "editor" ? "Szerkesztő" : "Olvasó"}
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={s.status === "accepted" ? "default" : "secondary"}
+                        className={
+                          s.status === "accepted"
+                            ? "bg-[#0F6E56] text-white hover:bg-[#0F6E56]/90"
+                            : ""
+                        }
+                      >
+                        {s.status === "accepted"
+                          ? "Elfogadva"
+                          : s.status === "pending"
+                            ? "Függőben"
+                            : "Visszavonva"}
+                      </Badge>
+                    </div>
                   </div>
 
                   {editingId === s.id ? (
                     <div className="space-y-3">
+                      {plan === "vallalati" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Szerepkör</Label>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditRole("viewer")}
+                              className={`flex-1 rounded-md border px-3 py-1.5 text-xs ${
+                                editRole === "viewer" ? "border-brand bg-brand/5" : "border-border"
+                              }`}
+                            >
+                              Olvasó
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditRole("editor")}
+                              className={`flex-1 rounded-md border px-3 py-1.5 text-xs ${
+                                editRole === "editor" ? "border-brand bg-brand/5" : "border-border"
+                              }`}
+                            >
+                              Szerkesztő
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <CategoryPicker
                         cats={allCats}
                         selected={editCats}

@@ -117,11 +117,13 @@ function formatHu(iso: string) {
 }
 
 type Row = AuditLogRow & { filename?: string | null };
+type ActorInfo = { full_name: string | null; email: string | null };
 
 function AuditPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [docsMap, setDocsMap] = useState<Record<string, DocumentRow>>({});
+  const [actorsMap, setActorsMap] = useState<Record<string, ActorInfo>>({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -162,6 +164,18 @@ function AuditPage() {
       const map: Record<string, DocumentRow> = {};
       (docs as DocumentRow[] | null)?.forEach((d) => { map[d.id] = d; });
       setDocsMap((prev) => ({ ...prev, ...map }));
+    }
+    const actorIds = Array.from(new Set(list.map((r) => r.user_id).filter(Boolean) as string[]));
+    if (actorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", actorIds);
+      const amap: Record<string, ActorInfo> = {};
+      (profs as { id: string; full_name: string | null; email: string | null }[] | null)?.forEach((p) => {
+        amap[p.id] = { full_name: p.full_name, email: p.email };
+      });
+      setActorsMap((prev) => ({ ...prev, ...amap }));
     }
     setRows(list);
     setLoading(false);
@@ -234,6 +248,18 @@ function AuditPage() {
     const text = formatMetaReadable(m);
     if (!text) return <span className="text-muted-foreground">—</span>;
     return <span className="text-xs text-muted-foreground">{text}</span>;
+  };
+
+  const renderActor = (uid: string) => {
+    const a = actorsMap[uid];
+    if (!a) return <span className="text-xs text-muted-foreground">—</span>;
+    const name = a.full_name || a.email || uid.slice(0, 8);
+    return (
+      <span className="text-xs">
+        <span className="font-medium">{name}</span>
+        {a.full_name && a.email && <span className="text-muted-foreground"> ({a.email})</span>}
+      </span>
+    );
   };
 
   return (

@@ -262,6 +262,7 @@ export type Database = {
           invited_email: string
           invited_user_id: string | null
           owner_user_id: string
+          role: string
           status: string
           updated_at: string
         }
@@ -272,6 +273,7 @@ export type Database = {
           invited_email: string
           invited_user_id?: string | null
           owner_user_id: string
+          role?: string
           status?: string
           updated_at?: string
         }
@@ -282,6 +284,7 @@ export type Database = {
           invited_email?: string
           invited_user_id?: string | null
           owner_user_id?: string
+          role?: string
           status?: string
           updated_at?: string
         }
@@ -378,6 +381,10 @@ export type Database = {
         }[]
       }
       has_active_access: { Args: { _user: string }; Returns: boolean }
+      is_workspace_editor_for_category: {
+        Args: { _category: string; _invited: string; _owner: string }
+        Returns: boolean
+      }
       log_audit: {
         Args: { _action: string; _document_id?: string; _metadata?: Json }
         Returns: undefined
