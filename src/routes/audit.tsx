@@ -366,6 +366,7 @@ function AuditPage() {
                         <span className="font-medium">{ACTION_LABELS[r.action] ?? r.action}</span>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">{formatHu(r.created_at)}</span>
                       </div>
+                      <div>{renderActor(r.user_id)}</div>
                       {doc ? (
                         <button onClick={() => openDoc(r.document_id)} className="text-sm text-brand hover:underline text-left block">
                           {doc.filename}
