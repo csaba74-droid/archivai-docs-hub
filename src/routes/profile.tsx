@@ -463,48 +463,82 @@ function ProfilePage() {
           </div>
         </Card>
 
-        {/* Guest sharing — external accountants/partners */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="h-5 w-5 text-brand" />
-            <h2 className="text-base font-semibold">Hozzáférés megosztása (vendégek)</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hívj meg külső partnert vagy könyvelőt egy-egy kategóriához. A vendégek csak
-            megtekinthetnek és letölthetnek — feltöltés és módosítás nincs.
-            {" "}Alap: 0 · Pro: max 3 · Vállalati: korlátlan.
-          </p>
-          <Button asChild variant="outline">
-            <Link to="/sharing">Vendégek kezelése</Link>
-          </Button>
-        </Card>
-
-        {/* Workspace members — Vállalati only, internal team */}
-        {isVallalati && (
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="h-5 w-5 text-brand" />
-              <h2 className="text-base font-semibold">Munkaterület tagok</h2>
-              <Badge variant="secondary" className="ml-auto">
-                {memberCount.total}/5 munkatárs
+        {/* Sharing features — two clearly distinct cards */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Guest access — sky/blue accent */}
+          <Card className="p-6 border-sky-200 dark:border-sky-900/60 bg-sky-50/40 dark:bg-sky-950/20 flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-9 w-9 rounded-lg bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 flex items-center justify-center">
+                <Eye className="h-5 w-5" />
+              </div>
+              <h2 className="text-base font-semibold">Megosztás</h2>
+              <Badge
+                variant="secondary"
+                className="ml-auto bg-sky-100 dark:bg-sky-900/50 text-sky-800 dark:text-sky-200 border-0"
+              >
+                {isVallalati
+                  ? "korlátlan vendég"
+                  : subscription?.plan === "pro"
+                    ? `${guestCount}/3 vendég`
+                    : `${guestCount}/0 vendég`}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Belső csapattagok meghívása (max 5 fő). A munkatársak saját bejelentkezéssel
-              hozzáférnek a kiválasztott kategóriákhoz — Szerkesztőként feltölthetnek és
-              átnevezhetnek, Olvasóként csak megtekinthetnek. Törlés egyik szerepkörben sem
-              engedélyezett. Minden műveletet a közös audit napló rögzít.
+            <p className="text-sm text-muted-foreground mb-4 flex-1">
+              Külső személyek (pl. könyvelő, partner) csak <strong>olvashatnak és letölthetnek</strong>{" "}
+              a kiválasztott kategóriákból. Nincs feltöltés, módosítás vagy törlés.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button asChild>
-                <Link to="/workspace-members">Munkatársak kezelése</Link>
+            <div>
+              <Button asChild variant="outline" className="border-sky-300 dark:border-sky-800">
+                <Link to="/sharing">Vendégek kezelése</Link>
               </Button>
-              <span className="text-xs text-muted-foreground">
-                {memberCount.accepted} elfogadta a meghívót
-              </span>
             </div>
           </Card>
-        )}
+
+          {/* Workspace members — violet accent, Vállalati only */}
+          <Card
+            className={`p-6 border-violet-200 dark:border-violet-900/60 bg-violet-50/40 dark:bg-violet-950/20 flex flex-col ${
+              !isVallalati ? "relative overflow-hidden" : ""
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-9 w-9 rounded-lg bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex items-center justify-center">
+                <Users className="h-5 w-5" />
+              </div>
+              <h2 className="text-base font-semibold">Munkaterület tagok</h2>
+              <Badge
+                variant="secondary"
+                className="ml-auto bg-violet-100 dark:bg-violet-900/50 text-violet-800 dark:text-violet-200 border-0"
+              >
+                {memberCount.total}/5 tag
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4 flex-1">
+              Belső munkatársak <strong>teljes hozzáféréssel</strong> és saját bejelentkezéssel.
+              Minden művelet külön szerepel az audit naplóban, így pontosan látható, ki mit csinált.
+            </p>
+            {isVallalati ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <Button asChild className="bg-violet-600 hover:bg-violet-700 text-white">
+                  <Link to="/workspace-members">Munkatársak kezelése</Link>
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {memberCount.accepted} elfogadta a meghívót
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 rounded-md border border-violet-200 dark:border-violet-900/60 bg-white/60 dark:bg-violet-950/40 px-3 py-2">
+                <Lock className="h-4 w-4 text-violet-600 dark:text-violet-300 shrink-0" />
+                <div className="flex-1 text-xs text-muted-foreground">
+                  Csak a Vállalati csomag tagjai számára érhető el.
+                </div>
+                <Button asChild size="sm" variant="outline" className="border-violet-300 dark:border-violet-800">
+                  <Link to="/subscription">Frissítés</Link>
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
+
 
 
         {/* Notification settings */}
