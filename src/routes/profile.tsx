@@ -468,11 +468,11 @@ function ProfilePage() {
               <Users className="h-5 w-5 text-brand" />
               <h2 className="text-base font-semibold">Munkaterület tagok</h2>
               <Badge variant="secondary" className="ml-auto">
-                {memberCount.total} / 5 aktív
+                {memberCount.total} aktív tag
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Hívj meg legfeljebb 5 munkatársat e-mailben. A meghívottak a kiválasztott
+              Hívj meg korlátlan számú munkatársat e-mailben. A meghívottak a kiválasztott
               kategóriák tartalmát látják (Olvasó), vagy fel is tölthetnek (Szerkesztő).
               Minden műveletet a közös audit napló rögzít.
             </p>

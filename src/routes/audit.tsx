@@ -323,6 +323,7 @@ function AuditPage() {
                   <thead className="bg-muted/40 text-left">
                     <tr>
                       <th className="px-4 py-2 font-medium">Dátum/Idő</th>
+                      <th className="px-4 py-2 font-medium">Felhasználó</th>
                       <th className="px-4 py-2 font-medium">Művelet</th>
                       <th className="px-4 py-2 font-medium">Dokumentum</th>
                       <th className="px-4 py-2 font-medium">Részletek</th>
@@ -334,6 +335,7 @@ function AuditPage() {
                       return (
                         <tr key={r.id} className="border-t hover:bg-muted/30">
                           <td className="px-4 py-2 whitespace-nowrap text-muted-foreground">{formatHu(r.created_at)}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">{renderActor(r.user_id)}</td>
                           <td className="px-4 py-2 whitespace-nowrap">{ACTION_LABELS[r.action] ?? r.action}</td>
                           <td className="px-4 py-2">
                             {doc ? (
@@ -364,6 +366,7 @@ function AuditPage() {
                         <span className="font-medium">{ACTION_LABELS[r.action] ?? r.action}</span>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">{formatHu(r.created_at)}</span>
                       </div>
+                      <div>{renderActor(r.user_id)}</div>
                       {doc ? (
                         <button onClick={() => openDoc(r.document_id)} className="text-sm text-brand hover:underline text-left block">
                           {doc.filename}
