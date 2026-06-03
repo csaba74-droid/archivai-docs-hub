@@ -23,8 +23,8 @@ type Ctx = {
 const SubscriptionContext = createContext<Ctx | null>(null);
 
 export const PLAN_INFO: Record<SubscriptionRow["plan"], { label: string; priceLabel: string; description: string }> = {
-  alap: { label: "Alap", priceLabel: "2 990 Ft / hó", description: "Max 100 dokumentum, alap funkciók" },
-  pro: { label: "Pro", priceLabel: "4 990 Ft / hó", description: "Max 500 dokumentum / hó, AI kategorizálás, bulk upload" },
+  alap: { label: "Alap", priceLabel: "2 990 Ft / hó", description: "Max 200 dokumentum / hó, alap funkciók" },
+  pro: { label: "Pro", priceLabel: "4 990 Ft / hó", description: "Max 500 dokumentum / hó, AI kategorizálás, tömeges feltöltés" },
   vallalati: { label: "Vállalati", priceLabel: "9 990 Ft / hó", description: "Több felhasználó, prioritásos támogatás, audit export" },
 };
 

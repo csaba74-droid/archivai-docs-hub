@@ -46,7 +46,6 @@ const PLAN_FEATURES: Record<PlanKey, string[]> = {
     "Egyéni kategóriák",
     "Hozzáférés megosztás (max 3 vendég)",
     "Dokumentum előnézet",
-    "Dedikált Archivai e-mail cím",
     "Dokumentumok fogadása dedikált e-mail címen",
     "Dokumentum verziózás",
   ],
