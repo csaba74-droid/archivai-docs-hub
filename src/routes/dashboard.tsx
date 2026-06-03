@@ -73,7 +73,8 @@ function Dashboard() {
       const { data } = await supabase
         .from("shared_access")
         .select("status")
-        .eq("owner_user_id", u.user.id);
+        .eq("owner_user_id", u.user.id)
+        .eq("access_type", "member");
       const rows = (data ?? []) as { status: string }[];
       setWorkspaceMemberCount(rows.filter((r) => r.status !== "revoked").length);
     })();
