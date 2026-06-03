@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Users, Trash2, Copy, ChevronRight } from "lucide-react";
+import { Loader2, Users, Trash2, Copy, ChevronRight } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { BackButton } from "@/components/BackButton";
 
@@ -22,8 +22,6 @@ export const Route = createFileRoute("/sharing")({
   component: SharingPage,
 });
 
-type ShareRole = "viewer" | "editor";
-
 type ShareRow = {
   id: string;
   owner_user_id: string;
@@ -31,11 +29,11 @@ type ShareRow = {
   invited_user_id: string | null;
   categories: string[];
   status: "pending" | "accepted" | "revoked";
-  role: ShareRole;
+  access_type: string;
   created_at: string;
 };
 
-// Alap: nem oszthat meg. Pro: max 3 megosztott felhasználó. Vállalati: korlátlan.
+// Vendég hozzáférés limit: Alap = 0, Pro = 3, Vállalati = korlátlan.
 const PLAN_LIMITS: Record<string, number> = {
   alap: 0,
   pro: 3,
@@ -62,14 +60,12 @@ function SharingPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<ShareRole>("viewer");
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
-  const [editRole, setEditRole] = useState<ShareRole>("viewer");
 
   const plan = subscription?.plan ?? "alap";
-  const limit = PLAN_LIMITS[plan] ?? 1;
+  const limit = PLAN_LIMITS[plan] ?? 0;
   const usedCount = shares.filter((s) => s.status !== "revoked").length;
   const limitReached = usedCount >= limit;
 
@@ -84,6 +80,7 @@ function SharingPage() {
       .from("shared_access")
       .select("*")
       .eq("owner_user_id", u.user.id)
+      .eq("access_type", "guest")
       .order("created_at", { ascending: false });
     if (error) toast.error("Betöltési hiba", { description: error.message });
     else setShares((data as ShareRow[]) ?? []);
