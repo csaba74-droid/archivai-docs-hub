@@ -203,6 +203,15 @@ function ProfilePage() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (window.location.hash === "#billing-section") {
+      const el = document.getElementById("billing-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, []);
+
   const saveBilling = async () => {
     setSavingBilling(true);
     const { data: u } = await supabase.auth.getUser();
@@ -374,7 +383,7 @@ function ProfilePage() {
         </Card>
 
         {/* Billing info */}
-        <Card className="p-6">
+        <Card className="p-6" id="billing-section">
           <div className="flex items-center gap-2 mb-4">
             <Receipt className="h-5 w-5 text-brand" />
             <h2 className="text-base font-semibold">Számlázási adatok</h2>

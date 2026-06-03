@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ function SubscriptionPage() {
   const [email, setEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
   const { openPortal, loading: portalLoading } = useBillingPortal();
+  const navigate = useNavigate();
   const hasStripeSubscription = !!subscription?.stripe_subscription_id;
   const canCancel = subscription?.status !== "canceled";
 
@@ -86,6 +87,16 @@ function SubscriptionPage() {
 
   const openCheckout = async (plan: PlanKey) => {
     if (!userId) return;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("billing_name, billing_address")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!profile?.billing_name?.trim() || !profile?.billing_address?.trim()) {
+      toast.error("Az előfizetéshez kérjük add meg számlázási adataidat!");
+      navigate({ to: "/profile", hash: "billing-section" });
+      return;
+    }
     const selectedPriceId = `${plan}_${interval === "monthly" ? "monthly" : "yearly"}`;
     setRedirecting(selectedPriceId);
     try {
