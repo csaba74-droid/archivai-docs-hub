@@ -705,7 +705,7 @@ function AudienceSection() {
       pain: "Kevesebb adminisztráció, több szabadidő.",
       checks: [
         "Egyszerű feltöltés, automatikus rendszerezés",
-        "NAV számlaadatok importálása — automatikusan érkeznek",
+        "Automatikus számlák beérkezése e-mailből",
         "Könyvelőnek egy kattintással megosztható",
       ],
       tag: "Hatósági ellenőrzésre mindig készen",
