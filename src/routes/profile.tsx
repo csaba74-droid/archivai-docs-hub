@@ -461,6 +461,32 @@ function ProfilePage() {
           </div>
         </Card>
 
+        {/* Workspace members — Vállalati only */}
+        {isVallalati && (
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-brand" />
+              <h2 className="text-base font-semibold">Munkaterület tagok</h2>
+              <Badge variant="secondary" className="ml-auto">
+                {memberCount.total} / 5 aktív
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Hívj meg legfeljebb 5 munkatársat e-mailben. A meghívottak a kiválasztott
+              kategóriák tartalmát látják (Olvasó), vagy fel is tölthetnek (Szerkesztő).
+              Minden műveletet a közös audit napló rögzít.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild>
+                <Link to="/sharing">Tagok kezelése</Link>
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                {memberCount.accepted} elfogadta a meghívót
+              </span>
+            </div>
+          </Card>
+        )}
+
         {/* Notification settings */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
