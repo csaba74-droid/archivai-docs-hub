@@ -187,6 +187,7 @@ function SharingPage() {
     setSubmitting(false);
     setEmail("");
     setSelectedCats([]);
+    setSelectedRole("viewer");
     void reload();
   };
 
@@ -204,6 +205,7 @@ function SharingPage() {
   const startEdit = (s: ShareRow) => {
     setEditingId(s.id);
     setEditCats(s.categories);
+    setEditRole(s.role ?? "viewer");
   };
 
   const saveEdit = async () => {
@@ -214,7 +216,7 @@ function SharingPage() {
     }
     const { error } = await supabase
       .from("shared_access")
-      .update({ categories: editCats, updated_at: new Date().toISOString() })
+      .update({ categories: editCats, role: editRole, updated_at: new Date().toISOString() })
       .eq("id", editingId);
     if (error) {
       toast.error("Mentés sikertelen", { description: error.message });
