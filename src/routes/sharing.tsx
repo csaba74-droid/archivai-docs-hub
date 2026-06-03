@@ -241,8 +241,13 @@ function SharingPage() {
 
       <main className="max-w-4xl mx-auto px-4 md:px-8 py-6 space-y-6">
         <p className="text-sm text-muted-foreground">
-          Hívjon meg könyvelőt vagy munkatársat. A meghívott csak az Ön által kijelölt mappákat
-          láthatja.
+          Vendég hozzáférés: hívjon meg könyvelőt vagy külső partnert. A meghívott csak az Ön
+          által kijelölt kategóriákat látja — csak megtekintés és letöltés.
+          {" "}Belső munkatársaknak külön{" "}
+          <Link to="/workspace-members" className="underline">
+            Munkaterület tagok
+          </Link>{" "}
+          funkció van (Vállalati csomag).
         </p>
 
         {/* Plan limit indicator */}
@@ -250,12 +255,12 @@ function SharingPage() {
           <div>
             <div className="text-sm font-medium">
               {PLAN_INFO[plan].label} csomag — {usedCount}/{limit === Infinity ? "∞" : limit}{" "}
-              {plan === "vallalati" ? "munkatárs" : "meghívott"}
+              vendég
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              {plan === "alap" && "Max 1 meghívott felhasználó"}
-              {plan === "pro" && "Max 3 meghívott felhasználó"}
-              {plan === "vallalati" && "Akár 5 munkatárs — közös munkaterület audit naplóval"}
+              {plan === "alap" && "Az Alap csomag nem támogat vendég hozzáférést."}
+              {plan === "pro" && "Max 3 vendég (csak megtekintés és letöltés)."}
+              {plan === "vallalati" && "Korlátlan vendég hozzáférés."}
             </div>
           </div>
           {plan !== "vallalati" && (
@@ -269,7 +274,7 @@ function SharingPage() {
 
         {/* Invite form */}
         <section className="rounded-lg border bg-card p-5 space-y-4">
-          <h2 className="font-semibold">Új meghívó</h2>
+          <h2 className="font-semibold">Új vendég meghívása</h2>
 
           <div className="space-y-2">
             <Label htmlFor="invite-email">Meghívott email címe</Label>
@@ -283,38 +288,8 @@ function SharingPage() {
             />
           </div>
 
-          {plan === "vallalati" && (
-            <div className="space-y-2">
-              <Label>Szerepkör</Label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole("viewer")}
-                  disabled={limitReached}
-                  className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
-                    selectedRole === "viewer" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
-                  }`}
-                >
-                  <div className="font-medium">Olvasó</div>
-                  <div className="text-xs text-muted-foreground">Csak megtekintés</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole("editor")}
-                  disabled={limitReached}
-                  className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
-                    selectedRole === "editor" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
-                  }`}
-                >
-                  <div className="font-medium">Szerkesztő</div>
-                  <div className="text-xs text-muted-foreground">Feltöltés és szerkesztés (törlés nélkül)</div>
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label>Megosztott kategóriák</Label>
+            <Label>Hozzáférhető kategóriák</Label>
             <CategoryPicker
               cats={allCats}
               selected={selectedCats}
@@ -330,11 +305,12 @@ function SharingPage() {
 
           {limitReached && (
             <p className="text-xs text-destructive">
-              Elérted a {PLAN_INFO[plan].label} csomag meghívó-limitjét. Magasabb csomagban többet
+              Elérted a {PLAN_INFO[plan].label} csomag vendég-limitjét. Magasabb csomagban többet
               hívhatsz meg.
             </p>
           )}
         </section>
+
 
         {/* Active shares */}
         <section className="space-y-3">
