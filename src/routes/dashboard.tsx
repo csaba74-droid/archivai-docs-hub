@@ -472,6 +472,11 @@ function Dashboard() {
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
         <Users className="h-4 w-4" /> Hozzáférés megosztása
+        {subscription?.plan === "vallalati" && workspaceMemberCount > 0 && (
+          <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px]">
+            {workspaceMemberCount} tag
+          </Badge>
+        )}
       </Link>
       <Link
         to="/referral"
