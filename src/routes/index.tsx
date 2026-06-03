@@ -610,7 +610,7 @@ function AudienceSection() {
       checks: [
         "Minden irat egy helyen, kereshető",
         "AI automatikusan kategorizál",
-        "NAV ellenőrzésnél azonnal megtalál mindent",
+        "Hatósági ellenőrzésnél azonnal megtalál mindent",
       ],
       tag: "14 nap ingyen, kártya nélkül",
       accent: "bg-teal-50 text-teal-700 ring-teal-200",
