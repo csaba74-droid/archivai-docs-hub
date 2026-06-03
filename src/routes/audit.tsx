@@ -165,6 +165,18 @@ function AuditPage() {
       (docs as DocumentRow[] | null)?.forEach((d) => { map[d.id] = d; });
       setDocsMap((prev) => ({ ...prev, ...map }));
     }
+    const actorIds = Array.from(new Set(list.map((r) => r.user_id).filter(Boolean) as string[]));
+    if (actorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", actorIds);
+      const amap: Record<string, ActorInfo> = {};
+      (profs as { id: string; full_name: string | null; email: string | null }[] | null)?.forEach((p) => {
+        amap[p.id] = { full_name: p.full_name, email: p.email };
+      });
+      setActorsMap((prev) => ({ ...prev, ...amap }));
+    }
     setRows(list);
     setLoading(false);
   }, [page, fromDate, toDate, actionFilter]);
