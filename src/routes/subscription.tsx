@@ -36,6 +36,7 @@ const PLAN_FEATURES: Record<PlanKey, string[]> = {
     "Audit napló",
     "GDPR adatexport",
     "ITM rendelet szerinti archiválás",
+    "Nincs megosztási lehetőség",
   ],
   pro: [
     "25 GB tárhely",
@@ -43,17 +44,19 @@ const PLAN_FEATURES: Record<PlanKey, string[]> = {
     "Minden Alap funkció",
     "Tömeges feltöltés",
     "Egyéni kategóriák",
-    "Hozzáférés megosztás",
+    "Hozzáférés megosztás (max 3 vendég)",
     "Dokumentum előnézet",
     "Dedikált Archivai e-mail cím",
+    "Dokumentumok fogadása dedikált e-mail címen",
+    "Dokumentum verziózás",
   ],
   vallalati: [
     "100 GB tárhely",
     "Korlátlan dokumentum",
     "Minden Pro funkció",
-    "Akár 5 munkatárs hozzáadása — közös munkaterület audit naplóval",
+    "Akár 5 munkaterület tag — teljes hozzáférés, személyre szabott audit napló",
+    "Korlátlan megosztás vendégeknek",
     "Prioritásos ügyfélszolgálat",
-    "Automatikus számlák beérkezése e-mailből",
   ],
 };
 
