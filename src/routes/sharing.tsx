@@ -22,6 +22,8 @@ export const Route = createFileRoute("/sharing")({
   component: SharingPage,
 });
 
+type ShareRole = "viewer" | "editor";
+
 type ShareRow = {
   id: string;
   owner_user_id: string;
@@ -29,13 +31,14 @@ type ShareRow = {
   invited_user_id: string | null;
   categories: string[];
   status: "pending" | "accepted" | "revoked";
+  role: ShareRole;
   created_at: string;
 };
 
 const PLAN_LIMITS: Record<string, number> = {
   alap: 1,
   pro: 3,
-  vallalati: Infinity,
+  vallalati: 5,
 };
 
 const CAT_COLORS: Record<string, string> = {
