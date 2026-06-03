@@ -61,9 +61,11 @@ function SharingPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<ShareRole>("viewer");
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
+  const [editRole, setEditRole] = useState<ShareRole>("viewer");
 
   const plan = subscription?.plan ?? "alap";
   const limit = PLAN_LIMITS[plan] ?? 1;
