@@ -485,15 +485,8 @@ function Dashboard() {
       >
         <CreditCard className="h-4 w-4" /> Csomagok és árak
       </Link>
-      {subscription?.plan === "vallalati" && (
-        <Link
-          to="/profile"
-          hash="nav"
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-        >
-          <Plug className="h-4 w-4" /> NAV számlaadatok importálása
-        </Link>
-      )}
+
+
       <Link
         to="/audit"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
