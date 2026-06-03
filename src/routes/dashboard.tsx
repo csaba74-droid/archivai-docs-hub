@@ -64,6 +64,20 @@ function Dashboard() {
   const { getCategory, isStrict, getRetentionDeadline, all: allCategories } = useCategoryHelpers();
   const { subscription, active, trialExpired, isTrialing, reload: reloadSubscription } = useSubscription();
   useEffect(() => { void reloadSubscription(); }, [reloadSubscription]);
+  const [workspaceMemberCount, setWorkspaceMemberCount] = useState(0);
+  useEffect(() => {
+    if (subscription?.plan !== "vallalati") { setWorkspaceMemberCount(0); return; }
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase
+        .from("shared_access")
+        .select("status")
+        .eq("owner_user_id", u.user.id);
+      const rows = (data ?? []) as { status: string }[];
+      setWorkspaceMemberCount(rows.filter((r) => r.status !== "revoked").length);
+    })();
+  }, [subscription?.plan]);
 
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [loading, setLoading] = useState(true);
