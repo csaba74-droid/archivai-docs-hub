@@ -323,6 +323,7 @@ function AuditPage() {
                   <thead className="bg-muted/40 text-left">
                     <tr>
                       <th className="px-4 py-2 font-medium">Dátum/Idő</th>
+                      <th className="px-4 py-2 font-medium">Felhasználó</th>
                       <th className="px-4 py-2 font-medium">Művelet</th>
                       <th className="px-4 py-2 font-medium">Dokumentum</th>
                       <th className="px-4 py-2 font-medium">Részletek</th>
@@ -334,6 +335,7 @@ function AuditPage() {
                       return (
                         <tr key={r.id} className="border-t hover:bg-muted/30">
                           <td className="px-4 py-2 whitespace-nowrap text-muted-foreground">{formatHu(r.created_at)}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">{renderActor(r.user_id)}</td>
                           <td className="px-4 py-2 whitespace-nowrap">{ACTION_LABELS[r.action] ?? r.action}</td>
                           <td className="px-4 py-2">
                             {doc ? (
