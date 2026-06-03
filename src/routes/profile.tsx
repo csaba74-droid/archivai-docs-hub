@@ -2,7 +2,7 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, FileText, Lock, Receipt, Bell, Trash2 } from "lucide-react";
+import { ArrowLeft, User as UserIcon, CreditCard, Shield, Loader2, AlertTriangle, Receipt, Bell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,107 +82,7 @@ function ProfilePage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const isVallalati = subscription?.plan === "vallalati";
-  const [navTaxNumber, setNavTaxNumber] = useState("");
-  const [navUsername, setNavUsername] = useState("");
-  const [navPassword, setNavPassword] = useState("");
-  const [navSignatureKey, setNavSignatureKey] = useState("");
-  const [navExchangeKey, setNavExchangeKey] = useState("");
-  const [navSaving, setNavSaving] = useState(false);
-  const [navTesting, setNavTesting] = useState(false);
 
-  const persistNav = async (): Promise<boolean> => {
-    console.log('[NAV] persistNav called', { navTaxNumber, navUsername });
-    if (!/^\d{8}-\d-\d{2}$/.test(navTaxNumber)) {
-      toast.error("Érvénytelen adószám", { description: "Formátum: 12345678-1-23" });
-      return false;
-    }
-    if (!navUsername || !navPassword || !navSignatureKey || !navExchangeKey) {
-      toast.error("Hiányzó mezők", { description: "Töltsön ki minden mezőt." });
-      return false;
-    }
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
-      toast.error("Nincs bejelentkezve");
-      return false;
-    }
-    const payload = {
-      user_id: u.user.id,
-      adoszam: navTaxNumber,
-      technical_username: navUsername,
-      password: navPassword,
-      signature_key: navSignatureKey,
-      exchange_key: navExchangeKey,
-    };
-    const { error } = await supabase
-      .from("nav_settings")
-      .upsert(payload, { onConflict: "user_id" })
-      .select();
-    if (error) {
-      console.error("[NAV save] error:", error);
-      toast.error("Mentési hiba", { description: error.message });
-      return false;
-    }
-    return true;
-  };
-
-  const saveNav = async () => {
-    setNavSaving(true);
-    const ok = await persistNav();
-    setNavSaving(false);
-    if (ok) toast.success("NAV beállítások mentve");
-  };
-
-  const testNav = async () => {
-    setNavTesting(true);
-    try {
-      const ok = await persistNav();
-      if (!ok) return;
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        toast.error("Nincs bejelentkezve");
-        return;
-      }
-      const { data, error } = await supabase.functions.invoke("nav-sync", {
-        body: { userId: u.user.id },
-      });
-      if (error) {
-        toast.error("Kapcsolódási hiba", {
-          description: error.message,
-          className: "text-destructive",
-        });
-        return;
-      }
-      const count = (data as { count?: number } | null)?.count ?? 0;
-      toast.success(`Kapcsolat sikeres! ${count} számla található az elmúlt 30 napban.`);
-    } catch (e) {
-      toast.error("Kapcsolódási hiba", {
-        description: e instanceof Error ? e.message : String(e),
-        className: "text-destructive",
-      });
-    } finally {
-      setNavTesting(false);
-    }
-  };
-
-
-  useEffect(() => {
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data } = await supabase
-        .from("nav_settings")
-        .select("*")
-        .eq("user_id", u.user.id)
-        .maybeSingle();
-      if (data) {
-        setNavTaxNumber(data.adoszam ?? "");
-        setNavUsername(data.technical_username ?? "");
-        setNavPassword((data as { password?: string }).password ?? "");
-        setNavSignatureKey(data.signature_key ?? "");
-        setNavExchangeKey(data.exchange_key ?? "");
-      }
-    })();
-  }, []);
 
   const canCancel = subscription?.status !== "canceled";
   const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
@@ -596,100 +496,6 @@ function ProfilePage() {
         </Card>
 
 
-        {/* NAV API integráció */}
-        <Card id="nav" className="p-6 scroll-mt-20">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="h-5 w-5 text-brand" />
-            <h2 className="text-base font-semibold">NAV számlaadatok importálása</h2>
-            {!isVallalati && (
-              <Badge variant="secondary" className="ml-auto gap-1">
-                <Lock className="h-3 w-3" /> Vállalati
-              </Badge>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Adja meg NAV Online Számla rendszer technikai felhasználójának adatait az automatikus számla letöltéshez. Az adatok titkosítva kerülnek tárolásra.
-          </p>
-
-          {!isVallalati ? (
-            <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center space-y-3">
-              <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
-              <div className="text-sm">
-                A NAV számlaadatok importálása csak <strong>Vállalati</strong> csomaggal érhető el.
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/subscription">Csomag frissítése</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="navTaxNumber">Adószám</Label>
-                <Input
-                  id="navTaxNumber"
-                  value={navTaxNumber}
-                  onChange={(e) => setNavTaxNumber(e.target.value)}
-                  placeholder="12345678-1-23"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="navUsername">NAV technikai felhasználónév</Label>
-                <Input
-                  id="navUsername"
-                  value={navUsername}
-                  onChange={(e) => setNavUsername(e.target.value)}
-                  placeholder="pl. abc123xyz"
-                  autoComplete="off"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="navPassword">NAV jelszó</Label>
-                <Input
-                  id="navPassword"
-                  type="password"
-                  value={navPassword}
-                  onChange={(e) => setNavPassword(e.target.value)}
-                  autoComplete="off"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="navSignatureKey">Aláírási kulcs (signatureKey)</Label>
-                <Input
-                  id="navSignatureKey"
-                  type="password"
-                  value={navSignatureKey}
-                  onChange={(e) => setNavSignatureKey(e.target.value)}
-                  autoComplete="off"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="navExchangeKey">Titkosítási kulcs (exchangeKey)</Label>
-                <Input
-                  id="navExchangeKey"
-                  type="password"
-                  value={navExchangeKey}
-                  onChange={(e) => setNavExchangeKey(e.target.value)}
-                  autoComplete="off"
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button onClick={saveNav} disabled={navSaving}>
-                  {navSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Mentés
-                </Button>
-                <Button variant="outline" onClick={testNav} disabled={navTesting}>
-                  {navTesting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Kapcsolat tesztelése
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
         {/* Account deletion */}
         <Card className="p-6 border-destructive/40">
           <div className="flex items-center gap-2 mb-2">

@@ -421,7 +421,7 @@ function LandingPage() {
                   "Korlátlan meghívott felhasználó",
                   "Korlátlan egyéni kategória",
                   "Minden Pro funkció",
-                  "NAV számlaadatok importálása",
+                  "Automatikus számlák beérkezése e-mailből",
                   "Prioritás support",
                 ],
                 cta: "Kipróbálom ingyen",
@@ -610,7 +610,7 @@ function AudienceSection() {
       checks: [
         "Minden irat egy helyen, kereshető",
         "AI automatikusan kategorizál",
-        "NAV ellenőrzésnél azonnal megtalál mindent",
+        "Hatósági ellenőrzésnél azonnal megtalál mindent",
       ],
       tag: "14 nap ingyen, kártya nélkül",
       accent: "bg-teal-50 text-teal-700 ring-teal-200",
@@ -705,7 +705,7 @@ function AudienceSection() {
       pain: "Kevesebb adminisztráció, több szabadidő.",
       checks: [
         "Egyszerű feltöltés, automatikus rendszerezés",
-        "NAV számlaadatok importálása — automatikusan érkeznek",
+        "Automatikus számlák beérkezése e-mailből",
         "Könyvelőnek egy kattintással megosztható",
       ],
       tag: "Hatósági ellenőrzésre mindig készen",
