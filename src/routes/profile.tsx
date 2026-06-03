@@ -83,6 +83,24 @@ function ProfilePage() {
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const isVallalati = subscription?.plan === "vallalati";
 
+  const [memberCount, setMemberCount] = useState<{ total: number; accepted: number }>({ total: 0, accepted: 0 });
+  useEffect(() => {
+    if (!isVallalati) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase
+        .from("shared_access")
+        .select("status")
+        .eq("owner_user_id", u.user.id);
+      const rows = (data ?? []) as { status: string }[];
+      const active = rows.filter((r) => r.status !== "revoked");
+      setMemberCount({
+        total: active.length,
+        accepted: active.filter((r) => r.status === "accepted").length,
+      });
+    })();
+  }, [isVallalati]);
 
   const canCancel = subscription?.status !== "canceled";
   const canChangePlan = subscription?.status === "active" && !!subscription?.stripe_subscription_id;
