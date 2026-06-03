@@ -286,6 +286,36 @@ function SharingPage() {
             />
           </div>
 
+          {plan === "vallalati" && (
+            <div className="space-y-2">
+              <Label>Szerepkör</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole("viewer")}
+                  disabled={limitReached}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                    selectedRole === "viewer" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="font-medium">Olvasó</div>
+                  <div className="text-xs text-muted-foreground">Csak megtekintés</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole("editor")}
+                  disabled={limitReached}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                    selectedRole === "editor" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="font-medium">Szerkesztő</div>
+                  <div className="text-xs text-muted-foreground">Feltöltés és szerkesztés (törlés nélkül)</div>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Megosztott kategóriák</Label>
             <CategoryPicker
