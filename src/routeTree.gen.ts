@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkspaceMembersRouteImport } from './routes/workspace-members'
 import { Route as SugoRouteImport } from './routes/sugo'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SharingRouteImport } from './routes/sharing'
@@ -30,6 +31,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
+const WorkspaceMembersRoute = WorkspaceMembersRouteImport.update({
+  id: '/workspace-members',
+  path: '/workspace-members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SugoRoute = SugoRouteImport.update({
   id: '/sugo',
   path: '/sugo',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
   '/sugo': typeof SugoRoute
+  '/workspace-members': typeof WorkspaceMembersRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
   '/sugo': typeof SugoRoute
+  '/workspace-members': typeof WorkspaceMembersRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/sharing': typeof SharingRoute
   '/subscription': typeof SubscriptionRoute
   '/sugo': typeof SugoRoute
+  '/workspace-members': typeof WorkspaceMembersRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/sharing'
     | '/subscription'
     | '/sugo'
+    | '/workspace-members'
     | '/admin/referrals'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/sharing'
     | '/subscription'
     | '/sugo'
+    | '/workspace-members'
     | '/admin/referrals'
     | '/api/public/payments/webhook'
   id:
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/sharing'
     | '/subscription'
     | '/sugo'
+    | '/workspace-members'
     | '/admin/referrals'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -287,11 +299,19 @@ export interface RootRouteChildren {
   SharingRoute: typeof SharingRoute
   SubscriptionRoute: typeof SubscriptionRoute
   SugoRoute: typeof SugoRoute
+  WorkspaceMembersRoute: typeof WorkspaceMembersRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workspace-members': {
+      id: '/workspace-members'
+      path: '/workspace-members'
+      fullPath: '/workspace-members'
+      preLoaderRoute: typeof WorkspaceMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sugo': {
       id: '/sugo'
       path: '/sugo'
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   SharingRoute: SharingRoute,
   SubscriptionRoute: SubscriptionRoute,
   SugoRoute: SugoRoute,
+  WorkspaceMembersRoute: WorkspaceMembersRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
