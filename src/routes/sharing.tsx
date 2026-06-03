@@ -253,12 +253,12 @@ function SharingPage() {
           <div>
             <div className="text-sm font-medium">
               {PLAN_INFO[plan].label} csomag — {usedCount}/{limit === Infinity ? "∞" : limit}{" "}
-              meghívott
+              {plan === "vallalati" ? "munkatárs" : "meghívott"}
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               {plan === "alap" && "Max 1 meghívott felhasználó"}
               {plan === "pro" && "Max 3 meghívott felhasználó"}
-              {plan === "vallalati" && "Korlátlan meghívott felhasználó"}
+              {plan === "vallalati" && "Akár 5 munkatárs — közös munkaterület audit naplóval"}
             </div>
           </div>
           {plan !== "vallalati" && (
