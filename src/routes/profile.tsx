@@ -92,12 +92,13 @@ function ProfilePage() {
       const { data } = await supabase
         .from("shared_access")
         .select("status")
-        .eq("owner_user_id", u.user.id);
+        .eq("owner_user_id", u.user.id)
+        .eq("access_type", "member");
       const rows = (data ?? []) as { status: string }[];
-      const active = rows.filter((r) => r.status !== "revoked");
+      const activeRows = rows.filter((r) => r.status !== "revoked");
       setMemberCount({
-        total: active.length,
-        accepted: active.filter((r) => r.status === "accepted").length,
+        total: activeRows.length,
+        accepted: activeRows.filter((r) => r.status === "accepted").length,
       });
     })();
   }, [isVallalati]);
@@ -461,24 +462,41 @@ function ProfilePage() {
           </div>
         </Card>
 
-        {/* Workspace members — Vállalati only */}
+        {/* Guest sharing — external accountants/partners */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-5 w-5 text-brand" />
+            <h2 className="text-base font-semibold">Hozzáférés megosztása (vendégek)</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Hívj meg külső partnert vagy könyvelőt egy-egy kategóriához. A vendégek csak
+            megtekinthetnek és letölthetnek — feltöltés és módosítás nincs.
+            {" "}Alap: 0 · Pro: max 3 · Vállalati: korlátlan.
+          </p>
+          <Button asChild variant="outline">
+            <Link to="/sharing">Vendégek kezelése</Link>
+          </Button>
+        </Card>
+
+        {/* Workspace members — Vállalati only, internal team */}
         {isVallalati && (
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Users className="h-5 w-5 text-brand" />
               <h2 className="text-base font-semibold">Munkaterület tagok</h2>
               <Badge variant="secondary" className="ml-auto">
-                {memberCount.total} aktív tag
+                {memberCount.total}/5 munkatárs
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Hívj meg korlátlan számú munkatársat e-mailben. A meghívottak a kiválasztott
-              kategóriák tartalmát látják (Olvasó), vagy fel is tölthetnek (Szerkesztő).
-              Minden műveletet a közös audit napló rögzít.
+              Belső csapattagok meghívása (max 5 fő). A munkatársak saját bejelentkezéssel
+              hozzáférnek a kiválasztott kategóriákhoz — Szerkesztőként feltölthetnek és
+              átnevezhetnek, Olvasóként csak megtekinthetnek. Törlés egyik szerepkörben sem
+              engedélyezett. Minden műveletet a közös audit napló rögzít.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild>
-                <Link to="/sharing">Tagok kezelése</Link>
+                <Link to="/workspace-members">Munkatársak kezelése</Link>
               </Button>
               <span className="text-xs text-muted-foreground">
                 {memberCount.accepted} elfogadta a meghívót
@@ -486,6 +504,7 @@ function ProfilePage() {
             </div>
           </Card>
         )}
+
 
         {/* Notification settings */}
         <Card className="p-6">

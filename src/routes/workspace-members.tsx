@@ -9,35 +9,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Trash2, Copy, ChevronRight } from "lucide-react";
+import { Loader2, Users, Trash2, Copy, ChevronRight, Lock } from "lucide-react";
 import type { Category } from "@/lib/categories";
 import { BackButton } from "@/components/BackButton";
 
-export const Route = createFileRoute("/sharing")({
+export const Route = createFileRoute("/workspace-members")({
+  head: () => ({
+    meta: [
+      { title: "Munkaterület tagok — Archivai" },
+      { name: "description", content: "Belső munkatársak hozzáadása a közös munkaterülethez." },
+    ],
+  }),
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/login" });
   },
-  component: SharingPage,
+  component: WorkspaceMembersPage,
 });
 
-type ShareRow = {
+const MAX_MEMBERS = 5;
+
+type MemberRole = "viewer" | "editor";
+
+type MemberRow = {
   id: string;
   owner_user_id: string;
   invited_email: string;
   invited_user_id: string | null;
   categories: string[];
   status: "pending" | "accepted" | "revoked";
+  role: MemberRole;
   access_type: string;
   created_at: string;
-};
-
-// Vendég hozzáférés limit: Alap = 0, Pro = 3, Vállalati = korlátlan.
-const PLAN_LIMITS: Record<string, number> = {
-  alap: 0,
-  pro: 3,
-  vallalati: Number.POSITIVE_INFINITY,
 };
 
 const CAT_COLORS: Record<string, string> = {
@@ -53,21 +57,23 @@ const CAT_COLORS: Record<string, string> = {
   egyeb: "#A8A49E",
 };
 
-function SharingPage() {
+function WorkspaceMembersPage() {
   const { all: allCats } = useCategories();
   const { subscription } = useSubscription();
-  const [shares, setShares] = useState<ShareRow[]>([]);
+  const [members, setMembers] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<MemberRole>("editor");
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
+  const [editRole, setEditRole] = useState<MemberRole>("editor");
 
   const plan = subscription?.plan ?? "alap";
-  const limit = PLAN_LIMITS[plan] ?? 0;
-  const usedCount = shares.filter((s) => s.status !== "revoked").length;
-  const limitReached = usedCount >= limit;
+  const isVallalati = plan === "vallalati";
+  const activeCount = members.filter((m) => m.status !== "revoked").length;
+  const limitReached = activeCount >= MAX_MEMBERS;
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -80,10 +86,10 @@ function SharingPage() {
       .from("shared_access")
       .select("*")
       .eq("owner_user_id", u.user.id)
-      .eq("access_type", "guest")
+      .eq("access_type", "member")
       .order("created_at", { ascending: false });
     if (error) toast.error("Betöltési hiba", { description: error.message });
-    else setShares((data as ShareRow[]) ?? []);
+    else setMembers((data as MemberRow[]) ?? []);
     setLoading(false);
   }, []);
 
@@ -106,8 +112,8 @@ function SharingPage() {
       return;
     }
     if (limitReached) {
-      toast.error("Elérted a meghívók maximumát", {
-        description: `A ${PLAN_INFO[plan].label} csomag max ${limit} meghívottat enged. Válts magasabb csomagra.`,
+      toast.error("Elérted a munkatársak maximumát", {
+        description: `A Vállalati csomag max ${MAX_MEMBERS} munkatársat enged.`,
       });
       return;
     }
@@ -117,49 +123,27 @@ function SharingPage() {
       setSubmitting(false);
       return;
     }
-    const insertPayload = {
-      owner_user_id: u.user.id,
-      invited_email: trimmed,
-      categories: selectedCats,
-      role: "viewer" as const,
-      access_type: "guest" as const,
-      status: "pending" as const,
-    };
-    console.log("[sharing] Inserting shared_access row:", insertPayload);
     const { data: inserted, error } = await supabase
       .from("shared_access")
-      .insert(insertPayload)
+      .insert({
+        owner_user_id: u.user.id,
+        invited_email: trimmed,
+        categories: selectedCats,
+        role: selectedRole,
+        access_type: "member",
+        status: "pending" as const,
+      })
       .select("*")
       .single();
-    console.log("[sharing] Insert result:", { inserted, error });
     if (error || !inserted) {
       setSubmitting(false);
-      toast.error("Meghívó sikertelen", {
+      toast.error("Meghívás sikertelen", {
         description: error?.message ?? "Nem sikerült létrehozni a meghívót",
       });
-      console.error("[sharing] Insert failed:", error);
       return;
     }
-
-    // Verify the row actually persisted before sending the email
-    const { data: verifyRow, error: verifyErr } = await supabase
-      .from("shared_access")
-      .select("id, status, invited_email")
-      .eq("id", inserted.id)
-      .maybeSingle();
-    console.log("[sharing] Verify row:", { verifyRow, verifyErr });
-    if (verifyErr || !verifyRow) {
-      setSubmitting(false);
-      toast.error("Meghívó nem található az adatbázisban", {
-        description: verifyErr?.message ?? "A beszúrt sor nem érhető el (RLS?)",
-      });
-      return;
-    }
-
     try {
-      console.log("Sending invitation to:", trimmed);
-      console.log("Calling edge function...");
-      const { data: fnData, error: fnError } = await supabase.functions.invoke("send-invitation", {
+      const { error: fnError } = await supabase.functions.invoke("send-invitation", {
         body: {
           to_email: trimmed,
           owner_name: u.user.email ?? "",
@@ -169,40 +153,36 @@ function SharingPage() {
           invitation_link: `https://archivai-docs-hub.lovable.app/accept-invitation?token=${inserted.id}`,
         },
       });
-      console.log("Edge function result:", fnData, fnError);
       if (fnError) throw fnError;
-      if (fnData && typeof fnData === "object" && "error" in fnData && fnData.error) {
-        throw new Error(String((fnData as { error: unknown }).error));
-      }
-      toast.success("Meghívó elküldve", {
-        description: `${trimmed} email értesítést kapott a hozzáférésről.`,
+      toast.success("Munkatárs meghívva", {
+        description: `${trimmed} email értesítést kapott a meghívóról.`,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Ismeretlen hiba";
-      toast.warning("Meghívó létrejött, de az email nem ment ki", {
-        description: msg,
-      });
+      toast.warning("Meghívó létrejött, de az email nem ment ki", { description: msg });
     }
     setSubmitting(false);
     setEmail("");
     setSelectedCats([]);
+    setSelectedRole("editor");
     void reload();
   };
 
   const handleRevoke = async (id: string) => {
-    if (!confirm("Biztosan visszavonod ezt a hozzáférést?")) return;
+    if (!confirm("Biztosan eltávolítod ezt a munkatársat?")) return;
     const { error } = await supabase.from("shared_access").delete().eq("id", id);
     if (error) {
       toast.error("Sikertelen", { description: error.message });
       return;
     }
-    toast.success("Hozzáférés visszavonva");
+    toast.success("Munkatárs eltávolítva");
     void reload();
   };
 
-  const startEdit = (s: ShareRow) => {
-    setEditingId(s.id);
-    setEditCats(s.categories);
+  const startEdit = (m: MemberRow) => {
+    setEditingId(m.id);
+    setEditCats(m.categories);
+    setEditRole(m.role ?? "editor");
   };
 
   const saveEdit = async () => {
@@ -213,7 +193,7 @@ function SharingPage() {
     }
     const { error } = await supabase
       .from("shared_access")
-      .update({ categories: editCats, updated_at: new Date().toISOString() })
+      .update({ categories: editCats, role: editRole, updated_at: new Date().toISOString() })
       .eq("id", editingId);
     if (error) {
       toast.error("Mentés sikertelen", { description: error.message });
@@ -229,63 +209,108 @@ function SharingPage() {
     [],
   );
 
+  if (!isVallalati) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card px-4 md:px-8 py-4 flex items-center gap-3">
+          <BackButton />
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-brand" />
+            <h1 className="text-lg font-semibold tracking-tight">Munkaterület tagok</h1>
+          </div>
+        </header>
+        <main className="max-w-2xl mx-auto px-4 md:px-8 py-12">
+          <div className="rounded-lg border bg-card p-8 text-center space-y-4">
+            <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <Lock className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">Csak Vállalati csomagban érhető el</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                A Munkaterület tagok funkcióval akár {MAX_MEMBERS} belső munkatársat adhatsz
+                hozzá a közös munkaterülethez. Mindenki ugyanazokat a kategóriákat látja, és
+                minden műveletet egy közös audit napló rögzít.
+              </p>
+            </div>
+            <Link to="/subscription">
+              <Button>Váltás Vállalati csomagra</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 md:px-8 py-4 flex items-center gap-3">
         <BackButton />
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-brand" />
-          <h1 className="text-lg font-semibold tracking-tight">Hozzáférés megosztása</h1>
+          <h1 className="text-lg font-semibold tracking-tight">Munkaterület tagok</h1>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 md:px-8 py-6 space-y-6">
         <p className="text-sm text-muted-foreground">
-          Vendég hozzáférés: hívjon meg könyvelőt vagy külső partnert. A meghívott csak az Ön
-          által kijelölt kategóriákat látja — csak megtekintés és letöltés.
-          {" "}Belső munkatársaknak külön{" "}
-          <Link to="/workspace-members" className="underline">
-            Munkaterület tagok
-          </Link>{" "}
-          funkció van (Vállalati csomag).
+          Belső munkatársak meghívása a közös munkaterületre. A tagok saját bejelentkezéssel
+          férnek hozzá; minden műveletet a közös audit napló rögzít.
         </p>
 
-        {/* Plan limit indicator */}
         <div className="rounded-lg border bg-card p-4 flex items-center justify-between">
           <div>
             <div className="text-sm font-medium">
-              {PLAN_INFO[plan].label} csomag — {usedCount}/{limit === Infinity ? "∞" : limit}{" "}
-              vendég
+              Vállalati munkaterület — {activeCount}/{MAX_MEMBERS} munkatárs
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              {plan === "alap" && "Az Alap csomag nem támogat vendég hozzáférést."}
-              {plan === "pro" && "Max 3 vendég (csak megtekintés és letöltés)."}
-              {plan === "vallalati" && "Korlátlan vendég hozzáférés."}
+              Max {MAX_MEMBERS} belső tag. Szerkesztők feltölthetnek és átnevezhetnek; olvasók
+              csak megtekinthetnek. Törlés egyik szerepkörben sem engedélyezett.
             </div>
           </div>
-          {plan !== "vallalati" && (
-            <Link to="/subscription">
-              <Button variant="outline" size="sm">
-                Csomag váltás
-              </Button>
-            </Link>
-          )}
         </div>
 
         {/* Invite form */}
         <section className="rounded-lg border bg-card p-5 space-y-4">
-          <h2 className="font-semibold">Új vendég meghívása</h2>
+          <h2 className="font-semibold">Új munkatárs meghívása</h2>
 
           <div className="space-y-2">
-            <Label htmlFor="invite-email">Meghívott email címe</Label>
+            <Label htmlFor="member-email">Munkatárs email címe</Label>
             <Input
-              id="invite-email"
+              id="member-email"
               type="email"
-              placeholder="konyvelo@pelda.hu"
+              placeholder="kollega@pelda.hu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={limitReached}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Szerepkör</Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedRole("editor")}
+                disabled={limitReached}
+                className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                  selectedRole === "editor" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
+                }`}
+              >
+                <div className="font-medium">Szerkesztő</div>
+                <div className="text-xs text-muted-foreground">Feltöltés, átnevezés, mozgatás (törlés nélkül)</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole("viewer")}
+                disabled={limitReached}
+                className={`flex-1 rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                  selectedRole === "viewer" ? "border-brand bg-brand/5" : "border-border hover:bg-muted/40"
+                }`}
+              >
+                <div className="font-medium">Olvasó</div>
+                <div className="text-xs text-muted-foreground">Csak megtekintés és letöltés</div>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -300,63 +325,85 @@ function SharingPage() {
 
           <Button onClick={handleSubmit} disabled={submitting || limitReached}>
             {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Meghívó küldése
+            Meghívás küldése
           </Button>
 
           {limitReached && (
             <p className="text-xs text-destructive">
-              Elérted a {PLAN_INFO[plan].label} csomag vendég-limitjét. Magasabb csomagban többet
-              hívhatsz meg.
+              Elérted az {MAX_MEMBERS} fős munkatárs-limitet.
             </p>
           )}
         </section>
 
-
-        {/* Active shares */}
+        {/* Members list */}
         <section className="space-y-3">
-          <h2 className="font-semibold">Megosztott hozzáférések</h2>
+          <h2 className="font-semibold">Aktív munkatársak</h2>
 
           {loading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
-          ) : shares.length === 0 ? (
+          ) : members.length === 0 ? (
             <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
-              Még nincs megosztott hozzáférés.
+              Még nincs meghívott munkatárs.
             </div>
           ) : (
             <div className="space-y-2">
-              {shares.map((s) => (
-                <div key={s.id} className="rounded-lg border bg-card p-4 space-y-3">
+              {members.map((m) => (
+                <div key={m.id} className="rounded-lg border bg-card p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
-                      <div className="font-medium text-sm">{s.invited_email}</div>
+                      <div className="font-medium text-sm">{m.invited_email}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        Meghívva: {new Date(s.created_at).toLocaleDateString("hu-HU")}
+                        Meghívva: {new Date(m.created_at).toLocaleDateString("hu-HU")}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">Vendég</Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {m.role === "editor" ? "Szerkesztő" : "Olvasó"}
+                      </Badge>
                       <Badge
-                        variant={s.status === "accepted" ? "default" : "secondary"}
+                        variant={m.status === "accepted" ? "default" : "secondary"}
                         className={
-                          s.status === "accepted"
+                          m.status === "accepted"
                             ? "bg-[#0F6E56] text-white hover:bg-[#0F6E56]/90"
                             : ""
                         }
                       >
-                        {s.status === "accepted"
-                          ? "Elfogadva"
-                          : s.status === "pending"
+                        {m.status === "accepted"
+                          ? "Aktív"
+                          : m.status === "pending"
                             ? "Függőben"
-                            : "Visszavonva"}
+                            : "Eltávolítva"}
                       </Badge>
                     </div>
                   </div>
 
-                  {editingId === s.id ? (
+                  {editingId === m.id ? (
                     <div className="space-y-3">
-
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Szerepkör</Label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditRole("editor")}
+                            className={`flex-1 rounded-md border px-3 py-1.5 text-xs ${
+                              editRole === "editor" ? "border-brand bg-brand/5" : "border-border"
+                            }`}
+                          >
+                            Szerkesztő
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditRole("viewer")}
+                            className={`flex-1 rounded-md border px-3 py-1.5 text-xs ${
+                              editRole === "viewer" ? "border-brand bg-brand/5" : "border-border"
+                            }`}
+                          >
+                            Olvasó
+                          </button>
+                        </div>
+                      </div>
                       <CategoryPicker
                         cats={allCats}
                         selected={editCats}
@@ -374,10 +421,10 @@ function SharingPage() {
                   ) : (
                     <>
                       <div className="flex flex-wrap gap-1.5">
-                        {s.categories.length === 0 ? (
+                        {m.categories.length === 0 ? (
                           <span className="text-xs text-muted-foreground">Nincs kategória</span>
                         ) : (
-                          s.categories.map((cid) => {
+                          m.categories.map((cid) => {
                             const cat = allCats.find((c) => c.id === cid);
                             const color = cat?.color ?? CAT_COLORS[cid] ?? "#9CA3AF";
                             return (
@@ -397,18 +444,18 @@ function SharingPage() {
                         )}
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => startEdit(s)}>
+                        <Button size="sm" variant="outline" onClick={() => startEdit(m)}>
                           Szerkesztés
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => handleRevoke(s.id)}
+                          onClick={() => handleRevoke(m.id)}
                         >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Visszavonás
+                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Eltávolítás
                         </Button>
-                        {s.status === "pending" && (
+                        {m.status === "pending" && (
                           <Button
                             size="sm"
                             variant="ghost"

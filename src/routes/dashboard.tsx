@@ -73,7 +73,8 @@ function Dashboard() {
       const { data } = await supabase
         .from("shared_access")
         .select("status")
-        .eq("owner_user_id", u.user.id);
+        .eq("owner_user_id", u.user.id)
+        .eq("access_type", "member");
       const rows = (data ?? []) as { status: string }[];
       setWorkspaceMemberCount(rows.filter((r) => r.status !== "revoked").length);
     })();
@@ -486,12 +487,20 @@ function Dashboard() {
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
       >
         <Users className="h-4 w-4" /> Hozzáférés megosztása
-        {subscription?.plan === "vallalati" && workspaceMemberCount > 0 && (
-          <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px]">
-            {workspaceMemberCount} tag
-          </Badge>
-        )}
       </Link>
+      {subscription?.plan === "vallalati" && (
+        <Link
+          to="/workspace-members"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+        >
+          <Users className="h-4 w-4" /> Munkaterület tagok
+          {workspaceMemberCount > 0 && (
+            <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px]">
+              {workspaceMemberCount}/5
+            </Badge>
+          )}
+        </Link>
+      )}
       <Link
         to="/referral"
         className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"

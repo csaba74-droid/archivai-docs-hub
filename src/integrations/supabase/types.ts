@@ -256,6 +256,7 @@ export type Database = {
       }
       shared_access: {
         Row: {
+          access_type: string
           categories: string[]
           created_at: string
           id: string
@@ -267,6 +268,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_type?: string
           categories?: string[]
           created_at?: string
           id?: string
@@ -278,6 +280,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_type?: string
           categories?: string[]
           created_at?: string
           id?: string
