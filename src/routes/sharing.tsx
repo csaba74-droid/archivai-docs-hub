@@ -121,7 +121,8 @@ function SharingPage() {
       owner_user_id: u.user.id,
       invited_email: trimmed,
       categories: selectedCats,
-      role: selectedRole,
+      role: "viewer" as const,
+      access_type: "guest" as const,
       status: "pending" as const,
     };
     console.log("[sharing] Inserting shared_access row:", insertPayload);
