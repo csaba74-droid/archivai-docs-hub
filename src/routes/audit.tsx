@@ -123,6 +123,7 @@ function AuditPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [docsMap, setDocsMap] = useState<Record<string, DocumentRow>>({});
+  const [actorsMap, setActorsMap] = useState<Record<string, ActorInfo>>({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
