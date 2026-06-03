@@ -117,6 +117,7 @@ function formatHu(iso: string) {
 }
 
 type Row = AuditLogRow & { filename?: string | null };
+type ActorInfo = { full_name: string | null; email: string | null };
 
 function AuditPage() {
   const navigate = useNavigate();
