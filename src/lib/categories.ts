@@ -35,11 +35,11 @@ export type Category = {
 
 export const BUILT_IN_CATEGORIES: Category[] = [
   { id: "beerkezett", label: "Beérkezett", icon: Inbox, mode: "normal", retentionYears: null, retentionLabel: "Beérkezett dokumentumok", color: "#3b82f6" },
-  { id: "szamlak", label: "Számlák", icon: Receipt, mode: "strict", retentionYears: 10, retentionLabel: "10 év kötelező megőrzés" },
-  { id: "szerzodesek", label: "Szerződések", icon: FileSignature, mode: "strict", retentionYears: 10, retentionLabel: "10 év kötelező megőrzés" },
-  { id: "szallitolevek", label: "Szállítólevelek", icon: Truck, mode: "strict", retentionYears: 10, retentionLabel: "10 év kötelező megőrzés" },
-  { id: "munkaugyi", label: "Munkaügyi iratok", icon: Briefcase, mode: "strict", retentionYears: null, retentionLabel: "Határozatlan megőrzés" },
-  { id: "adobevallasok", label: "Adóbevallások", icon: Landmark, mode: "strict", retentionYears: 6, retentionLabel: "6 év kötelező megőrzés" },
+  { id: "szamlak", label: "Számlák", icon: Receipt, mode: "strict", retentionYears: 8, retentionLabel: "8 év kötelező megőrzés" },
+  { id: "szerzodesek", label: "Szerződések", icon: FileSignature, mode: "strict", retentionYears: 8, retentionLabel: "8 év kötelező megőrzés" },
+  { id: "szallitolevek", label: "Szállítólevelek", icon: Truck, mode: "strict", retentionYears: 8, retentionLabel: "8 év kötelező megőrzés" },
+  { id: "munkaugyi", label: "Munkaügyi iratok", icon: Briefcase, mode: "strict", retentionYears: 50, retentionLabel: "50 év kötelező megőrzés" },
+  { id: "adobevallasok", label: "Adóbevallások", icon: Landmark, mode: "strict", retentionYears: 5, retentionLabel: "5 év kötelező megőrzés" },
   { id: "kozuzemi", label: "Közüzemi számlák", icon: Zap, mode: "normal", retentionYears: 5, retentionLabel: "5 év ajánlott" },
   { id: "banki", label: "Banki dokumentumok", icon: Banknote, mode: "normal", retentionYears: 5, retentionLabel: "5 év ajánlott" },
   { id: "muszaki", label: "Műszaki dokumentumok", icon: Wrench, mode: "normal", retentionYears: null, retentionLabel: "Nincs megőrzési korlát" },
@@ -166,12 +166,20 @@ export function getRetentionDeadline(
   const cat = getCategory(categoryId, all);
   if (cat.retentionYears == null) return null;
   const d = new Date(baseDate);
-  d.setFullYear(d.getFullYear() + cat.retentionYears);
-  return d;
+  // Retention starts Jan 1 of the year after the document date,
+  // runs for retentionYears, and ends on Dec 31 of the final year.
+  // => deadline year = baseYear + retentionYears
+  const deadlineYear = d.getFullYear() + cat.retentionYears;
+  return new Date(deadlineYear, 11, 31);
 }
 
+const HU_MONTHS = [
+  "január", "február", "március", "április", "május", "június",
+  "július", "augusztus", "szeptember", "október", "november", "december",
+];
+
 export function formatDeadline(date: Date): string {
-  return date.toLocaleDateString("hu-HU", { year: "numeric", month: "short", day: "numeric" });
+  return `${date.getFullYear()}. ${HU_MONTHS[date.getMonth()]} ${date.getDate()}.`;
 }
 
 export function isExpired(deadline: Date | null): boolean {
