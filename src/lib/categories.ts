@@ -166,12 +166,20 @@ export function getRetentionDeadline(
   const cat = getCategory(categoryId, all);
   if (cat.retentionYears == null) return null;
   const d = new Date(baseDate);
-  d.setFullYear(d.getFullYear() + cat.retentionYears);
-  return d;
+  // Retention starts Jan 1 of the year after the document date,
+  // runs for retentionYears, and ends on Dec 31 of the final year.
+  // => deadline year = baseYear + retentionYears
+  const deadlineYear = d.getFullYear() + cat.retentionYears;
+  return new Date(deadlineYear, 11, 31);
 }
 
+const HU_MONTHS = [
+  "január", "február", "március", "április", "május", "június",
+  "július", "augusztus", "szeptember", "október", "november", "december",
+];
+
 export function formatDeadline(date: Date): string {
-  return date.toLocaleDateString("hu-HU", { year: "numeric", month: "short", day: "numeric" });
+  return `${date.getFullYear()}. ${HU_MONTHS[date.getMonth()]} ${date.getDate()}.`;
 }
 
 export function isExpired(deadline: Date | null): boolean {
