@@ -16,7 +16,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Mail, FolderPlus, ArrowUpDown, Download,
+  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Mail, FolderPlus, ArrowUpDown, Download, Menu,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import {
