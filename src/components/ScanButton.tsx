@@ -216,7 +216,7 @@ export function ScanButton({
       }`}
       size={iconOnly ? "icon" : "default"}
     >
-      <label aria-label="Szkennelés" aria-disabled={inactive}>
+      <label aria-label="Fényképezés" aria-disabled={inactive}>
         <input
           type="file"
           accept="image/*,application/pdf"
