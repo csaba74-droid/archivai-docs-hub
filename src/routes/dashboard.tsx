@@ -604,6 +604,13 @@ function Dashboard() {
         {/* Mobile header */}
         <header className="md:hidden border-b-2 border-brand/10 bg-card px-4 py-3 flex items-center justify-between gap-2 sticky top-0 z-30">
           <div className="flex items-center gap-2 min-w-0">
+            <button
+              aria-label="Menü"
+              onClick={() => setMobileMenuOpen(true)}
+              className="h-10 w-10 -ml-2 rounded-full flex items-center justify-center text-brand hover:bg-muted transition-colors shrink-0"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <div className="h-9 w-9 rounded-lg bg-brand flex items-center justify-center shrink-0">
               <Archive className="h-4 w-4 text-brand-foreground" />
             </div>
