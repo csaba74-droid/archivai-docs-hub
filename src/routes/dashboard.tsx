@@ -96,6 +96,7 @@ function Dashboard() {
   const [subfolderParent, setSubfolderParent] = useState<string | null>(null);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
