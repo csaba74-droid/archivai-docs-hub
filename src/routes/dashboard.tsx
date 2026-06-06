@@ -1114,6 +1114,27 @@ function Dashboard() {
         </SheetContent>
       </Sheet>
 
+      {/* Mobile main menu sheet (full sidebar) */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-[85vw] sm:w-80 p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-brand flex items-center justify-center">
+                <Archive className="h-4 w-4 text-brand-foreground" />
+              </div>
+              Archivai
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto" onClick={(e) => {
+            // Close the sheet when a navigation link inside is clicked
+            const t = e.target as HTMLElement;
+            if (t.closest("a,button")) setMobileMenuOpen(false);
+          }}>
+            {desktopSidebarNav}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <DocumentPreviewModal
         doc={previewDoc}
         open={!!previewDoc}
