@@ -16,7 +16,7 @@ import {
   Archive, Search, Upload, LogOut, Lock, FileIcon, Loader2, Trash2,
   CalendarClock, Sparkles, Plus, CreditCard, AlertTriangle, Tag, X,
   Bell, ChevronRight, ShieldCheck, ClipboardList, UserCog, ArrowLeft,
-  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Mail, FolderPlus, ArrowUpDown, Download,
+  Home, Gift, Copy, Check, CheckSquare, Users, Camera, BookOpen, Shield, Mail, FolderPlus, ArrowUpDown, Download, Menu,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import {
@@ -96,6 +96,7 @@ function Dashboard() {
   const [subfolderParent, setSubfolderParent] = useState<string | null>(null);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
@@ -603,6 +604,13 @@ function Dashboard() {
         {/* Mobile header */}
         <header className="md:hidden border-b-2 border-brand/10 bg-card px-4 py-3 flex items-center justify-between gap-2 sticky top-0 z-30">
           <div className="flex items-center gap-2 min-w-0">
+            <button
+              aria-label="Menü"
+              onClick={() => setMobileMenuOpen(true)}
+              className="h-10 w-10 -ml-2 rounded-full flex items-center justify-center text-brand hover:bg-muted transition-colors shrink-0"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <div className="h-9 w-9 rounded-lg bg-brand flex items-center justify-center shrink-0">
               <Archive className="h-4 w-4 text-brand-foreground" />
             </div>
@@ -1103,6 +1111,27 @@ function Dashboard() {
           </SheetHeader>
           <div className="flex-1" />
           {profilePanel}
+        </SheetContent>
+      </Sheet>
+
+      {/* Mobile main menu sheet (full sidebar) */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-[85vw] sm:w-80 p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-brand flex items-center justify-center">
+                <Archive className="h-4 w-4 text-brand-foreground" />
+              </div>
+              Archivai
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto" onClick={(e) => {
+            // Close the sheet when a navigation link inside is clicked
+            const t = e.target as HTMLElement;
+            if (t.closest("a,button")) setMobileMenuOpen(false);
+          }}>
+            {desktopSidebarNav}
+          </div>
         </SheetContent>
       </Sheet>
 
