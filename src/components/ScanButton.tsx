@@ -229,7 +229,7 @@ export function ScanButton({
         ) : (
           <Camera className={`h-4 w-4 ${iconOnly ? "" : "mr-2"}`} />
         )}
-        {!iconOnly && "Szkennelés"}
+        {!iconOnly && "Fényképezés"}
       </label>
     </Button>
   );
