@@ -38,7 +38,7 @@ export function MobileBottomNav({ onAll, onSearch, onUpload, onCategories, onPro
           variant="ghost"
           className="h-9 w-9 rounded-full"
         />
-        <span className="text-[10px] text-muted-foreground">Szken</span>
+        <span className="text-[10px] text-muted-foreground">Fotó</span>
       </div>
 
       <NavBtn icon={<FolderOpen className="h-5 w-5" />} label="Kategóriák" onClick={onCategories} />
