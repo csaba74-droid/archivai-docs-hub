@@ -9,7 +9,9 @@ export type AuditAction =
   | "search"
   | "categorize"
   | "rename"
-  | "move";
+  | "move"
+  | "note_added"
+  | "note_deleted";
 
 export async function logAudit(
   action: AuditAction,
