@@ -128,7 +128,9 @@ export function MoveFolderDialog({
           })}
           {options.length === 0 && (
             <p className="text-sm text-muted-foreground px-3 py-2">
-              Nincs elérhető célmappa.
+              {currentRootStrict
+                ? "Nincs másik törvényileg védett főkategória, ahova áthelyezhető lenne."
+                : "Nincs elérhető célmappa."}
             </p>
           )}
         </div>
