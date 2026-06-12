@@ -228,6 +228,45 @@ export function DocumentPreviewModal({
     if (data) onUpdated?.(data as DocumentRow);
   };
 
+  const postNote = async () => {
+    const text = newNote.trim();
+    if (!text || !currentUserId) return;
+    setPostingNote(true);
+    const { data, error } = await supabase
+      .from("document_notes" as never)
+      .insert({
+        document_id: doc.id,
+        user_id: currentUserId,
+        author_name: currentAuthorName || null,
+        content: text,
+      } as never)
+      .select()
+      .single();
+    setPostingNote(false);
+    if (error) {
+      toast.error("Megjegyzés hozzáadása sikertelen", { description: error.message });
+      return;
+    }
+    setNotes((prev) => [...prev, data as unknown as NoteRow]);
+    setNewNote("");
+    void logAudit("note_added", doc.id);
+  };
+
+  const deleteNote = async (note: NoteRow) => {
+    const { error } = await supabase
+      .from("document_notes" as never)
+      .delete()
+      .eq("id", note.id);
+    if (error) {
+      toast.error("Megjegyzés törlése sikertelen", { description: error.message });
+      return;
+    }
+    setNotes((prev) => prev.filter((n) => n.id !== note.id));
+    void logAudit("note_deleted", doc.id);
+  };
+
+
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
