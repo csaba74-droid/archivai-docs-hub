@@ -122,6 +122,29 @@ export function DocumentPreviewModal({
     getSignedUrl(activeDoc.storage_path, 600).then((u) => {
       if (!cancelled) setUrl(u);
     });
+
+    // Load current user (for author name + delete permission)
+    void supabase.auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user) return;
+      setCurrentUserId(data.user.id);
+      const meta = (data.user.user_metadata ?? {}) as { full_name?: string };
+      const fallback = data.user.email ? data.user.email.split("@")[0] : "";
+      setCurrentAuthorName(meta.full_name?.trim() || fallback);
+    });
+
+    // Load comment thread
+    setNotes([]);
+    setNewNote("");
+    void supabase
+      .from("document_notes" as never)
+      .select("*")
+      .eq("document_id", activeDoc.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data) setNotes(data as unknown as NoteRow[]);
+      });
+
     return () => {
       cancelled = true;
     };
