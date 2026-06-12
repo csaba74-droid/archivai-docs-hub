@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Download,
   Lock,
@@ -21,6 +22,9 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
+  Trash2,
+  Send,
 } from "lucide-react";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline, isExpired } from "@/lib/categories";
@@ -29,6 +33,15 @@ import { getSignedUrl } from "@/lib/signed-url";
 import { logAudit } from "@/lib/audit";
 import { FilePreview } from "./FilePreview";
 import { toast } from "sonner";
+
+type NoteRow = {
+  id: string;
+  document_id: string;
+  user_id: string;
+  author_name: string | null;
+  content: string;
+  created_at: string;
+};
 
 export function DocumentPreviewModal({
   doc: propDoc,
@@ -57,6 +70,11 @@ export function DocumentPreviewModal({
   const [savingNotes, setSavingNotes] = useState(false);
   const [versions, setVersions] = useState<DocumentRow[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<NoteRow[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [postingNote, setPostingNote] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentAuthorName, setCurrentAuthorName] = useState<string>("");
 
   // The doc currently shown: either the explicitly selected version, or the prop doc
   const activeDoc = activeVersionId
@@ -104,6 +122,29 @@ export function DocumentPreviewModal({
     getSignedUrl(activeDoc.storage_path, 600).then((u) => {
       if (!cancelled) setUrl(u);
     });
+
+    // Load current user (for author name + delete permission)
+    void supabase.auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user) return;
+      setCurrentUserId(data.user.id);
+      const meta = (data.user.user_metadata ?? {}) as { full_name?: string };
+      const fallback = data.user.email ? data.user.email.split("@")[0] : "";
+      setCurrentAuthorName(meta.full_name?.trim() || fallback);
+    });
+
+    // Load comment thread
+    setNotes([]);
+    setNewNote("");
+    void supabase
+      .from("document_notes" as never)
+      .select("*")
+      .eq("document_id", activeDoc.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data) setNotes(data as unknown as NoteRow[]);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -186,6 +227,45 @@ export function DocumentPreviewModal({
     setEditingNotes(false);
     if (data) onUpdated?.(data as DocumentRow);
   };
+
+  const postNote = async () => {
+    const text = newNote.trim();
+    if (!text || !currentUserId) return;
+    setPostingNote(true);
+    const { data, error } = await supabase
+      .from("document_notes" as never)
+      .insert({
+        document_id: doc.id,
+        user_id: currentUserId,
+        author_name: currentAuthorName || null,
+        content: text,
+      } as never)
+      .select()
+      .single();
+    setPostingNote(false);
+    if (error) {
+      toast.error("Megjegyzés hozzáadása sikertelen", { description: error.message });
+      return;
+    }
+    setNotes((prev) => [...prev, data as unknown as NoteRow]);
+    setNewNote("");
+    void logAudit("note_added", doc.id);
+  };
+
+  const deleteNote = async (note: NoteRow) => {
+    const { error } = await supabase
+      .from("document_notes" as never)
+      .delete()
+      .eq("id", note.id);
+    if (error) {
+      toast.error("Megjegyzés törlése sikertelen", { description: error.message });
+      return;
+    }
+    setNotes((prev) => prev.filter((n) => n.id !== note.id));
+    void logAudit("note_deleted", doc.id);
+  };
+
+
 
 
   return (
@@ -340,6 +420,74 @@ export function DocumentPreviewModal({
                 </button>
               )}
             </div>
+
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5 mb-2">
+                <MessageSquare className="h-3.5 w-3.5" /> Megjegyzések
+                {notes.length > 0 && (
+                  <span className="text-muted-foreground/70">({notes.length})</span>
+                )}
+              </div>
+              <div className="space-y-2 mb-2">
+                {notes.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Még nincs megjegyzés.
+                  </p>
+                )}
+                {notes.map((n) => {
+                  const canDelete = n.user_id === currentUserId || doc.user_id === currentUserId;
+                  return (
+                    <div key={n.id} className="group rounded-md border bg-background p-2 text-sm">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-semibold">{n.author_name || "Névtelen"}</span>
+                          <span className="text-muted-foreground">
+                            {new Date(n.created_at).toLocaleString("hu-HU")}
+                          </span>
+                        </div>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => deleteNote(n)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            aria-label="Megjegyzés törlése"
+                            title="Megjegyzés törlése"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="whitespace-pre-wrap break-words text-sm">{n.content}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="space-y-2">
+                <Textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Új megjegyzés..."
+                  rows={2}
+                  className="text-sm resize-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void postNote();
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  onClick={postNote}
+                  disabled={postingNote || !newNote.trim()}
+                  className="w-full"
+                >
+                  <Send className="h-3.5 w-3.5 mr-1.5" /> Hozzáadás
+                </Button>
+              </div>
+            </div>
+
+
 
 
 

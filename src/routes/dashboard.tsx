@@ -1015,6 +1015,24 @@ function Dashboard() {
                     <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
                   )}
                 </Button>
+                {selectionMode && filtered.length > 0 && (() => {
+                  const allSelected = filtered.every((d) => selectedDocs.has(d.id));
+                  return (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (allSelected) {
+                          setSelectedDocs(new Set());
+                        } else {
+                          setSelectedDocs(new Set(filtered.map((d) => d.id)));
+                        }
+                      }}
+                    >
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      {allSelected ? "Kijelölés törlése" : "Összes kijelölése"}
+                    </Button>
+                  );
+                })()}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">

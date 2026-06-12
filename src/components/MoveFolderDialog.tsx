@@ -44,16 +44,20 @@ export function MoveFolderDialog({
   const currentRoot = folderId ? getRoot(folderId) : null;
 
   // Destination options: all top-level categories except the folder's current
-  // root and the folder itself (a folder can't be its own ancestor).
+  // root and the folder itself. When the current root is "strict" (legally
+  // protected), restrict destinations to other strict roots so the retention
+  // protection is preserved.
+  const currentRootStrict = currentRoot?.mode === "strict";
   const options = useMemo(() => {
     if (!folder) return [];
     return all.filter(
       (c) =>
         c.parentCatId == null &&
         c.id !== folder.id &&
-        c.id !== currentRoot?.id,
+        c.id !== currentRoot?.id &&
+        (!currentRootStrict || c.mode === "strict"),
     );
-  }, [all, folder, currentRoot]);
+  }, [all, folder, currentRoot, currentRootStrict]);
 
   const handleMove = async () => {
     if (!folder || !selected || !folder.custom) {
@@ -93,7 +97,9 @@ export function MoveFolderDialog({
           <DialogTitle>Mappa áthelyezése</DialogTitle>
           <DialogDescription>
             {folder
-              ? `"${folder.label}" — válassz új főkategóriát. A mappa és minden dokumentuma az új helyre kerül.`
+              ? currentRootStrict
+                ? `"${folder.label}" — csak másik törvényileg védett főkategóriába helyezhető át, hogy a megőrzési kötelezettség ne sérüljön.`
+                : `"${folder.label}" — válassz új főkategóriát. A mappa és minden dokumentuma az új helyre kerül.`
               : ""}
           </DialogDescription>
         </DialogHeader>
@@ -122,7 +128,9 @@ export function MoveFolderDialog({
           })}
           {options.length === 0 && (
             <p className="text-sm text-muted-foreground px-3 py-2">
-              Nincs elérhető célmappa.
+              {currentRootStrict
+                ? "Nincs másik törvényileg védett főkategória, ahova áthelyezhető lenne."
+                : "Nincs elérhető célmappa."}
             </p>
           )}
         </div>
