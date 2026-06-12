@@ -421,6 +421,74 @@ export function DocumentPreviewModal({
               )}
             </div>
 
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5 mb-2">
+                <MessageSquare className="h-3.5 w-3.5" /> Megjegyzések
+                {notes.length > 0 && (
+                  <span className="text-muted-foreground/70">({notes.length})</span>
+                )}
+              </div>
+              <div className="space-y-2 mb-2">
+                {notes.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Még nincs megjegyzés.
+                  </p>
+                )}
+                {notes.map((n) => {
+                  const canDelete = n.user_id === currentUserId || doc.user_id === currentUserId;
+                  return (
+                    <div key={n.id} className="group rounded-md border bg-background p-2 text-sm">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-semibold">{n.author_name || "Névtelen"}</span>
+                          <span className="text-muted-foreground">
+                            {new Date(n.created_at).toLocaleString("hu-HU")}
+                          </span>
+                        </div>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => deleteNote(n)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            aria-label="Megjegyzés törlése"
+                            title="Megjegyzés törlése"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="whitespace-pre-wrap break-words text-sm">{n.content}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="space-y-2">
+                <Textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Új megjegyzés..."
+                  rows={2}
+                  className="text-sm resize-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void postNote();
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  onClick={postNote}
+                  disabled={postingNote || !newNote.trim()}
+                  className="w-full"
+                >
+                  <Send className="h-3.5 w-3.5 mr-1.5" /> Hozzáadás
+                </Button>
+              </div>
+            </div>
+
+
+
 
 
             <Field label="Kategória" value={cat.label} />
