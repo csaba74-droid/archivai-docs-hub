@@ -70,6 +70,11 @@ export function DocumentPreviewModal({
   const [savingNotes, setSavingNotes] = useState(false);
   const [versions, setVersions] = useState<DocumentRow[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<NoteRow[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [postingNote, setPostingNote] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentAuthorName, setCurrentAuthorName] = useState<string>("");
 
   // The doc currently shown: either the explicitly selected version, or the prop doc
   const activeDoc = activeVersionId
