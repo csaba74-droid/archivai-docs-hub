@@ -97,7 +97,9 @@ export function MoveFolderDialog({
           <DialogTitle>Mappa áthelyezése</DialogTitle>
           <DialogDescription>
             {folder
-              ? `"${folder.label}" — válassz új főkategóriát. A mappa és minden dokumentuma az új helyre kerül.`
+              ? currentRootStrict
+                ? `"${folder.label}" — csak másik törvényileg védett főkategóriába helyezhető át, hogy a megőrzési kötelezettség ne sérüljön.`
+                : `"${folder.label}" — válassz új főkategóriát. A mappa és minden dokumentuma az új helyre kerül.`
               : ""}
           </DialogDescription>
         </DialogHeader>
