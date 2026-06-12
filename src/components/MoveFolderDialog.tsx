@@ -44,16 +44,20 @@ export function MoveFolderDialog({
   const currentRoot = folderId ? getRoot(folderId) : null;
 
   // Destination options: all top-level categories except the folder's current
-  // root and the folder itself (a folder can't be its own ancestor).
+  // root and the folder itself. When the current root is "strict" (legally
+  // protected), restrict destinations to other strict roots so the retention
+  // protection is preserved.
+  const currentRootStrict = currentRoot?.mode === "strict";
   const options = useMemo(() => {
     if (!folder) return [];
     return all.filter(
       (c) =>
         c.parentCatId == null &&
         c.id !== folder.id &&
-        c.id !== currentRoot?.id,
+        c.id !== currentRoot?.id &&
+        (!currentRootStrict || c.mode === "strict"),
     );
-  }, [all, folder, currentRoot]);
+  }, [all, folder, currentRoot, currentRootStrict]);
 
   const handleMove = async () => {
     if (!folder || !selected || !folder.custom) {
