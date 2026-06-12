@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Download,
   Lock,
@@ -21,6 +22,9 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
+  Trash2,
+  Send,
 } from "lucide-react";
 import { supabase, type DocumentRow } from "@/lib/supabase";
 import { formatDeadline, isExpired } from "@/lib/categories";
@@ -29,6 +33,15 @@ import { getSignedUrl } from "@/lib/signed-url";
 import { logAudit } from "@/lib/audit";
 import { FilePreview } from "./FilePreview";
 import { toast } from "sonner";
+
+type NoteRow = {
+  id: string;
+  document_id: string;
+  user_id: string;
+  author_name: string | null;
+  content: string;
+  created_at: string;
+};
 
 export function DocumentPreviewModal({
   doc: propDoc,
