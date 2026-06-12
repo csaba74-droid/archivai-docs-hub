@@ -983,8 +983,9 @@ function Dashboard() {
           ) : (
             <>
               {/* Compact dropzone — desktop only */}
-              <div className="hidden md:flex rounded-xl border bg-card p-3 items-center gap-3">
-                <div className="flex-1">
+              <div className="hidden md:flex flex-col rounded-xl border bg-card p-3 gap-3">
+                {/* Row 1: drop zone */}
+                <div className="w-full">
                   <DropZone
                     variant="compact"
                     dragOver={dragOver}
@@ -995,71 +996,74 @@ function Dashboard() {
                     onClick={() => canUpload && openUploadWith(null)}
                   />
                 </div>
-                <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
-                  <Upload className="h-4 w-4 mr-2" /> Feltöltés
-                </Button>
-                <Button
-                  variant={selectionMode ? "default" : "outline"}
-                  onClick={() => {
-                    if (selectionMode) {
-                      setSelectedDocs(new Set());
-                      setSelectionMode(false);
-                    } else {
-                      setSelectionMode(true);
-                    }
-                  }}
-                >
-                  {selectionMode ? (
-                    <><X className="h-4 w-4 mr-2" /> Mégse</>
-                  ) : (
-                    <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
-                  )}
-                </Button>
-                {selectionMode && filtered.length > 0 && (() => {
-                  const allSelected = filtered.every((d) => selectedDocs.has(d.id));
-                  return (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        if (allSelected) {
-                          setSelectedDocs(new Set());
-                        } else {
-                          setSelectedDocs(new Set(filtered.map((d) => d.id)));
-                        }
-                      }}
-                    >
-                      <CheckSquare className="h-4 w-4 mr-2" />
-                      {allSelected ? "Kijelölés törlése" : "Összes kijelölése"}
-                    </Button>
-                  );
-                })()}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      {sortBy === "created_desc" && "Legújabb elöl"}
-                      {sortBy === "created_asc" && "Legrégebbi elöl"}
-                      {sortBy === "name_asc" && "Név (A-Z)"}
-                      {sortBy === "name_desc" && "Név (Z-A)"}
-                      {sortBy === "size_desc" && "Méret (legnagyobb)"}
-                      {sortBy === "size_asc" && "Méret (legkisebb)"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuCheckboxItem checked={sortBy === "created_desc"} onCheckedChange={() => setSortBy("created_desc")}>Legújabb elöl</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem checked={sortBy === "created_asc"} onCheckedChange={() => setSortBy("created_asc")}>Legrégebbi elöl</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem checked={sortBy === "name_asc"} onCheckedChange={() => setSortBy("name_asc")}>Név (A-Z)</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem checked={sortBy === "name_desc"} onCheckedChange={() => setSortBy("name_desc")}>Név (Z-A)</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem checked={sortBy === "size_desc"} onCheckedChange={() => setSortBy("size_desc")}>Méret (legnagyobb elöl)</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem checked={sortBy === "size_asc"} onCheckedChange={() => setSortBy("size_asc")}>Méret (legkisebb elöl)</DropdownMenuCheckboxItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
-                {activeCat && (
-                  <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
-                    <FolderPlus className="h-4 w-4 mr-2" /> Új almappa
+                {/* Row 2: action buttons */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button onClick={() => openUploadWith(null)} disabled={!canUpload}>
+                    <Upload className="h-4 w-4 mr-2" /> Feltöltés
                   </Button>
-                )}
+                  <Button
+                    variant={selectionMode ? "default" : "outline"}
+                    onClick={() => {
+                      if (selectionMode) {
+                        setSelectedDocs(new Set());
+                        setSelectionMode(false);
+                      } else {
+                        setSelectionMode(true);
+                      }
+                    }}
+                  >
+                    {selectionMode ? (
+                      <><X className="h-4 w-4 mr-2" /> Mégse</>
+                    ) : (
+                      <><CheckSquare className="h-4 w-4 mr-2" /> Kijelölés</>
+                    )}
+                  </Button>
+                  {selectionMode && filtered.length > 0 && (() => {
+                    const allSelected = filtered.every((d) => selectedDocs.has(d.id));
+                    return (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (allSelected) {
+                            setSelectedDocs(new Set());
+                          } else {
+                            setSelectedDocs(new Set(filtered.map((d) => d.id)));
+                          }
+                        }}
+                      >
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        {allSelected ? "Kijelölés törlése" : "Összes kijelölése"}
+                      </Button>
+                    );
+                  })()}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <ArrowUpDown className="h-4 w-4 mr-2" />
+                        {sortBy === "created_desc" && "Legújabb elöl"}
+                        {sortBy === "created_asc" && "Legrégebbi elöl"}
+                        {sortBy === "name_asc" && "Név (A-Z)"}
+                        {sortBy === "name_desc" && "Név (Z-A)"}
+                        {sortBy === "size_desc" && "Méret (legnagyobb)"}
+                        {sortBy === "size_asc" && "Méret (legkisebb)"}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuCheckboxItem checked={sortBy === "created_desc"} onCheckedChange={() => setSortBy("created_desc")}>Legújabb elöl</DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={sortBy === "created_asc"} onCheckedChange={() => setSortBy("created_asc")}>Legrégebbi elöl</DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={sortBy === "name_asc"} onCheckedChange={() => setSortBy("name_asc")}>Név (A-Z)</DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={sortBy === "name_desc"} onCheckedChange={() => setSortBy("name_desc")}>Név (Z-A)</DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={sortBy === "size_desc"} onCheckedChange={() => setSortBy("size_desc")}>Méret (legnagyobb elöl)</DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={sortBy === "size_asc"} onCheckedChange={() => setSortBy("size_asc")}>Méret (legkisebb elöl)</DropdownMenuCheckboxItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <ScanButton disabled={!canUpload} onFilesReady={(f) => openUploadWith(f)} />
+                  {activeCat && (
+                    <Button variant="outline" onClick={() => openNewSubfolder(activeCat)}>
+                      <FolderPlus className="h-4 w-4 mr-2" /> Új almappa
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((doc) => {
