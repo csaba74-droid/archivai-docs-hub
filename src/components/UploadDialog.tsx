@@ -48,6 +48,8 @@ type FileProgress = {
   error?: string;
   suggestedCategory?: string;
   detectedDate?: string | null;
+  /** When set, skip AI categorization and place into this category (used by folder upload). */
+  forcedCategory?: string;
 };
 
 async function sha256Hex(buf: ArrayBuffer): Promise<string> {
