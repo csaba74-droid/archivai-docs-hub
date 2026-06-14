@@ -318,7 +318,7 @@ export function UploadDialog({
       const file = files[i].file;
       console.log("STARTING UPLOAD FOR:", file.name);
       try {
-        const hardCategory = filenameMatches[i]?.category ?? null;
+        const hardCategory = files[i].forcedCategory ?? filenameMatches[i]?.category ?? null;
 
         updateAt(i, { status: "extracting", progress: 10 });
         const lowerName = file.name.toLowerCase();
