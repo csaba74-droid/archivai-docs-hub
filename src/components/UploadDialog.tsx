@@ -98,7 +98,7 @@ export function UploadDialog({
   onComplete: () => void;
   initialFiles?: File[] | null;
 }) {
-  const { customRows, all: allCats } = useCategories();
+  const { customRows, all: allCats, create: createCategory } = useCategories();
   const { isStrict } = useCategoryHelpers();
   const { subscription, isTrialing, active } = useSubscription();
   const plan = subscription?.plan ?? null;
