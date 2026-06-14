@@ -112,6 +112,10 @@ export function UploadDialog({
   const [running, setRunning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const [folderTargetPrompt, setFolderTargetPrompt] = useState<{ files: File[] } | null>(null);
+  const [folderTarget, setFolderTarget] = useState<string>("");
+  const [folderCreating, setFolderCreating] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<{
     fileName: string;
     suggested: string;
