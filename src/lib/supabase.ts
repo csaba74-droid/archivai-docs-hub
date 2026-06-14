@@ -32,6 +32,15 @@ export type DocumentRow = {
   version_number?: number | null;
 };
 
+export type DocumentNoteRow = {
+  id: string;
+  document_id: string;
+  user_id: string;
+  author_name: string | null;
+  content: string;
+  created_at: string;
+};
+
 export type ProfileRow = {
   id: string;
   full_name: string | null;
