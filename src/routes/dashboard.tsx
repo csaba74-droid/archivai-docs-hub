@@ -113,6 +113,7 @@ function Dashboard() {
   useEffect(() => {
     setSelectedDocs(new Set());
     setSelectionMode(false);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeCat]);
 
   const toggleDocSelected = useCallback((id: string) => {
