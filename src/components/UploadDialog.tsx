@@ -338,6 +338,7 @@ export function UploadDialog({
       }
     }
     setRunning(true);
+    applyDateToAllRef.current = null;
     const customForAi = customRows.map((c: CustomCategoryRow) => ({ id: c.id, name: c.name, mode: c.is_strict_itm ? "strict" as const : "normal" as const }));
     let okCount = 0;
 
