@@ -80,13 +80,17 @@ export function MoveDocumentDialog({
     }
   };
 
+  const root = doc ? getRoot(doc.category) : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Dokumentum áthelyezése</DialogTitle>
           <DialogDescription>
-            Válassz másik mappát ugyanazon a főkategórián belül.
+            {root?.mode === "strict"
+              ? "Válassz másik mappát ugyanazon a védett főkategórián belül."
+              : "Válassz célmappát — bármelyik kategóriába áthelyezhető."}
           </DialogDescription>
         </DialogHeader>
 
