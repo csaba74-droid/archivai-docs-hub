@@ -896,6 +896,13 @@ export function UploadDialog({
                   className="h-9 w-auto"
                 />
               </div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <Checkbox
+                  checked={applyDateToAll}
+                  onCheckedChange={(v) => setApplyDateToAll(v === true)}
+                />
+                <span className="text-sm">Alkalmaz az összes dokumentumra</span>
+              </label>
               <p className="text-xs text-muted-foreground">
                 A megőrzési határidő ettől a dátumtól számítódik.
               </p>
