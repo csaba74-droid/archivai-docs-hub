@@ -350,39 +350,26 @@ export function UploadDialog({
       try {
         const hardCategory = files[i].forcedCategory ?? filenameMatches[i]?.category ?? null;
 
-        updateAt(i, { status: "extracting", progress: 10 });
         const lowerName = file.name.toLowerCase();
         const mime = (file.type || "").toLowerCase();
         const isPdf = mime.includes("pdf") || lowerName.endsWith(".pdf");
+        // Plain image uploads (jpg/jpeg/png/gif/webp): skip OCR and AI entirely.
+        const isPlainImage =
+          /^image\/(jpeg|png|gif|webp)$/.test(mime) ||
+          /\.(jpe?g|png|gif|webp)$/i.test(lowerName);
         const isImage =
-          mime.startsWith("image/") ||
-          /\.(jpe?g|png|webp|bmp|tiff?|heic)$/i.test(lowerName);
+          !isPlainImage && (
+            mime.startsWith("image/") ||
+            /\.(bmp|tiff?|heic)$/i.test(lowerName)
+          );
         let contentText = "";
-        if (isPdf) {
-          // Camera scans: OCR was already done on the upright image before
-          // wrapping in PDF. Reuse it instead of re-rendering the page.
-          const preOcr = getScanOcrText(file);
-          if (preOcr) {
-            console.log("Using cached scan OCR text, length:", preOcr.length);
-            contentText = preOcr;
-          } else {
-            try {
-              contentText = await extractPdfText(file);
-            } catch (extractErr) {
-              console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
-              contentText = "";
-            }
-            // Scanned PDF (no embedded text) → OCR first page
-            if (contentText.trim().length < 30) {
-              console.log("PDF has no text layer, running OCR fallback");
-              try {
-                const ocr = await ocrPdfFirstPage(file);
-                if (ocr) contentText = ocr;
-              } catch (ocrErr) {
-                console.warn("PDF OCR fallback failed", ocrErr);
-              }
-            }
-          }
+        if (!isPlainImage) {
+          updateAt(i, { status: "extracting", progress: 10 });
+        }
+        if (isPlainImage) {
+          // no text extraction
+        } else if (isPdf) {
+...
         } else if (isImage) {
           try {
             console.log("Image upload — running OCR");
@@ -400,9 +387,11 @@ export function UploadDialog({
         updateAt(i, { status: "ai", progress: 30 });
 
         let category = hardCategory ?? "egyeb";
-        let aiConfidence = hardCategory ? 1 : 0;
+        let aiConfidence = isPlainImage || hardCategory ? 1 : 0;
         let detectedDate: string | null = null;
-        let aiReasoning: string | undefined = hardCategory ? "filename keyword match" : undefined;
+        let aiReasoning: string | undefined = isPlainImage
+          ? "image upload — no AI"
+          : hardCategory ? "filename keyword match" : undefined;
         try {
           if (hardCategory) {
             updateAt(i, { suggestedCategory: category, detectedDate: null });
