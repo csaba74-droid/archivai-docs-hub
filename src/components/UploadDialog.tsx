@@ -590,8 +590,8 @@ export function UploadDialog({
         }
         updateAt(i, { status: "done", progress: 100 });
 
-        // Post-upload: always confirm document date (pre-filled with detected date or today).
-        if (inserted) {
+        // Post-upload: confirm document date (skipped for plain image uploads).
+        if (inserted && !isPlainImage) {
           await askDateConfirm({
             documentId: (inserted as DocumentRow).id,
             fileName: file.name,
