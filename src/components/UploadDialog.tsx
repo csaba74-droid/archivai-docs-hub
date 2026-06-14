@@ -612,20 +612,54 @@ export function UploadDialog({
                 <p className="text-sm font-semibold">Húzd ide a fájlokat</p>
                 <p className="text-xs text-muted-foreground">PDF, DOCX, XLSX, JPG, PNG — több fájl is</p>
               </div>
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-brand hover:bg-brand-hover text-brand-foreground shrink-0"
-                disabled={running}
-              >
-                <FolderOpen className="h-4 w-4 mr-2" /> Fájlok kiválasztása
-              </Button>
+              <div className="flex flex-col gap-2 shrink-0">
+                <Button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-brand hover:bg-brand-hover text-brand-foreground"
+                  disabled={running}
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" /> Fájlok kiválasztása
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => folderInputRef.current?.click()}
+                  disabled={running}
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" /> Mappa kiválasztása
+                </Button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 className="hidden"
                 onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
+              />
+              <input
+                ref={folderInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                // @ts-expect-error non-standard but widely supported folder selection attributes
+                webkitdirectory=""
+                directory=""
+                onChange={(e) => {
+                  const list = e.target.files;
+                  if (!list || list.length === 0) { e.target.value = ""; return; }
+                  if (list.length > 100) {
+                    toast.error(`Túl sok fájl (${list.length}). Maximum 100 fájl tölthető fel egyszerre mappából.`);
+                    e.target.value = "";
+                    return;
+                  }
+                  const arr = Array.from(list);
+                  // Default target: first non-inbox root category
+                  const firstRoot = allCats.find((c) => !c.parentCatId && c.id !== "beerkezett" && c.label !== "Beérkezett");
+                  setFolderTarget(firstRoot?.id ?? "egyeb");
+                  setFolderTargetPrompt({ files: arr });
+                  e.target.value = "";
+                }}
               />
             </div>
 
