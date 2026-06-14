@@ -350,15 +350,25 @@ export function UploadDialog({
       try {
         const hardCategory = files[i].forcedCategory ?? filenameMatches[i]?.category ?? null;
 
-        updateAt(i, { status: "extracting", progress: 10 });
         const lowerName = file.name.toLowerCase();
         const mime = (file.type || "").toLowerCase();
         const isPdf = mime.includes("pdf") || lowerName.endsWith(".pdf");
+        // Plain image uploads (jpg/jpeg/png/gif/webp): skip OCR and AI entirely.
+        const isPlainImage =
+          /^image\/(jpeg|png|gif|webp)$/.test(mime) ||
+          /\.(jpe?g|png|gif|webp)$/i.test(lowerName);
         const isImage =
-          mime.startsWith("image/") ||
-          /\.(jpe?g|png|webp|bmp|tiff?|heic)$/i.test(lowerName);
+          !isPlainImage && (
+            mime.startsWith("image/") ||
+            /\.(bmp|tiff?|heic)$/i.test(lowerName)
+          );
         let contentText = "";
-        if (isPdf) {
+        if (!isPlainImage) {
+          updateAt(i, { status: "extracting", progress: 10 });
+        }
+        if (isPlainImage) {
+          // no text extraction
+        } else if (isPdf) {
           // Camera scans: OCR was already done on the upright image before
           // wrapping in PDF. Reuse it instead of re-rendering the page.
           const preOcr = getScanOcrText(file);
@@ -372,7 +382,6 @@ export function UploadDialog({
               console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
               contentText = "";
             }
-            // Scanned PDF (no embedded text) → OCR first page
             if (contentText.trim().length < 30) {
               console.log("PDF has no text layer, running OCR fallback");
               try {
@@ -400,9 +409,11 @@ export function UploadDialog({
         updateAt(i, { status: "ai", progress: 30 });
 
         let category = hardCategory ?? "egyeb";
-        let aiConfidence = hardCategory ? 1 : 0;
+        let aiConfidence = isPlainImage || hardCategory ? 1 : 0;
         let detectedDate: string | null = null;
-        let aiReasoning: string | undefined = hardCategory ? "filename keyword match" : undefined;
+        let aiReasoning: string | undefined = isPlainImage
+          ? "image upload — no AI"
+          : hardCategory ? "filename keyword match" : undefined;
         try {
           if (hardCategory) {
             updateAt(i, { suggestedCategory: category, detectedDate: null });
@@ -579,8 +590,8 @@ export function UploadDialog({
         }
         updateAt(i, { status: "done", progress: 100 });
 
-        // Post-upload: always confirm document date (pre-filled with detected date or today).
-        if (inserted) {
+        // Post-upload: confirm document date (skipped for plain image uploads).
+        if (inserted && !isPlainImage) {
           await askDateConfirm({
             documentId: (inserted as DocumentRow).id,
             fileName: file.name,
