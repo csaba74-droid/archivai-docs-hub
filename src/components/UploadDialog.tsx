@@ -911,6 +911,94 @@ export function UploadDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Folder upload: pick target root category */}
+      <Dialog open={!!folderTargetPrompt} onOpenChange={(v) => { if (!v && !folderCreating) setFolderTargetPrompt(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mappa feltöltése</DialogTitle>
+            <DialogDescription>
+              {folderTargetPrompt?.files.length ?? 0} fájl — válassz célkategóriát. Az almappastruktúra automatikusan létrejön a választott kategórián belül.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label>Célkategória</Label>
+            <Select value={folderTarget} onValueChange={setFolderTarget} disabled={folderCreating}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {allCats
+                  .filter((c) => !c.parentCatId && c.id !== "beerkezett" && c.label !== "Beérkezett")
+                  .map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.label}{c.mode === "strict" && " 🔒"}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="flex flex-row gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setFolderTargetPrompt(null)} disabled={folderCreating}>
+              Mégse
+            </Button>
+            <Button
+              className="bg-brand hover:bg-brand-hover text-brand-foreground"
+              disabled={folderCreating || !folderTarget}
+              onClick={async () => {
+                if (!folderTargetPrompt) return;
+                const rootCat = allCats.find((c) => c.id === folderTarget);
+                if (!rootCat) { toast.error("Érvénytelen célkategória"); return; }
+                setFolderCreating(true);
+                const created = new Map<string, string>();
+                const findChild = (parentId: string, name: string): string | null => {
+                  const key = `${parentId}|${name.toLowerCase()}`;
+                  if (created.has(key)) return created.get(key)!;
+                  const existing = allCats.find(
+                    (c) => c.parentCatId === parentId && c.label.toLowerCase() === name.toLowerCase(),
+                  );
+                  return existing ? existing.id : null;
+                };
+                const newFiles: FileProgress[] = [];
+                try {
+                  for (const file of folderTargetPrompt.files) {
+                    const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+                    const parts = rel.split("/").filter(Boolean);
+                    const dirs = parts.slice(0, -1);
+                    let parentId = rootCat.id;
+                    for (const seg of dirs) {
+                      const name = seg.trim();
+                      if (!name) continue;
+                      let childId = findChild(parentId, name);
+                      if (!childId) {
+                        childId = await createCategory({
+                          name,
+                          color: rootCat.color || "#6366f1",
+                          mode: rootCat.mode,
+                          retentionYears: rootCat.retentionYears,
+                          parentCatId: parentId,
+                        });
+                        created.set(`${parentId}|${name.toLowerCase()}`, childId);
+                      }
+                      parentId = childId;
+                    }
+                    newFiles.push({ file, status: "queued", progress: 0, forcedCategory: parentId });
+                  }
+                } catch (e) {
+                  console.error("Folder structure create failed", e);
+                  toast.error(`Almappa létrehozás sikertelen: ${(e as Error).message ?? "ismeretlen hiba"}`);
+                  setFolderCreating(false);
+                  return;
+                }
+                setFiles((prev) => [...prev, ...newFiles]);
+                setFolderCreating(false);
+                setFolderTargetPrompt(null);
+                toast.success(`${newFiles.length} fájl előkészítve a(z) ${rootCat.label} mappába`);
+              }}
+            >
+              {folderCreating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Mappák létrehozása…</> : "Tovább"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
