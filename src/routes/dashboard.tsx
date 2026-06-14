@@ -607,7 +607,10 @@ function Dashboard() {
             {activeCat ? (
               <button
                 aria-label="Vissza"
-                onClick={() => setActiveCat(null)}
+                onClick={() => {
+                  const parentId = getCategory(activeCat).parentCatId ?? null;
+                  setActiveCat(parentId);
+                }}
                 className="h-10 w-10 -ml-2 rounded-full flex items-center justify-center text-brand hover:bg-muted transition-colors shrink-0"
               >
                 <ArrowLeft className="h-6 w-6" />
