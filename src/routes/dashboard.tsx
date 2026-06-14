@@ -733,17 +733,30 @@ function Dashboard() {
             {activeCat ? (
               <div className="space-y-3">
                 <button
-                  onClick={() => setActiveCat(null)}
+                  onClick={() => {
+                    const parentId = getCategory(activeCat).parentCatId ?? null;
+                    setActiveCat(parentId);
+                  }}
                   className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Vissza a kategóriákhoz
+                  <ArrowLeft className="h-4 w-4" /> Vissza
                 </button>
                 <nav className="text-sm text-muted-foreground">
                   <button onClick={() => setActiveCat(null)} className="hover:text-foreground transition-colors">
                     Összes
                   </button>
-                  <span className="mx-2">→</span>
-                  <span className="text-foreground font-medium">{getCategory(activeCat).label}</span>
+                  {getCategoryPath(activeCat, allCategories).map((cat, idx, arr) => (
+                    <span key={cat.id}>
+                      <span className="mx-2">→</span>
+                      {idx === arr.length - 1 ? (
+                        <span className="text-foreground font-medium">{cat.label}</span>
+                      ) : (
+                        <button onClick={() => setActiveCat(cat.id)} className="hover:text-foreground transition-colors">
+                          {cat.label}
+                        </button>
+                      )}
+                    </span>
+                  ))}
                 </nav>
                 <div className="flex items-center justify-between gap-3">
                   <div>
