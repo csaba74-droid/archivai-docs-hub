@@ -369,7 +369,29 @@ export function UploadDialog({
         if (isPlainImage) {
           // no text extraction
         } else if (isPdf) {
-...
+          // Camera scans: OCR was already done on the upright image before
+          // wrapping in PDF. Reuse it instead of re-rendering the page.
+          const preOcr = getScanOcrText(file);
+          if (preOcr) {
+            console.log("Using cached scan OCR text, length:", preOcr.length);
+            contentText = preOcr;
+          } else {
+            try {
+              contentText = await extractPdfText(file);
+            } catch (extractErr) {
+              console.warn("PDF text extraction failed, continuing with filename-only", extractErr);
+              contentText = "";
+            }
+            if (contentText.trim().length < 30) {
+              console.log("PDF has no text layer, running OCR fallback");
+              try {
+                const ocr = await ocrPdfFirstPage(file);
+                if (ocr) contentText = ocr;
+              } catch (ocrErr) {
+                console.warn("PDF OCR fallback failed", ocrErr);
+              }
+            }
+          }
         } else if (isImage) {
           try {
             console.log("Image upload — running OCR");
