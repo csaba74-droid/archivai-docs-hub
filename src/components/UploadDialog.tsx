@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -141,6 +142,7 @@ export function UploadDialog({
   const reset = () => {
     setFiles([]);
     setDocumentDate(new Date().toISOString().slice(0, 10));
+    applyDateToAllRef.current = null;
   };
 
   useEffect(() => {
@@ -184,6 +186,9 @@ export function UploadDialog({
     setPendingConfirm(null);
   };
 
+  const [applyDateToAll, setApplyDateToAll] = useState(true);
+  const applyDateToAllRef = useRef<string | null>(null);
+
   const askDateConfirm = (params: {
     documentId: string;
     fileName: string;
@@ -191,8 +196,26 @@ export function UploadDialog({
     currentDate: string;
   }) =>
     new Promise<boolean>((resolve) => {
+      // If user already chose "apply to all" earlier in this batch, apply silently.
+      const sticky = applyDateToAllRef.current;
+      if (sticky && sticky !== params.currentDate) {
+        void supabase
+          .from("documents")
+          .update({ document_date: sticky })
+          .eq("id", params.documentId)
+          .then(({ error }) => {
+            if (error) toast.error(`Dátum frissítés sikertelen: ${error.message}`);
+          });
+        resolve(true);
+        return;
+      }
+      if (sticky) {
+        resolve(true);
+        return;
+      }
       setDatePrompt(params);
       setDatePromptValue(params.detectedDate ?? new Date().toISOString().slice(0, 10));
+      setApplyDateToAll(true);
       datePromptResolveRef.current = resolve;
     });
 
@@ -202,6 +225,7 @@ export function UploadDialog({
     const prompt = datePrompt;
     const chosenDate = datePromptValue;
     const resolver = datePromptResolveRef.current;
+    const stickAll = applyDateToAll;
     setDatePrompt(null);
     datePromptResolveRef.current = null;
     if (save && prompt && chosenDate && chosenDate !== prompt.currentDate) {
@@ -215,8 +239,13 @@ export function UploadDialog({
         toast.success(`📅 Dátum mentve: ${chosenDate}`);
       }
     }
+    if (save && stickAll && chosenDate) {
+      applyDateToAllRef.current = chosenDate;
+    }
     resolver?.(save);
   };
+
+
 
   const askVersion = (params: { fileName: string; existingDate: string }) =>
     new Promise<boolean | null>((resolve) => {
@@ -310,6 +339,7 @@ export function UploadDialog({
       }
     }
     setRunning(true);
+    applyDateToAllRef.current = null;
     const customForAi = customRows.map((c: CustomCategoryRow) => ({ id: c.id, name: c.name, mode: c.is_strict_itm ? "strict" as const : "normal" as const }));
     let okCount = 0;
 
@@ -866,6 +896,13 @@ export function UploadDialog({
                   className="h-9 w-auto"
                 />
               </div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <Checkbox
+                  checked={applyDateToAll}
+                  onCheckedChange={(v) => setApplyDateToAll(v === true)}
+                />
+                <span className="text-sm">Alkalmaz az összes dokumentumra</span>
+              </label>
               <p className="text-xs text-muted-foreground">
                 A megőrzési határidő ettől a dátumtól számítódik.
               </p>
