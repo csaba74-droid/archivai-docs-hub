@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-ro
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, type DocumentRow } from "@/lib/supabase";
-import { formatDeadline, type Category } from "@/lib/categories";
+import { formatDeadline, getCategoryPath, type Category } from "@/lib/categories";
 import { useCategories, useCategoryHelpers } from "@/hooks/use-categories";
 import { useSubscription, PLAN_INFO } from "@/hooks/use-subscription";
 import { documentCap, storageCap } from "@/lib/entitlements";
@@ -607,7 +607,10 @@ function Dashboard() {
             {activeCat ? (
               <button
                 aria-label="Vissza"
-                onClick={() => setActiveCat(null)}
+                onClick={() => {
+                  const parentId = getCategory(activeCat).parentCatId ?? null;
+                  setActiveCat(parentId);
+                }}
                 className="h-10 w-10 -ml-2 rounded-full flex items-center justify-center text-brand hover:bg-muted transition-colors shrink-0"
               >
                 <ArrowLeft className="h-6 w-6" />
@@ -730,17 +733,30 @@ function Dashboard() {
             {activeCat ? (
               <div className="space-y-3">
                 <button
-                  onClick={() => setActiveCat(null)}
+                  onClick={() => {
+                    const parentId = getCategory(activeCat).parentCatId ?? null;
+                    setActiveCat(parentId);
+                  }}
                   className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Vissza a kategóriákhoz
+                  <ArrowLeft className="h-4 w-4" /> Vissza
                 </button>
                 <nav className="text-sm text-muted-foreground">
                   <button onClick={() => setActiveCat(null)} className="hover:text-foreground transition-colors">
                     Összes
                   </button>
-                  <span className="mx-2">→</span>
-                  <span className="text-foreground font-medium">{getCategory(activeCat).label}</span>
+                  {getCategoryPath(activeCat, allCategories).map((cat, idx, arr) => (
+                    <span key={cat.id}>
+                      <span className="mx-2">→</span>
+                      {idx === arr.length - 1 ? (
+                        <span className="text-foreground font-medium">{cat.label}</span>
+                      ) : (
+                        <button onClick={() => setActiveCat(cat.id)} className="hover:text-foreground transition-colors">
+                          {cat.label}
+                        </button>
+                      )}
+                    </span>
+                  ))}
                 </nav>
                 <div className="flex items-center justify-between gap-3">
                   <div>
