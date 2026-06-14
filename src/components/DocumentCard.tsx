@@ -370,7 +370,7 @@ export function DocumentCard({
                   .filter((x) => x.parentCatId === id)
                   .forEach((ch) => visit(ch.id, depth + 1));
               };
-              if (isInbox) {
+              if (isInbox || moveRoot.mode !== "strict") {
                 allCategories
                   .filter((c) => c.parentCatId == null)
                   .forEach((c) => visit(c.id, 0));
