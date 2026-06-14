@@ -141,6 +141,7 @@ export function UploadDialog({
   const reset = () => {
     setFiles([]);
     setDocumentDate(new Date().toISOString().slice(0, 10));
+    applyDateToAllRef.current = null;
   };
 
   useEffect(() => {
