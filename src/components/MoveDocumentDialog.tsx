@@ -40,17 +40,17 @@ export function MoveDocumentDialog({
         .filter((x) => x.parentCatId === id)
         .forEach((ch) => visit(ch.id, depth + 1));
     };
-    // From the Beérkezett tree, allow moving anywhere — including into
-    // Beérkezett subfolders. Skip "beerkezett" itself as a target.
-    if (root.id === "beerkezett") {
+    if (root.mode === "strict") {
+      // Strict categories: only allow moving within the same protected tree
+      visit(root.id, 0);
+      return result;
+    } else {
+      // Normal categories: allow moving to any category except Beérkezett
       all
         .filter((c) => c.parentCatId == null)
         .forEach((c) => visit(c.id, 0));
       return result.filter((o) => o.id !== "beerkezett");
-    } else {
-      visit(root.id, 0);
     }
-    return result;
   }, [doc, all, getRoot, getCategory]);
 
   const handleMove = async () => {
@@ -80,13 +80,17 @@ export function MoveDocumentDialog({
     }
   };
 
+  const root = doc ? getRoot(doc.category) : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Dokumentum áthelyezése</DialogTitle>
           <DialogDescription>
-            Válassz másik mappát ugyanazon a főkategórián belül.
+            {root?.mode === "strict"
+              ? "Válassz másik mappát ugyanazon a védett főkategórián belül."
+              : "Válassz célmappát — bármelyik kategóriába áthelyezhető."}
           </DialogDescription>
         </DialogHeader>
 
